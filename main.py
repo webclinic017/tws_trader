@@ -11,11 +11,8 @@ def main():
 						level=logging.INFO,
 						filename='test.log'
 						)
-
 	wrp=ibapi.wrapper.EWrapper()
 	cln=ibapi.client.EClient(wrp)
-
-
 	cln.connect("127.0.0.1", 7497, 1)
 
 	# не понимаю как работать с потоком. ИЗУЧИТЬ модуль threading!!
@@ -34,7 +31,6 @@ def main():
 	contract.secType = "STK"
 	contract.currency = "USD"
 	contract.exchange = "ISLAND"
-
 
 	time.sleep(60*60*24)
 	cln.disconnect()
