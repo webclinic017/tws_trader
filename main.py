@@ -1,42 +1,176 @@
+'''from datetime import datetime
+import logging
+import threading
+import time
+
 import ibapi.wrapper
 import ibapi.client
 import ibapi.contract
-import threading
-import logging
-from datetime import datetime
-import time
+import ibapi.connection
+
+def make_contract(symbol, sec_type='STK', currency='USD', exchange='ISLAND'):
+	my_contract = ibapi.contract.Contract()
+	symbol = my_contract.symbol
+	sec_type = my_contract.secType
+	currency = my_contract.currency
+	exchange = my_contract.exchange
+	return my_contract
+
+def make_LMT_order(action, quantity, price):
+	my_order = ibapi.order.Order()
+	my_order.orderType = "LMT"
+	my_order.totalQuantity = quantity
+	my_order.action = action
+	my_order.lmtPrice = price
+	return my_order
 
 def main():
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
-                        level=logging.INFO,
-                        filename='test.log'
-                        )
-    wrp=ibapi.wrapper.EWrapper()
-    cln=ibapi.client.EClient(wrp)
-    cln.connect("127.0.0.1", 7497, 1)
+	logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
+						level=logging.INFO,
+						filename='test.log'
+						)
 
-    # не понимаю как работать с потоком. ИЗУЧИТЬ модуль threading!!
-    if cln.isConnected():
-        print("Успешно подключились к TWS")
-        cln.th = threading.Thread(target=cln.run())
-        cln.th.start()
-        cln.th.join(timeout=5)
-        time_now_for_log=datetime.now().strftime("%m/%d/%Y %I:%M %p")
-        logging.info(f"Time: {time_now_for_log}, status: {cln.th.join()}")
+	wrp=ibapi.wrapper.EWrapper()
+	cln=ibapi.client.EClient(wrp)
+	cln.connect("127.0.0.1", 7497, 1)
 
-    #ibapi.client.EClient.run() # что за метод? ИЗУЧИТЬ!
+	conn = ibapi.connection.Connection.connect("127.0.0.1", 7497)
+	conn.connect()
 
-    contract = ibapi.contract.Contract()
-    contract.symbol = "IBKR"
-    contract.secType = "STK"
-    contract.currency = "USD"
-    contract.exchange = "ISLAND"
 
-    time.sleep(60*60*24)
-    cln.disconnect()
+	cont = make_contract('TSLA')
+	offer = make_LMT_order('BUY', 1, 300)
+	conn.placeOrder(1, cont, offer)
+
+	
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+	time.sleep(120)
+
+	cln.disconnect()
 
 if __name__=='__main__':
-    main()
+	main()
+'''
+import logging
+import datetime
+import time
+
+from ibapi.client import EClient
+from ibapi.wrapper import EWrapper
+from ibapi.contract import Contract
+from ibapi.order import *
+from threading import Timer
+
+class TestApp(EWrapper, EClient):
+	def __init__(self):
+		EClient.__init__(self,self)
+
+	def nextValidId(self, orderId):
+		self.nextOrderId = orderId
+		self.start()
+
+	def orderStatus(self, orderId, status, filled, remaining, avgFillPrice, clientId, whyHeld, mktCapPrice):
+		print('Такой ордер')	
+
+	def openOrder(self, orderId, contract, order, orderState):
+		print("открыт")
+
+	def start(self):
+		contract = Contract()
+		contract.symbol = 'TSLA'
+		contract.secType = 'STK'
+		contract.currency = 'USD'
+		contract.exchange = 'ISLAND'
+
+		order = Order()
+		order.acrion = 'BUY'
+		order.orderType = "LMT"
+		order.totalQuantity = 1
+		order.lmtPrice = 300
+
+		self.placeOrder(self.nextOrderId, contract, order)
+
+	def stop(self):
+		self.done = True
+		self.disconnect()
+
+def main():
+	logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
+						level=logging.INFO,
+						filename='test.log'
+						)
+
+	app = TestApp()
+	app.nextOrderId = 0
+	app.connect("127.0.0.1", 7497, 1)
+
+#	Timer(60, app.stop).start()
+	app.run()
+
+
+if __name__ == '__main__':
+	main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
