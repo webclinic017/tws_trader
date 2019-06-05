@@ -69,6 +69,7 @@ def main():
 if __name__=='__main__':
 	main()
 '''
+'''
 import logging
 import datetime
 import time
@@ -76,7 +77,7 @@ import time
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
-from ibapi.order import *
+from ibapi.order import Order
 from threading import Timer
 
 class TestApp(EWrapper, EClient):
@@ -95,13 +96,13 @@ class TestApp(EWrapper, EClient):
 
 	def start(self):
 		contract = Contract()
-		contract.symbol = 'TSLA'
-		contract.secType = 'STK'
-		contract.currency = 'USD'
-		contract.exchange = 'ISLAND'
+		contract.symbol = "TSLA"
+		contract.secType = "STK"
+		contract.currency = "USD"
+		contract.exchange = "ISLAND"
 
 		order = Order()
-		order.acrion = 'BUY'
+		order.acrion = "BUY"
 		order.orderType = "LMT"
 		order.totalQuantity = 1
 		order.lmtPrice = 300
@@ -122,20 +123,81 @@ def main():
 	app.nextOrderId = 0
 	app.connect("127.0.0.1", 7497, 1)
 
-#	Timer(60, app.stop).start()
+	Timer(60, app.stop).start()
 	app.run()
 
 
 if __name__ == '__main__':
 	main()
+'''
+'''
+import logging
 
+from ib_insync import *
+# util.startLoop()  # uncomment this line when in a notebook
 
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
+						level=logging.INFO,
+						filename='test.log'
+						)
 
+from ib_insync import *
+# util.startLoop()  # uncomment this line when in a notebook
 
+ib = IB()
+ib.connect('127.0.0.1', 7497, clientId=1)
 
+contract = Forex('EURUSD')
+bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='30 D',
+		barSizeSetting='1 hour', whatToShow='MIDPOINT', useRTH=True)
 
+# convert to pandas dataframe:
+df = util.df(bars)
+print(df[['date', 'open', 'high', 'low', 'close']])
+'''
+import logging
 
+from ib.opt import Connection, message
+from ib.ext.Contract import Contract
+from ib.ext.Order import Order
 
+def make_contract(symbol, sec_type, exch, prim_exch, curr):
+	Contract.m_symbol = symbol
+	Contract.m_secType = sec_type
+	Contract.m_exchange = exch
+	Contract.m_primaryExch = prim_exch
+	Contract.m_currency = curr
+	return Contract
+
+def make_order(action, quantity, price = None):
+	if price is not None:
+		order = Order()
+		order.m_orderType = 'LMT'
+		order.m_totalQuantity = quantity
+		order.m_action = action
+		order.m_lmtPrice = price
+	else:
+		order = Order()
+		order.m_orderType = 'MKT'
+		order.m_totalQuantity = quantity
+		order.m_action = action
+	return order
+
+def main():
+	logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
+						level=logging.INFO,
+						filename='test.log'
+						)
+	conn = Connection.create(port=7497, clientId=1)
+	conn.connect()
+	oid = 3423583240
+	cont = make_contract('TSLA', 'STK', 'SMART', 'SMART', 'USD')
+	offer = make_order('BUY', 1, 300)
+	conn.placeOrder(oid, cont, offer)
+	conn.disconnect()
+
+if __name__ == '__main__':
+	main()
 
 
 
