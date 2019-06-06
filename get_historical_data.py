@@ -1,3 +1,5 @@
+# ПРОБЛЕМА: перестает записывать файлы после 5-20 успешных попыток, хотя по списку продолжает проверять
+
 import csv
 import time
 
@@ -26,20 +28,18 @@ def main(stock_ticker, duration, bar_size):
 		dict['High']=msg.high
 		dict['Low']=msg.low
 		dict['Volume']=msg.volume
-		with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'a', encoding='utf-8') as csvfile:
-	#		fieldnames = ('date' 'open', 'close', 'high', 'low', 'volume')
-			fieldnames = dict.keys()
-			delimiter=';'
-			writer = csv.DictWriter(csvfile, fieldnames, delimiter=delimiter)
-	#		writer.writeheader()
-			if 'finished' not in dict['Date']:
-				writer.writerow(dict)
+		if msg.close > 1:	# ПРОБЛЕМА: продолжает собирать данные, отвечающие условию. Надо: прекратить собирать данные по запросу вообще
+			with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'a', encoding='utf-8') as csvfile:
+				fieldnames = dict.keys()
+				delimiter=';'
+				writer = csv.DictWriter(csvfile, fieldnames, delimiter=delimiter)
+				if 'finished' not in dict['Date']:
+					writer.writerow(dict)
 
 	contract = create_contract(stock_ticker, 'STK', 'SMART', 'SMART', 'USD')
-	conn.registerAll(print)	# this is for errors searching
+#	conn.registerAll(print)	# this is for errors searching
 	conn.register(create_csv_from_data, message.historicalData)
 	conn.connect()
-#	endtime = time.strftime('%Y%m%d %H:%M:%S')
 	conn.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
 							contract,	# your Contract()
 							'',	# endDateTime, The request's end date and time (the empty string indicates current present moment)
@@ -53,8 +53,5 @@ def main(stock_ticker, duration, bar_size):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(3)
+	time.sleep(4)
 	conn.disconnect()
-	
-if __name__ == "__main__":
-	main('TWTR', '3 W', '1 hour')

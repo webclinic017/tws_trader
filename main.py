@@ -6,6 +6,7 @@ from ib.opt import Connection, dispatcher, message
 
 from all_companies import set_of_all_companies
 import get_historical_data
+import volume_analysis
 
 order_id = 42
 
@@ -57,8 +58,15 @@ if __name__ == "__main__":
 # 4. Trading
 
 # 1. Historical data updating functional:
-	for company in set_of_all_companies():
-		get_historical_data.main(company, '3 W', '1 hour')
+#	for company in set_of_all_companies():
+#		get_historical_data.main(company, '3 Y', '1 day')
+#	here we need UPDATE_historical_data
+
+
+# 2. Historical data analysis:
+	company = 'SPY'
+	get_historical_data.main(company, '3 Y', '1 day')
+	volume_analysis.main(company, '3 Y', '1 day')
 
 
 
