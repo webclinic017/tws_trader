@@ -4,8 +4,8 @@ from ib.ext.Contract import Contract
 from ib.ext.Order import Order
 from ib.opt import Connection, dispatcher, message
 
-from get_tickers import set_of_all_companies
-import all_companies
+from all_companies import set_of_all_companies
+import get_historical_data
 
 order_id = 42
 

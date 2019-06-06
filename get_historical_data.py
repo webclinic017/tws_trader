@@ -53,7 +53,7 @@ def main(stock_ticker, duration, bar_size):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(5)
+	time.sleep(3)
 	conn.disconnect()
 	
 if __name__ == "__main__":
