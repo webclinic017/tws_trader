@@ -1,6 +1,24 @@
 # ПРОБЛЕМА: перестает записывать файлы после 5-20 успешных попыток, хотя по списку продолжает проверять
 # не получив ответ от TWS однажды, перестает получать ответы на другие запросы. Помогает перезагрузка TWS
-# но иногда после безответного запроса может давать ответы на другие запросы
+# но иногда после безответного запроса может давать ответы на другие запросы - если возникает сразу после ошибки 326
+# ОШИБКА, возникающая когда все встает: [Errno 54] Connection reset by peer
+
+'''
+# ОШИБКА ПРИЧИНА ОСТАНОВКИ: 
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.hfarm>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.hfarm>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.jfarm>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfuture>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.jfarm>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfuture>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+'''
+
+# КАК остановить функцию при получении этой ошибки?
+# ИЛИ как избежать остановки при получении этой ошибки?
 
 import csv
 import time
@@ -30,17 +48,25 @@ def main(stock_ticker, duration, bar_size):
 		dict['High']=msg.high
 		dict['Low']=msg.low
 		dict['Volume']=msg.volume
-		if msg.close > 1:	# ПРОБЛЕМА: продолжает собирать данные, отвечающие условию. Надо: прекратить собирать данные по запросу вообще
-			with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'a', encoding='utf-8') as csvfile:
-				fieldnames = dict.keys()
-				delimiter=';'
-				writer = csv.DictWriter(csvfile, fieldnames, delimiter=delimiter)
-				if 'finished' not in dict['Date']:
-					writer.writerow(dict)
+		with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'w', encoding='utf-8') as csvfile:
+			fieldnames = dict.keys()
+			delimiter=';'
+			writer = csv.DictWriter(csvfile, fieldnames, delimiter=delimiter)
+			if 'finished' not in dict['Date']:
+				writer.writerow(dict)
+
+	def error_handler(msg):
+		if msg.errorCode == 326:
+			print(f"ERROR {msg.errorCode}: No data permissions for {stock_ticker}")
+		elif msg.errorCode == 2104 or msg.errorCode == 2106:
+			pass
+		else:
+			print(msg)
 
 	contract = create_contract(stock_ticker, 'STK', 'SMART', 'SMART', 'USD')
 #	conn.registerAll(print)	# this is for errors searching
 	conn.register(create_csv_from_data, message.historicalData)
+	conn.register(error_handler, message.Error)
 	conn.connect()
 	conn.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
 							contract,	# your Contract()
@@ -60,5 +86,5 @@ def main(stock_ticker, duration, bar_size):
 
 # In case of testing:
 if __name__ == '__main__':
-	main('AAPL', '5 Y', '1 hour')
+	main('GBTC', '1 Y', '1 hour')
 

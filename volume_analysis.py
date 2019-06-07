@@ -1,3 +1,5 @@
+# ВОПРОС: Как лучше определить зубцы на графике? провалы
+
 import csv
 
 import matplotlib.pyplot as plt
@@ -29,14 +31,15 @@ def main(stock_ticker, duration, bar_size):
 	for y in a.index:
 		y_list.append(y)
 
-	plt.plot(x_list, y_list)
-	plt.show()
 	print(f"Для {stock_ticker} максимальные объемы сделок пришлись на цену ${y_list[x_list.index(max(x_list))]}")
 	total_volumes = 0
 	for z in range(0, len(y_list)):
 		total_volumes += float(x_list[z])*float(y_list[z])
 	print(f"Для {stock_ticker} средняя цена сделки за рассматриваемый париод составила ${round(total_volumes/sum(x_list),2)}")
 
+	plt.plot(x_list, y_list)
+	plt.show()
+
 # In case of testing:
 if __name__ == '__main__':
-	main('AAPL', '3 Y', '1 day')
+	main('AAPL', '1 Y', '10 mins')

@@ -16,6 +16,7 @@ mpl_logger.setLevel(logging.WARNING)
 '''
 
 if __name__ == "__main__":
+
 # STRUSTURE:
 # 1. Updating historical data
 # 2. Historical data analysis
@@ -23,8 +24,8 @@ if __name__ == "__main__":
 # 4. Trading
 
 # 1.1. Historical data collect:
-#	for company in set_of_all_companies():
-#		get_historical_data.main(company, '3 Y', '1 day')
+	for company in set_of_all_companies():
+		get_historical_data.main(company, '3 Y', '1 day')
 # 1.2. Historical data update:
 
 # 2. Historical data analysis:
@@ -32,9 +33,19 @@ if __name__ == "__main__":
 #	get_historical_data.main(company, '3 Y', '1 day')
 #	volume_analysis.main(company, '3 Y', '1 day')
 
-# 3. Get account info:
+'''
+# 3. Make trading decisions
+# 3.1 Get account info:
 	def prt_msg(msg):
-		print(msg)
+		if msg.key == 'BuyingPower' and msg.currency == 'USD':
+			print(f"Buying Power: ${msg.value}")
+		if msg.key == 'TotalCashValue' and msg.currency == 'USD':
+			print(f'Total: ${msg.value}')
+		if msg.key == 'GrossPositionValue' and msg.currency == 'USD':
+			print(f'Gross positions value: ${msg.value}')
+		if msg.key == 'UnrealizedPnL' and msg.currency == 'USD':
+			print(f'Unrealized P&L: ${msg.value}')			
+
 	conn = settings.connection
 #	conn.registerAll(print)	# this is for errors searching
 	conn.register(prt_msg,
@@ -45,6 +56,7 @@ if __name__ == "__main__":
 	conn.reqAccountUpdates(True, settings.ACCOUNT_NUMBER)
 	time.sleep(4)
 	conn.disconnect()
+'''
 
 # 4. Trading functional:
 #	conn = Connection.create(port=7497, clientId=0)
