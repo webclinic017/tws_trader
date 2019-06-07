@@ -9,23 +9,21 @@ def main(stock_ticker, duration, bar_size):
 		for row in csv.reader(data_file, delimiter=';'):
 			min_max_prices.append(row[3])
 			min_max_prices.append(row[4])
-	min_max_prices = sorted(min_max_prices, key=float)	# how can I use it?
-	min_price = int(float(min_max_prices[0]))
-	max_price = int(float(min_max_prices[-1]))
+	min_max_prices = sorted(min_max_prices, key=float)
 
 	volume_level={}
-	for x in range(min_price, max_price+1):
+	for x in min_max_prices:
 		volume_level[x] = 0
 		with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'r', encoding='utf-8') as data_file:
 			for row in csv.reader(data_file, delimiter=';'):
-				if float(row[3]) >= x >= float(row[4]):
+				if float(row[3]) >= float(x) >= float(row[4]):
 					volume_level[x] += int(row[5])
 
 	a = pd.DataFrame.from_dict(volume_level, orient='index')
 	# what can I do with this ?
 
-	x_list=[]
-	y_list=[]
+	x_list=[]	# volumes
+	y_list=[]	# prices
 	for x in a.iloc[:,0]:
 		x_list.append(x)
 	for y in a.index:
@@ -33,6 +31,12 @@ def main(stock_ticker, duration, bar_size):
 
 	plt.plot(x_list, y_list)
 	plt.show()
+	print(f"Для {stock_ticker} максимальные объемы сделок пришлись на цену ${y_list[x_list.index(max(x_list))]}")
+	total_volumes = 0
+	for z in range(0, len(y_list)):
+		total_volumes += float(x_list[z])*float(y_list[z])
+	print(f"Для {stock_ticker} средняя цена сделки за рассматриваемый париод составила ${round(total_volumes/sum(x_list),2)}")
 
+# In case of testing:
 if __name__ == '__main__':
-	main('AMZN', '3 Y', '1 day')
+	main('AAPL', '3 Y', '1 day')
