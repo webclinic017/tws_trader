@@ -2,7 +2,7 @@
 
 import csv
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pandas as pd
 
 def main(stock_ticker, duration, bar_size):
@@ -19,7 +19,7 @@ def main(stock_ticker, duration, bar_size):
 		with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'r', encoding='utf-8') as data_file:
 			for row in csv.reader(data_file, delimiter=';'):
 				if float(row[3]) >= float(x) >= float(row[4]):
-					volume_level[x] += int(row[5])
+					volume_level[x] += float(row[5])
 
 	a = pd.DataFrame.from_dict(volume_level, orient='index')
 	# what can I do with this ?
@@ -37,9 +37,9 @@ def main(stock_ticker, duration, bar_size):
 		total_volumes += float(x_list[z])*float(y_list[z])
 	print(f"Для {stock_ticker} средняя цена сделки за рассматриваемый париод составила ${round(total_volumes/sum(x_list),2)}")
 
-	plt.plot(x_list, y_list)
-	plt.show()
+#	plt.plot(x_list, y_list)
+#	plt.show()
 
 # In case of testing:
 if __name__ == '__main__':
-	main('AAPL', '1 Y', '10 mins')
+	main('TSLA', '1 W', '1 day')

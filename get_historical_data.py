@@ -16,9 +16,15 @@
 <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
 <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
 '''
+# ЕЩЕ ОДНА ОШИБКА ПРИЧИНА ОСТАНОВКИ: <error id=1, errorCode=200, errorMsg=No security definition has been found for the request>
 
 # КАК остановить функцию при получении этой ошибки?
 # ИЛИ как избежать остановки при получении этой ошибки?
+
+# ИНОГДА СОЗДАЮТСЯ ПУСТЫЕ ФАЙЛЫ, хотя данные есть
+
+
+# Как остановить функцию, если файл не создан?
 
 import csv
 import time
@@ -27,49 +33,50 @@ from ib.ext.Contract import Contract
 from ib.ext.Order import Order
 from ib.opt import Connection, dispatcher, message
 
-def main(stock_ticker, duration, bar_size):
-	conn = Connection.create(port=7497, clientId=0)
-	print(f"Requesting data for {stock_ticker}")
+from all_companies import set_of_all_companies
 
-	def create_contract(symbol, sec_type, exch, prim_exch, curr):
-		contract = Contract()
-		contract.m_symbol = symbol
-		contract.m_secType = sec_type
-		contract.m_exchange = exch
-		contract.m_primaryExch = prim_exch
-		contract.m_currency = curr
-		return contract
+price_data = ['date;open;close;high;low;volume']
 
-	def create_csv_from_data(msg):
-		dict={}
-		dict['Date']=msg.date
-		dict['Open']=msg.open
-		dict['Close']=msg.close
-		dict['High']=msg.high
-		dict['Low']=msg.low
-		dict['Volume']=msg.volume
-		with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'w', encoding='utf-8') as csvfile:
-			fieldnames = dict.keys()
-			delimiter=';'
-			writer = csv.DictWriter(csvfile, fieldnames, delimiter=delimiter)
-			if 'finished' not in dict['Date']:
-				writer.writerow(dict)
+def create_contract(symbol, sec_type, exch, prim_exch, curr):
+	contract = Contract()
+	contract.m_symbol = symbol
+	contract.m_secType = sec_type
+	contract.m_exchange = exch
+	contract.m_primaryExch = prim_exch
+	contract.m_currency = curr
+	return contract
 
-	def error_handler(msg):
-		if msg.errorCode == 326:
-			print(f"ERROR {msg.errorCode}: No data permissions for {stock_ticker}")
-		elif msg.errorCode == 2104 or msg.errorCode == 2106:
-			pass
-		else:
-			print(msg)
+def create_price_data_list(msg):
+	if 'finished' not in msg.date:
+		price_data.append(f'{msg.date};{float(msg.open)};{float(msg.close)};{float(msg.high)};{float(msg.low)};{float(msg.volume)};')
 
-	contract = create_contract(stock_ticker, 'STK', 'SMART', 'SMART', 'USD')
+def create_csv_from_dict(price_data, stock_ticker, duration, bar_size):
+	with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'w', encoding='utf-8') as csvfile:
+		fieldnames = ('date', 'open', 'close', 'high', 'low', 'volume')
+		delimiter=';'
+		a = csv.writer(csvfile, fieldnames, delimiter=delimiter)
+		for row in price_data:
+			a.writerow(row.split(';'))
+	print(f"Для {stock_ticker} успешно собраны данные")
+
+def error_handler(msg):
+	if msg.errorCode == 326:
+		print(f"ERROR {msg.errorCode}: No data permissions for {stock_ticker}")
+	elif msg.errorCode == 2104 or msg.errorCode == 2106:
+		pass
+	elif msg.errorMsg == '[Errno 54] Connection reset by peer':
+		print('[Errno 54] Connection reset by peer')
+		main(stock_ticker, duration, bar_size) # почему не работает?
+	else:
+		print(msg)
+
+def requesting(conn, stock_ticker, duration, bar_size):
+	my_contract = create_contract(stock_ticker, 'STK', 'SMART', 'SMART', 'USD')
 #	conn.registerAll(print)	# this is for errors searching
-	conn.register(create_csv_from_data, message.historicalData)
+	conn.register(create_price_data_list, message.historicalData)
 	conn.register(error_handler, message.Error)
-	conn.connect()
 	conn.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
-							contract,	# your Contract()
+							my_contract,	# your Contract()
 							'',	# endDateTime, The request's end date and time (the empty string indicates current present moment)
 							duration,	# durationString, S D W M Y (seconds, days, weeks, months, year)
 							bar_size,	# barSizeSetting, 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
@@ -81,10 +88,19 @@ def main(stock_ticker, duration, bar_size):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(4)
-	conn.disconnect()
+	time.sleep(3)
+
+def main(conn, stock_ticker, duration, bar_size):
+	print(f"Requesting data for {stock_ticker}")
+	requesting(conn, stock_ticker, duration, bar_size)
+	create_csv_from_dict(price_data, stock_ticker, duration, bar_size)
 
 # In case of testing:
 if __name__ == '__main__':
-	main('GBTC', '1 Y', '1 hour')
+#	for company in set_of_all_companies():
+	company = 'TSLA'
+	c = Connection.create(port=7497, clientId=0)
+	c.connect()
+	main(c, company, '1 W', '1 day')
+	c.disconnect()
 

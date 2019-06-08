@@ -2,12 +2,11 @@ import time
 
 from ib.ext.Contract import Contract
 from ib.ext.Order import Order
-from ib.opt import message
+from ib.opt import message, Connection
 
 from all_companies import set_of_all_companies
 import get_historical_data
 import settings
-import volume_analysis
 
 '''
 import logging 
@@ -18,24 +17,51 @@ mpl_logger.setLevel(logging.WARNING)
 if __name__ == "__main__":
 
 # STRUSTURE:
-# 1. Updating historical data
-# 2. Historical data analysis
-# 3. Make trading decisions
-# 4. Trading
+# 1. Updating historical data collect for chosen timeframe: make db
+# 2. Update dp everery [time] for every single timeframe of db data
+# 3. Historical data analysis
+# 4. Make trading decisions
+# 5. Trading
 
-# 1.1. Historical data collect:
+# 1. Historical data collect:
+	conn = Connection.create(port=7497, clientId=0)
+	conn.connect()
 	for company in set_of_all_companies():
-		get_historical_data.main(company, '3 Y', '1 day')
-# 1.2. Historical data update:
+		get_historical_data.main(conn, company, '1 W', '1 day')
+	conn.disconnect()
 
-# 2. Historical data analysis:
+# проработать ошибки:
+# <error id=-1, errorCode=2103, errorMsg=Market data farm connection is broken:cashfarm>
+
+# <error id=1, errorCode=200, errorMsg=No security definition has been found for the request>
+
+# одна ошибка:
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+
+# <error id=None, errorCode=None, errorMsg=[Errno 54] Connection reset by peer>
+
+# 2. Historical data update:
+
+#	file = open('ergerg.csv')
+#	print(file)
+
+
+
+
+
+
+# 3. Historical data analysis:
 #	company = 'GE'
 #	get_historical_data.main(company, '3 Y', '1 day')
 #	volume_analysis.main(company, '3 Y', '1 day')
 
 '''
-# 3. Make trading decisions
-# 3.1 Get account info:
+# 4. Make trading decisions
+
+# Get account info:
 	def prt_msg(msg):
 		if msg.key == 'BuyingPower' and msg.currency == 'USD':
 			print(f"Buying Power: ${msg.value}")
@@ -58,7 +84,7 @@ if __name__ == "__main__":
 	conn.disconnect()
 '''
 
-# 4. Trading functional:
+# 5. Trading functional:
 #	conn = Connection.create(port=7497, clientId=0)
 #	contract = create_contract('FB', 'STK', 'SMART', 'SMART', 'USD')
 #	conn.registerAll(print_message_from_ib)
