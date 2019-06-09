@@ -8,40 +8,28 @@ from all_companies import set_of_all_companies
 import get_historical_data
 import settings
 
-'''
-import logging 
-mpl_logger = logging.getLogger('matplotlib') 
-mpl_logger.setLevel(logging.WARNING)
-'''
-
-if __name__ == "__main__":
-
-# STRUSTURE:
-# 1. Updating historical data collect for chosen timeframe: make db
+# STRUCTURE:
+# 1. Historical data collect for chosen timeframe: make db
+#	- make new list of companies (only with data) ??
 # 2. Update dp everery [time] for every single timeframe of db data
-# 3. Historical data analysis
+# 3. Historical data analysis:
+#	3.1 Filters make new watch-list:
+#		- not penny-stock
+#		- not low volume
+#	3.2 Analysis:
+#		- volume analysis: signals db
+#		- comare signals and range watchlist by signal force
 # 4. Make trading decisions
 # 5. Trading
+
+if __name__ == "__main__":
 
 # 1. Historical data collect:
 	conn = Connection.create(port=7497, clientId=0)
 	conn.connect()
 	for company in set_of_all_companies():
-		get_historical_data.main(conn, company, '1 W', '1 day')
+		get_historical_data.main(conn, company)
 	conn.disconnect()
-
-# проработать ошибки:
-# <error id=-1, errorCode=2103, errorMsg=Market data farm connection is broken:cashfarm>
-
-# <error id=1, errorCode=200, errorMsg=No security definition has been found for the request>
-
-# одна ошибка:
-# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
-# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
-# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
-# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
-
-# <error id=None, errorCode=None, errorMsg=[Errno 54] Connection reset by peer>
 
 # 2. Historical data update:
 

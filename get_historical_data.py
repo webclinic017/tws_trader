@@ -1,29 +1,4 @@
-# ПРОБЛЕМА: перестает записывать файлы после 5-20 успешных попыток, хотя по списку продолжает проверять
-# не получив ответ от TWS однажды, перестает получать ответы на другие запросы. Помогает перезагрузка TWS
-# но иногда после безответного запроса может давать ответы на другие запросы - если возникает сразу после ошибки 326
-# ОШИБКА, возникающая когда все встает: [Errno 54] Connection reset by peer
-
-'''
-# ОШИБКА ПРИЧИНА ОСТАНОВКИ: 
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.hfarm>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.hfarm>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.jfarm>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfuture>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.jfarm>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfuture>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
-<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
-'''
-# ЕЩЕ ОДНА ОШИБКА ПРИЧИНА ОСТАНОВКИ: <error id=1, errorCode=200, errorMsg=No security definition has been found for the request>
-
 # КАК остановить функцию при получении этой ошибки?
-# ИЛИ как избежать остановки при получении этой ошибки?
-
-# ИНОГДА СОЗДАЮТСЯ ПУСТЫЕ ФАЙЛЫ, хотя данные есть
-
-
 # Как остановить функцию, если файл не создан?
 
 import csv
@@ -32,10 +7,12 @@ import time
 from ib.ext.Contract import Contract
 from ib.ext.Order import Order
 from ib.opt import Connection, dispatcher, message
+from pymongo import MongoClient
 
 from all_companies import set_of_all_companies
+from settings import MONGO_LINK
 
-price_data = ['date;open;close;high;low;volume']
+price_data = []
 
 def create_contract(symbol, sec_type, exch, prim_exch, curr):
 	contract = Contract()
@@ -48,33 +25,65 @@ def create_contract(symbol, sec_type, exch, prim_exch, curr):
 
 def create_price_data_list(msg):
 	if 'finished' not in msg.date:
-		price_data.append(f'{msg.date};{float(msg.open)};{float(msg.close)};{float(msg.high)};{float(msg.low)};{float(msg.volume)};')
+		price_data.append(f'{msg.date};{float(msg.open)};{float(msg.close)};{float(msg.high)};{float(msg.low)};{int(msg.volume)};')
 
-def create_csv_from_dict(price_data, stock_ticker, duration, bar_size):
-	with open(f'historical_data/{stock_ticker} for {duration} by {bar_size}.csv', 'w', encoding='utf-8') as csvfile:
+def create_csv_from_list(price_data, stock_ticker, path):
+	with open(f'{path}{stock_ticker}.csv', 'w', encoding='utf-8') as csvfile:
 		fieldnames = ('date', 'open', 'close', 'high', 'low', 'volume')
 		delimiter=';'
 		a = csv.writer(csvfile, fieldnames, delimiter=delimiter)
 		for row in price_data:
 			a.writerow(row.split(';'))
-	print(f"Для {stock_ticker} успешно собраны данные")
+		print(f"Created csv file for {stock_ticker}")
+		with open(f'{path}!Companies.csv', 'a', encoding='utf-8') as file:
+			file.write(stock_ticker+';')
+	price_data = []
+
+def adding_in_db(stock_ticker, price_data):
+	client = MongoClient(MONGO_LINK)
+	db = client.test
+	db.collection.insert({stock_ticker: price_data})
+	print(f"Added in mongo db prices for {stock_ticker}")
 
 def error_handler(msg):
 	if msg.errorCode == 326:
-		print(f"ERROR {msg.errorCode}: No data permissions for {stock_ticker}")
+		print(f"ERROR {msg.errorCode}: No data permissions for this item")
 	elif msg.errorCode == 2104 or msg.errorCode == 2106:
 		pass
-	elif msg.errorMsg == '[Errno 54] Connection reset by peer':
-		print('[Errno 54] Connection reset by peer')
-		main(stock_ticker, duration, bar_size) # почему не работает?
 	else:
 		print(msg)
+# <error id=-1, errorCode=504, errorMsg=Not connected> - Crucial!
+# <error id=-1, errorCode=2105, errorMsg=HMDS data farm connection is broken:ushmds> - Crucial! IB server may be reseting at this moment
+
+# <error id=1, errorCode=322, errorMsg=Error processing request:-'bI' : cause - Duplicate ticker ID for API historical data query>
+# RFI, SAFT, MFV, JSD, JSM, BIOC, TSM, GGT, EGP, GECC, FUSB, 
+
+# # ОШИБКА: 
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.hfarm>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.hfarm>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfarm.nj>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.jfarm>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfuture>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.jfarm>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.usfuture>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+# <error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+
+# <error id=1, errorCode=200, errorMsg=No security definition has been found for the request>
+# <error id=1, errorCode=200, errorMsg=The contract description specified for <stock_ticker> is ambiguous.>
+# FTEK, AMBCW, SCOR, 
+
+# <error id=None, errorCode=None, errorMsg=[Errno 54] Connection reset by peer>
+# <error id=-1, errorCode=2103, errorMsg=Market data farm connection is broken:cashfarm>
+
 
 def requesting(conn, stock_ticker, duration, bar_size):
 	my_contract = create_contract(stock_ticker, 'STK', 'SMART', 'SMART', 'USD')
 #	conn.registerAll(print)	# this is for errors searching
 	conn.register(create_price_data_list, message.historicalData)
 	conn.register(error_handler, message.Error)
+#	conn.connect()
 	conn.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
 							my_contract,	# your Contract()
 							'',	# endDateTime, The request's end date and time (the empty string indicates current present moment)
@@ -89,18 +98,44 @@ def requesting(conn, stock_ticker, duration, bar_size):
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
 	time.sleep(3)
+#	conn.disconnect()
 
-def main(conn, stock_ticker, duration, bar_size):
+
+
+
+
+def main(conn, stock_ticker):
 	print(f"Requesting data for {stock_ticker}")
-	requesting(conn, stock_ticker, duration, bar_size)
-	create_csv_from_dict(price_data, stock_ticker, duration, bar_size)
+	global price_data
+	
+# Long term
+	requesting(conn, stock_ticker, '3 Y', '1 day')
+	if price_data != []:
+		create_csv_from_list(price_data, stock_ticker, 'historical_data/long_term/')
+#		adding_in_db(stock_ticker, price_data)
+	price_data = []
+
+# Middle term
+	requesting(conn, stock_ticker, '6 M', '2 hours')
+	if price_data != []:
+		create_csv_from_list(price_data, stock_ticker, 'historical_data/middle_term/')
+#		adding_in_db(stock_ticker, price_data)
+	price_data = []
+
+# Short term
+	requesting(conn, stock_ticker, '1 M', '30 mins')
+	if price_data != []:
+		create_csv_from_list(price_data, stock_ticker, 'historical_data/short_term/')
+#		adding_in_db(stock_ticker, price_data)
+	price_data = []
+
 
 # In case of testing:
 if __name__ == '__main__':
 #	for company in set_of_all_companies():
-	company = 'TSLA'
+	company = 'AAPL'
 	c = Connection.create(port=7497, clientId=0)
 	c.connect()
-	main(c, company, '1 W', '1 day')
+	main(c, company)
 	c.disconnect()
 

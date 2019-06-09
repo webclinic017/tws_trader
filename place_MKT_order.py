@@ -9,7 +9,7 @@ import get_historical_data
 import settings
 import volume_analysis
 
-import logging 
+import logging
 mpl_logger = logging.getLogger('matplotlib') 
 mpl_logger.setLevel(logging.WARNING)
 
