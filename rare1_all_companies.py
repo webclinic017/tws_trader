@@ -13,13 +13,4 @@ def set_of_all_companies():
 					useless_companies.add(company)
 	my_companies = all_companies - useless_companies
 
-#	return my_companies
-
-# for test only:
-#	my_companies_test = set()
-#	for company in my_companies:
-#		if company[0] == 'A':
-#			my_companies_test.add(company)
-#	my_companies = my_companies_test
-
 	return my_companies

@@ -2,7 +2,7 @@
 
 import csv
 
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 
 def max_volume_level(stock_ticker, path):
@@ -31,20 +31,23 @@ def max_volume_level(stock_ticker, path):
 	for y in a.index:
 		y_list.append(y)
 
-	return y_list[x_list.index(max(x_list))], max(x_list)
+	a,b = y_list[x_list.index(max(x_list))], max(x_list)
+	print(a,b)
+
+
 # 	total_volumes = 0
 # 	for z in range(0, len(y_list)):
 # 		total_volumes += float(x_list[z])*float(y_list[z])
 # #	print(f"Для {stock_ticker} средняя цена сделки за рассматриваемый париод составила ${round(total_volumes/sum(x_list),2)}")
 
-#	plt.plot(x_list, y_list)
-#	plt.show()
+	plt.plot(x_list, y_list)
+	plt.show()
 
 
-
-
-
-
+def main():
+	path = 'historical_data/long_term/'
+	stock_ticker = 'C'
+	max_volume_level(stock_ticker, path)
 	
 
 	# volume_differents=[]
@@ -57,16 +60,15 @@ def max_volume_level(stock_ticker, path):
 	# 	print(z)
 
 # In case of testing:
-if __name__ == '__main__':
-	stock_ticker = 'CAKE'
-
-	with open(f'historical_data/long_term/!Companies.csv', 'r', encoding='utf-8') as data_file:
-		for row in csv.reader(data_file, delimiter=';'):
-			for stock_ticker in row:
-				print(stock_ticker, max_volume_level(stock_ticker, 'historical_data/long_term/')[0], round(max_volume_level(stock_ticker, 'historical_data/long_term/')[1]/36))
-				print(stock_ticker, max_volume_level(stock_ticker, 'historical_data/middle_term/')[0], round(max_volume_level(stock_ticker, 'historical_data/middle_term/')[1]/6))
-				print(stock_ticker, max_volume_level(stock_ticker, 'historical_data/short_term/')[0], max_volume_level(stock_ticker, 'historical_data/short_term/')[1])
-	#			print(f"{path} Для {stock_ticker} максимальные объемы сделок пришлись на цену ${y_list[x_list.index(max(x_list))]}")
+ if __name__ == '__main__':
+ 	main()
+# 	# with open(f'historical_data/long_term/!Companies.csv', 'r', encoding='utf-8') as data_file:
+# 	# 	for row in csv.reader(data_file, delimiter=';'):
+	# 		for stock_ticker in row:
+	# 			print(stock_ticker, max_volume_level(stock_ticker, 'historical_data/long_term/')[0], round(max_volume_level(stock_ticker, 'historical_data/long_term/')[1]/36))
+	# 			print(stock_ticker, max_volume_level(stock_ticker, 'historical_data/middle_term/')[0], round(max_volume_level(stock_ticker, 'historical_data/middle_term/')[1]/6))
+	# 			print(stock_ticker, max_volume_level(stock_ticker, 'historical_data/short_term/')[0], max_volume_level(stock_ticker, 'historical_data/short_term/')[1])
+	# #			print(f"{path} Для {stock_ticker} максимальные объемы сделок пришлись на цену ${y_list[x_list.index(max(x_list))]}")
 
 
 # Варианты стратегий:
