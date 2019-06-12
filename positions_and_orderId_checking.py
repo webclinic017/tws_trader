@@ -8,11 +8,9 @@ import settings
 open_positions = []
 def get_open_positions_info(msg):
 	open_positions.append(f'{msg.contract.m_symbol};{msg.pos}')
-#	return (open_positions, order_id)
 
 order_id = []
 def get_order_id(msg):
-	print('Order ID from msg:', msg.orderId)
 	order_id.append(msg.orderId)
 
 def create_csv_with_open_positions(open_positions):
@@ -53,6 +51,6 @@ def main(c):
 if __name__ == '__main__':
 	c = Connection.create(port=7497, clientId=0)
 	c.connect()
-	main(c)
+	print(main(c))
 	c.disconnect()
 
