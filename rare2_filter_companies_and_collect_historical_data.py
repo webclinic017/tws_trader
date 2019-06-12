@@ -4,26 +4,16 @@
 import csv
 import time
 
-from ib.ext.Contract import Contract
-from ib.ext.Order import Order
-from ib.opt import Connection, dispatcher, message
+from ib.opt import Connection, message
 from pymongo import MongoClient
 
 from rare1_all_companies import set_of_all_companies
 from settings import MONGO_LINK
 from settings import DURATION, BAR_SIZE
 from settings import PRICE_FILTER, AVERAGE_VOLUME_FILTER
+import utils
 
 price_data = []
-
-def create_contract(symbol, sec_type, exch, prim_exch, curr):
-	contract = Contract()
-	contract.m_symbol = symbol
-	contract.m_secType = sec_type
-	contract.m_exchange = exch
-	contract.m_primaryExch = prim_exch
-	contract.m_currency = curr
-	return contract
 
 def create_price_data_list(msg):
 	if 'finished' not in msg.date:
@@ -97,7 +87,7 @@ def error_handler(msg):
 # <error id=1, errorCode=162, errorMsg=Historical Market Data Service error message:No historical market data for 1527/STK@NYSENBBO Last 1d> TDW
 
 def requesting(conn, stock_ticker):
-	my_contract = create_contract(stock_ticker, 'STK', 'SMART', 'SMART', 'USD')
+	my_contract = utils.create_contract_from_ticker(stock_ticker)
 #	conn.registerAll(print)	# this is for errors searching
 	conn.register(create_price_data_list, message.historicalData)
 	conn.register(error_handler, message.Error)
@@ -143,7 +133,6 @@ def main(conn, stock_ticker):
 
 # In case of testing:
 if __name__ == '__main__':
-#	for company in set_of_all_companies():
 	company = 'AAPL'
 	c = Connection.create(port=7497, clientId=0)
 	c.connect()

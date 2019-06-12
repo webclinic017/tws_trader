@@ -18,7 +18,10 @@ def fast_K_list(list_with_price_data, period, slow_average_period, fast_average_
 				lowest_price_for_period = float(row[4])
 			if float(row[3]) > highest_price_for_period:
 				highest_price_for_period = float(row[3])
-		fast_K = (close_price - lowest_price_for_period) / (highest_price_for_period - lowest_price_for_period) * 100
+		if highest_price_for_period != lowest_price_for_period:
+			fast_K = (close_price - lowest_price_for_period) / (highest_price_for_period - lowest_price_for_period) * 100
+		else:
+			fast_K = 50
 		fast_K_list.insert(0, round(fast_K, 2))
 	return fast_K_list
 
@@ -33,7 +36,7 @@ def slow_average(fast_average_list, slow_average_period):	# slow_average = SMA o
 	slow_average = sum(fast_average_list) / slow_average_period
 	return round(slow_average, 2)
 
-def main(stock_ticker, path_to_data='historical_data/short_term/', period=26, slow_average_period=26, fast_average_period=9):
+def main(stock_ticker, path_to_data='historical_data/', period=26, slow_average_period=26, fast_average_period=9):
 	try:
 		prices = get_data(stock_ticker, path_to_data)
 		if len(prices) >= period + slow_average_period + fast_average_period - 2:
@@ -44,7 +47,7 @@ def main(stock_ticker, path_to_data='historical_data/short_term/', period=26, sl
 		else:
 			return 'ERROR: not enough price data for stochastic with this periods'
 	except(FileNotFoundError):
-		return 'ERROR: File with data did not found'
+		return f'ERROR: File with price data for {stock_ticker} did not found'
 
 # In order to testing:
 if __name__ == '__main__':
