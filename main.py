@@ -42,3 +42,15 @@ if __name__ == "__main__":
 		print('ERROR!')
 		conn.disconnect()
 
+# !Worker1 - filter_all_companies_and_historical_data_update.py	| () | companylist.csv => !MyCompanies.csv + historical_data/
+# !Worker2 - everyday_price_data_collect.py						| () | !MyCompanies.csv => historical_data/
+# !Worker3 - make_watchlist_of_interesting_companies.py			| () | !MyCompanies.csv + historical_data/ =>
+# 																		=> Stoch_watchlist_to_buy.csv + Stoch_watchlist_to_sell.csv
+# !Worker4 - real_signal_awaiter.py								| 
+
+
+
+
+
+
+

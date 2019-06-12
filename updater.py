@@ -57,18 +57,15 @@ def requesting(conn, stock_ticker):
 							)
 	time.sleep(1.5)
 
-def main(conn):
-	companies_with_data = set()
-	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
-		for x in csv.reader(file):
-			for y in x:
-				companies_with_data = set(y.split(';'))
-				companies_with_data -= {''}
+def main(conn, set_of_companies):
 	count = 1
-	for company in companies_with_data:
-		percentage = int((count/len(companies_with_data))*30)
-		print(' ['+'█'*percentage+' '*(30 - percentage)+']', f'{count}/{len(companies_with_data)} Updating data for {company}', end='\r')
-		count += 1
+	for company in set_of_companies:
+		percentage = int((count/len(set_of_companies))*30)
+		if count < len(set_of_companies):
+			print(' ['+'█'*percentage+' '*(30 - percentage)+']', f'{count}/{len(set_of_companies)} Updating data for {company}', ' '*5, end='\r')
+			count += 1
+		else:
+			print(' ['+'█'*percentage+' '*(30 - percentage)+']', f'{count}/{len(set_of_companies)} Updating complete! {company}', ' '*27)
 		requesting(conn, company)
 		global new_price_data
 		data_adding(new_price_data, company)
