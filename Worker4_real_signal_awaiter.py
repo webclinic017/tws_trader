@@ -1,4 +1,5 @@
 import csv
+import time
 
 from ib.opt import Connection
 
@@ -38,6 +39,7 @@ def main(conn):
 	watchlist_to_buy = get_watchlists()[0]
 	watchlist_to_sell = get_watchlists()[1]
 	watchlists = watchlist_to_buy | watchlist_to_sell
+	
 	updater.main(conn, watchlists)
 	companies_to_buy_now = stoch_real_signal_to_buy(watchlist_to_buy)
 	companies_to_sell_now = stoch_real_signal_to_sell(watchlist_to_sell)
@@ -45,8 +47,14 @@ def main(conn):
 
 # In case of testing:
 if __name__ == '__main__':
-	c = Connection.create(port=7497, clientId=0)
-	c.connect()
-	print(main(c))
-	c.disconnect()
+	conn = Connection.create(port=7497, clientId=0)
+	conn.connect()
+	try:
+		main(conn)
+	except(KeyboardInterrupt):
+		print('Bye!')
+		conn.disconnect()
+	except():
+		print('ERROR!')
+		conn.disconnect()
 

@@ -14,7 +14,7 @@ def main(c):
 				companies_with_data -= {''}
 	while True:
 		updater.main(c, companies_with_data)	 # N.B.: 2 D updating depth!
-		time.sleep(60*10)	# Updating every 30 mins (20 mins updatind + 10 mins awaiting)
+		time.sleep(60*60*8)	# Updating every 8 hours + 20 mins to updating process
 
 if __name__ == "__main__":
 	conn = Connection.create(port=7497, clientId=0)

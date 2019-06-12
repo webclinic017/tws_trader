@@ -47,6 +47,7 @@ def main(c):
 
 	open_positions = []
 
+
 # In case of testing:
 if __name__ == '__main__':
 	c = Connection.create(port=7497, clientId=0)

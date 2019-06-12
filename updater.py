@@ -48,7 +48,7 @@ def requesting(conn, stock_ticker):
 	conn.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
 							my_contract,	# your Contract()
 							'',	# endDateTime, The request's end date and time (the empty string indicates current present moment)
-							'3 D',	# durationString, S D W M Y (seconds, days, weeks, months, year)
+							'1 D',	# durationString, S D W M Y (seconds, days, weeks, months, year)
 							BAR_SIZE,	# barSizeSetting, 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
 							"TRADES",	# whatToShow
 							1,	# useRTH, Whether (1) or not (0) to retrieve data generated only within Regular Trading Hours (RTH)
