@@ -25,9 +25,10 @@ def main(conn, company, quantity, action, order_id):
 	order = create_MKT_order(quantity, action)
 	conn.placeOrder(order_id, contract, order)
 
-# if __name__ == "__main__":
-# 	c = Connection.create(port=7497, clientId=0)
-# 	c.connect()
-# 	main(c, 'Z', 1, 'BUY')
-# 	c.disconnect()
+if __name__ == "__main__":
+	c = Connection.create(port=7497, clientId=0)
+	c.connect()
+	order_id = positions_and_orderId_checking.main(c)[1]
+	main(c, 'SYY', 100, 'SELL', order_id)
+	c.disconnect()
 

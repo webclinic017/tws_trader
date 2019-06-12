@@ -51,4 +51,4 @@ def main(stock_ticker, path_to_data='historical_data/', period=26, slow_average_
 
 # In order to testing:
 if __name__ == '__main__':
-	print(main('GE', 'historical_data/short_term/', 26, 26, 9))
+	print(main('ABR', 'historical_data/short_term/', 26, 26, 9))

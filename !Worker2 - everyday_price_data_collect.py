@@ -22,7 +22,7 @@ if __name__ == "__main__":
 	try:
 		main(conn)
 	except(KeyboardInterrupt):
-		print('\nBye!')
+		print('Bye!')
 		conn.disconnect()
 	except():
 		print('ERROR!')

@@ -29,7 +29,7 @@ def filter_companies(price_data):
 		if average_volume >= AVERAGE_VOLUME_FILTER and last_close >= PRICE_FILTER:
 			return True
 		else:
-			print('This security is a \'penny stock\' or illiquid')
+#			print('This security is a \'penny stock\' or illiquid')
 			return False
 
 def create_csv_from_list(price_data, stock_ticker):
@@ -47,19 +47,19 @@ def adding_in_db(stock_ticker, price_data):
 	client = MongoClient(MONGO_LINK)
 	db = client.test
 	db.collection.insert({stock_ticker: price_data})
-	print(f"Added in mongo db prices for {stock_ticker}")
+#	print(f"Added in mongo db prices for {stock_ticker}")
 
 def error_handler(msg):
-	if msg.errorCode == 326:
-		print(f"ERROR {msg.errorCode}: No data permissions for this item")
-	elif msg.errorCode == 2104 or msg.errorCode == 2106:
+#	if msg.errorCode == 326:
+#		print(f"ERROR {msg.errorCode}: No data permissions for this item")
+	if msg.errorCode == 2104 or msg.errorCode == 2106:
 		pass
 	elif msg.errorCode == 2103 or msg.errorCode == 504:
-		print('CONNECTION ERROR!')
-		print(msg)
+#		print('CONNECTION ERROR!')
+#		print(msg)
 		exit()
-	else:
-		print(msg)
+#	else:
+#		print(msg)
 
 # <error id=-1, errorCode=2105, errorMsg=HMDS data farm connection is broken:ushmds> - Crucial! IB server may be reseting at this moment
 
@@ -105,7 +105,7 @@ def requesting(conn, stock_ticker):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(3)
+	time.sleep(2.5)
 #	conn.disconnect()
 
 def check_data_existing(stock_ticker):
@@ -119,16 +119,16 @@ def check_data_existing(stock_ticker):
 		return True	# we already have data for this company
 
 def main(conn, stock_ticker):
-	print(f"Requesting data for {stock_ticker}")
+#	print(f"Requesting data for {stock_ticker}", end='\r')
 	global price_data
 	if check_data_existing(stock_ticker):
 		requesting(conn, stock_ticker)
 		if filter_companies(price_data):
 			create_csv_from_list(price_data, stock_ticker)
-			print(f"Created csv file with price data for {stock_ticker}")
+#			print(f"Created csv file with price data for {stock_ticker}")
 	#	adding_in_db(stock_ticker, price_data)
-	else:
-		print(f'We already have price data for {stock_ticker}')
+#	else:
+#		print(f'We already have price data for {stock_ticker}')
 	price_data = []
 
 # In case of testing:

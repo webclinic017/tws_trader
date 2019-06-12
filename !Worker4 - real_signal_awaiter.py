@@ -1,12 +1,9 @@
 import csv
-import time
 
-from ib.opt import Connection, message
+from ib.opt import Connection
 
-from settings import DURATION, BAR_SIZE
 import stochastic
 import updater
-import utils
 
 def get_watchlists():	# Make a set of companies (from pre-signal)
 	watchlist_to_buy = set()
@@ -34,7 +31,7 @@ def stoch_real_signal_to_sell(set_of_companies):
 	companies_to_sell_now = set()
 	for company in set_of_companies:
 		if stochastic.main(company)[1] - stochastic.main(company)[0] >= 2:	# %K < %D
-			companies_to_buy_now.add(company)
+			companies_to_sell_now.add(company)
 	return companies_to_sell_now
 
 def main(conn):
