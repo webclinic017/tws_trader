@@ -9,9 +9,9 @@ open_positions = []
 def get_open_positions_info(msg):
 	open_positions.append(f'{msg.contract.m_symbol};{msg.pos}')
 
-order_id = []
 def get_order_id(msg):
-	order_id.append(msg.orderId)
+	with open('!NextValidId.csv', 'w', encoding='utf-8') as csvfile:
+		csvfile.write(str(msg.orderId))
 
 def create_csv_with_open_positions(open_positions):
 	with open('!MyPositions.csv', 'w', encoding='utf-8') as csvfile:
@@ -20,13 +20,6 @@ def create_csv_with_open_positions(open_positions):
 		a = csv.writer(csvfile, fieldnames, delimiter=delimiter)
 		for row in open_positions:
 			a.writerow(row.split(';'))
-
-# как вызывать эту функцию мимо main? Может ее в класс запихнуть?
-def companies_in_position():
-	companies_in_position = set()
-	for row in open_positions:
-		companies_in_dposition.add(row.split(';')[0])
-	return companies_in_position
 
 def main(c):
 	global open_positions
@@ -38,10 +31,13 @@ def main(c):
 
 	companies_in_position = set()
 	for row in open_positions:
-		companies_in_position.add(row.split(';')[0])
+		if int(row.split(';')[1]) != 0:
+			companies_in_position.add(row.split(';')[0])
 
-	global order_id
-	orderid = order_id[0]
+	orderid = None
+	with open('!NextValidId.csv', 'r', encoding='utf-8') as file:
+		for next_id in csv.reader(file):
+			orderid = next_id[0]
 
 	return (companies_in_position, orderid)
 

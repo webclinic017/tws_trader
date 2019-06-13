@@ -68,7 +68,8 @@ def main(conn, set_of_companies):
 			print(' ['+'█'*percentage+' '*(30 - percentage)+']', f'{count}/{len(set_of_companies)} Updating data for {company}', ' '*5, end='\r')
 			count += 1
 		else:
-			print(' ['+'█'*percentage+' '*(30 - percentage)+']', f'{count}/{len(set_of_companies)} Updating complete!', ' '*27)
+			time_now = time.strftime("%m/%d/%Y %I:%M %p", time.gmtime())
+			print(' ['+'█'*percentage+' '*(30 - percentage)+']', f'{count}/{len(set_of_companies)} Updating complete!', time_now)
 		requesting(conn, company)
 		global new_price_data
 		data_adding(new_price_data, company)

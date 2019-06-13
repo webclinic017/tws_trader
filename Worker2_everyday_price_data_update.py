@@ -3,6 +3,7 @@ import time
 
 from ib.opt import Connection
 
+import making_watchlist_of_interesting_companies
 import updater
 
 def main(c):
@@ -12,9 +13,10 @@ def main(c):
 			for y in x:
 				companies_with_data = set(y.split(';'))
 				companies_with_data -= {''}
-	while True:
-		updater.main(c, companies_with_data)	 # N.B.: 2 D updating depth!
-		time.sleep(60*60*8)	# Updating every 8 hours + 20 mins to updating process
+
+	updater.main(c, companies_with_data)	 # N.B.: 1 D updating depth!
+
+	making_watchlist_of_interesting_companies.main()
 
 if __name__ == "__main__":
 	conn = Connection.create(port=7497, clientId=0)

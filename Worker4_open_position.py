@@ -28,11 +28,13 @@ def quantity_calculate(stock_ticker):
 	return int(quantity)
 
 def main(conn, company, action, order_id):
-	quantity = quantity_calculate(company)
-	order_id = positions_and_orderId_checking.main(conn)[1]
-	contract = utils.create_contract_from_ticker(company)
-	order = create_MKT_order(quantity, action)
-	conn.placeOrder(order_id, contract, order)
+	set_of_companies_in_position = positions_and_orderId_checking.main(c)[0]
+	if company not in set_of_companies_in_position:
+		quantity = quantity_calculate(company)
+		contract = utils.create_contract_from_ticker(company)
+		order = create_MKT_order(quantity, action)
+		conn.placeOrder(order_id, contract, order)
+		time.sleep(3)
 
 if __name__ == "__main__":
 	c = Connection.create(port=7497, clientId=0)
