@@ -24,14 +24,14 @@ def get_watchlists():	# Make a set of companies (from pre-signal)
 def stoch_real_signal_to_buy(set_of_companies):
 	companies_to_buy_now = set()
 	for company in set_of_companies:
-		if stochastic.main(company)[0] - stochastic.main(company)[1] >= 2:	# %K > %D
+		if stochastic.main(company)[0] - stochastic.main(company)[1] >= 4:	# %K > %D
 			companies_to_buy_now.add(company)
 	return companies_to_buy_now
 
 def stoch_real_signal_to_sell(set_of_companies):
 	companies_to_sell_now = set()
 	for company in set_of_companies:
-		if stochastic.main(company)[1] - stochastic.main(company)[0] >= 2:	# %K < %D
+		if stochastic.main(company)[1] - stochastic.main(company)[0] >= 4:	# %K < %D
 			companies_to_sell_now.add(company)
 	return companies_to_sell_now
 

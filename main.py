@@ -15,9 +15,13 @@ def SEs_should_work_now():
 	if work_day == 1 or work_day == 6:
 		work_day = False
 		return False
+	else:
+		return True
 	if work_day:
-		if hours_now < 14 or hours_now > 19:
+		if hours_now < 13 or hours_now > 19:
 			return False
+	else:
+		return True
 
 def main(c):
 # '''This is traiding robot. It trades stocks at u.s. echanges.
@@ -50,6 +54,7 @@ def main(c):
 				order_id += 1
 		time.sleep(60*25)	# 25 mins
 	else:
+		print(SEs_should_work_now())
 		if int(time.strftime("%H", time.gmtime())) == 21:	# = 00:00 MSK
 			Worker2_everyday_price_data_update.main(c)
 		else:

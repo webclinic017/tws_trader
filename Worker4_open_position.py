@@ -48,7 +48,7 @@ def quantity_calculate(stock_ticker):
 	return int(quantity)
 
 def main(conn, company, action, order_id):
-	set_of_companies_in_position = positions_and_orderId_checking.main(c)[0]
+	set_of_companies_in_position = positions_and_orderId_checking.main(conn)[0]
 	if company not in set_of_companies_in_position:
 		quantity = quantity_calculate(company)
 		contract = utils.create_contract_from_ticker(company)
