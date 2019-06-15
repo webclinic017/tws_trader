@@ -48,6 +48,7 @@ def main(c):
 if __name__ == '__main__':
 	c = Connection.create(port=7497, clientId=0)
 	c.connect()
+	c.registerAll(print)
 	print(main(c))
 	c.disconnect()
 

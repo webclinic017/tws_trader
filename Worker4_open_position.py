@@ -15,6 +15,7 @@ def create_MKT_order(stock_ticker, quantity, action, order_id):
 	parent_order.m_totalQuantity = quantity
 	parent_order.m_action = action
 	parent_order.order_id = order_id
+	parent_order.transmit = False
 
 	last_price = None
 	with open(f'historical_data/{stock_ticker}.csv', 'r', encoding='utf-8') as data_file:
@@ -28,6 +29,7 @@ def create_MKT_order(stock_ticker, quantity, action, order_id):
 	tp.m_lmtPrice = round(last_price * (1 + TP / 100), 2)
 	tp.order_id = order_id + 1
 	tp.m_parentId = order_id
+	tp.transmit = False
 
 	sl = Order()
 	sl.m_orderType = 'STP'
@@ -36,6 +38,7 @@ def create_MKT_order(stock_ticker, quantity, action, order_id):
 	sl.m_auxPrice = round(last_price * (1 - SL / 100), 2)
 	sl.order_id = order_id + 2
 	sl.m_parentId = order_id
+	sl.transmit = True
 
 	return [parent_order, tp, sl]
 

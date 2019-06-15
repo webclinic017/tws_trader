@@ -35,21 +35,23 @@ def main(c):
 
 	# Worker1_filter_all_companies_and_historical_data_update.main(c)	# needs very seldom
 
-	if SEs_should_work_now():
+	if True:	#SEs_should_work_now():
 		companies_to_place_order = Worker3_real_signal_awaiter.main(c)
 		set_of_companies_to_buy = companies_to_place_order[0]
 		set_of_companies_to_sell = companies_to_place_order[1]
 		print(f'Found {len(set_of_companies_to_buy)} companies to buy: {set_of_companies_to_buy}')
-		print(f'Found {len(set_of_companies_to_sell)} companies to buy: {set_of_companies_to_sell}')
+		print(f'Found {len(set_of_companies_to_sell)} companies to sell: {set_of_companies_to_sell}')
 		order_id = int(positions_and_orderId_checking.main(c)[1])
 		if set_of_companies_to_buy != set():
 			for company in set_of_companies_to_buy:
+				print(f'Buying {company}')
 				Worker4_open_position.main(c, company, 'BUY', order_id)
-				order_id += 1
+				order_id += 3
 		if set_of_companies_to_sell != set():
 			for company in set_of_companies_to_sell:
+				print(f'Selling {company}')
 				Worker4_open_position.main(c, company, 'SELL', order_id)
-				order_id += 1
+				order_id += 3
 		time.sleep(60*25)	# 25 mins
 	else:
 		if int(time.strftime("%H", time.gmtime())) == 21:	# = 00:00 MSK

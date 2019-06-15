@@ -1,0 +1,62 @@
+<error id=14, errorCode=201, errorMsg=Order rejected - reason:The parent order is being canceled.>
+<error id=15, errorCode=201, errorMsg=Order rejected - reason:The parent order is being canceled.>
+<error id=16, errorCode=399, errorMsg=Order Message:
+BUY 496 PLAY NASDAQ.NMS
+Warning: Your order was repriced so as not to cross a related resting order>
+<error id=16, errorCode=399, errorMsg=Order Message:
+BUY 496 PLAY NASDAQ.NMS
+Warning: Your order was repriced so as not to cross a related resting order>
+<error id=20, errorCode=163, errorMsg=The following order "ID:20" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=20, errorCode=163, errorMsg=The following order "ID:20" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=20, errorCode=163, errorMsg=The following order "ID:20" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=23, errorCode=163, errorMsg=The following order "ID:23" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=23, errorCode=163, errorMsg=The following order "ID:23" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=23, errorCode=163, errorMsg=The following order "ID:23" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=26, errorCode=201, errorMsg=Order rejected - reason:The parent order is being canceled.>
+<error id=27, errorCode=201, errorMsg=Order rejected - reason:The parent order is being canceled.>
+<error id=29, errorCode=163, errorMsg=The following order "ID:29" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=29, errorCode=163, errorMsg=The following order "ID:29" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=29, errorCode=163, errorMsg=The following order "ID:29" price exceeds
+the Percentage constraint of 3%.
+Restriction is specified in Precautionary Settings of Global Configuration/Presets.>
+<error id=33, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=33, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=30, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=30, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=21, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=21, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=24, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=24, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+<error id=-1, errorCode=2108, errorMsg=Market data farm connection is inactive but should be available upon demand.cashfarm>
+<error id=12, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=6, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=11, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=6, errorCode=201, errorMsg=Order rejected - reason:No such order: order done>
+<error id=5, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=12, errorCode=201, errorMsg=Order rejected - reason:No such order>
+<error id=9, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=3, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=18, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=3, errorCode=201, errorMsg=Order rejected - reason:No such order: order done>
+<error id=18, errorCode=201, errorMsg=Order rejected - reason:No such order: order done>
+<error id=8, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=2, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=17, errorCode=202, errorMsg=Order Canceled - reason:>
+<error id=9, errorCode=201, errorMsg=Order rejected - reason:No such order>
