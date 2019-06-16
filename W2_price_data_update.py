@@ -14,7 +14,7 @@ def main(c):
 				companies_with_data = set(y.split(';'))
 				companies_with_data -= {''}
 
-	updater.main(c, companies_with_data)	 # N.B.: 1 D updating depth!
+	updater.main(c, companies_with_data)
 
 	making_watchlist_of_interesting_companies.main()
 

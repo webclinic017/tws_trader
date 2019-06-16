@@ -4,6 +4,7 @@ import time
 from ib.ext.Order import Order
 from ib.opt import Connection, message
 
+import orders_checking
 import positions_and_orderId_checking
 from settings import POSITION_QUANTITY, TP, SL
 import utils
@@ -52,13 +53,27 @@ def quantity_calculate(stock_ticker):
 
 def main(conn, company, action, order_id):
 	set_of_companies_in_position = positions_and_orderId_checking.main(conn)[0]
+	set_of_companies_in_orders = orders_checking.main(conn)
+
+##### If connection is bad:
+	# set_of_companies_in_orders = set()
+	# with open(f'!MyOrders.csv', 'r', encoding='utf-8') as file:
+	# 	for x in csv.reader(file, delimiter=';'):
+	# 		for y in x:
+	# 			set_of_companies_in_orders.add(y)
+
 	if company not in set_of_companies_in_position:
-		quantity = quantity_calculate(company)
-		contract = utils.create_contract_from_ticker(company)
-		bracket_order = create_MKT_order(company, quantity, action, order_id)
-		for order in bracket_order:
-			conn.placeOrder(order.order_id, contract, order)
-		time.sleep(3)
+		if company not in set_of_companies_in_orders:
+			quantity = quantity_calculate(company)
+			contract = utils.create_contract_from_ticker(company)
+			bracket_order = create_MKT_order(company, quantity, action, order_id)
+			for order in bracket_order:
+				conn.placeOrder(order.order_id, contract, order)
+			time.sleep(3)
+		else:
+			print(f'{company} is already in order')
+	else:
+		print(f'{company} is already in position')
 
 if __name__ == "__main__":
 	c = Connection.create(port=7497, clientId=0)
