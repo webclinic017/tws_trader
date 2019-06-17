@@ -5,12 +5,8 @@
 # 2. запихнуть "стратегию" в настройки, main сделать по типу воронки
 
 # 1. GET abd FILTER all companies:
-# - если инструмент перестал торговаться - последняя дата старше 1 рабочего дня, то не собираем инфу по инструменту
-# - rare2 - line 42 - replace 'a' to 'w'
 # - Сбор данных - прикрутить вторую попытку на основе определенных ошибок + показывать результат оставшихся "ошибок"
-# - сделать header
 # - может сразу добавлять данные индекатора в исторические данные?
-# - очищать файлы перед записью где flag = 'a'
 
 # 4. WATCH for signals:
 # - Here I found ... companies to buy - исключить те, которые уже куплены и выставлены ордера
@@ -30,6 +26,8 @@
 # 	get price data 						| 2/10		|			| !MyCompanies.csv +	|
 # 										|			|			| + historical data 	|
 # 2. SORT companies						| 4/10		|			| 	list of companies	| !MyCompanies + ...
+
+#######################################################################################################################
 # 3. UPDATE data 						| 10/10		|			| 	list of companies	| !MyCompanies + ...
 # 4. WATCH for trade signals			| 10/10		| strategy	| 	buy or sell signal	| 
 # 5. TRADE with strong trading signals	| 10/10		|			| 						|
@@ -58,15 +56,16 @@ import time
 from ib.opt import Connection
 
 import W1_filter_all_companies_and_get_price_data
-import W2_price_data_update
+import W2_price_data_updater
 import Worker3_real_signal_awaiter
 import Worker4_open_position
 import positions_and_orderId_checking
 import utils
 
 def main(c):
-
-	# W1_filter_all_companies_and_get_price_data.main(c)	# needs very seldom
+	##### needs very seldom
+	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
+	# W1_filter_all_companies_and_get_price_data.main(c)
 
 	if True:	#utils.SEs_should_work_now():
 		companies_to_place_order = Worker3_real_signal_awaiter.main(c)
@@ -88,7 +87,7 @@ def main(c):
 		time.sleep(60*25)	# 25 mins
 	else:
 		if int(time.strftime("%H", time.gmtime())) == 21:	# = 00:00 MSK
-			W2_price_data_update.main(c)
+			W2_price_data_updater.main(c)
 		else:
 			print(' Stock exchange is not working now. Awaiting till it opens.', end = '\r')
 			time.sleep(60*25)	# 25 mins

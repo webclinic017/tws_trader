@@ -7,27 +7,36 @@ from ib.opt import Connection, message
 from settings import BAR_SIZE
 import utils
 
+def get_set_of_companies_to_update():
+	companies_with_data = set()
+	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
+		for x in csv.reader(file):
+			for y in x:
+				companies_with_data = set(y.split(';'))
+				companies_with_data -= {''}
+	return companies_with_data
+
 new_price_data = []
 def new_price_data_list(msg):
 	if 'finished' not in msg.date:
-		new_price_data.append(f'{msg.date};{float(msg.open)};{float(msg.high)};{float(msg.low)};{float(msg.close)};{int(msg.volume)};')
+		new_price_data.append(f'{msg.date};{float(msg.open)};{float(msg.high)};{float(msg.low)};{float(msg.close)};{int(msg.volume)}')
 
 def data_adding(new_price_data, stock_ticker):
 	last_date = None
 	with open(f'historical_data/{stock_ticker}.csv', 'r', encoding='utf-8') as data_file:
 		last_date = list(csv.reader(data_file, delimiter=';'))[-1][0]	# last date in collected data
 	
-	i = -1
+	i = -1	# index of the last row in file with data
 	for row in new_price_data:
 		if last_date in row:
-			i = new_price_data.index(row)	# new prices cince this index in new_price_data
+			i = new_price_data.index(row)	# new prices since next from this index in new_price_data
 	if i == -1 and new_price_data != []:
-		print(f'{stock_ticker} needs in updating with more depth. Last data was collected: {last_date}')
+		print(f'ERROR: for {stock_ticker} can\'t choose appropriate duration.')
 		exit()
+
 	with open(f'historical_data/{stock_ticker}.csv', 'a', encoding='utf-8') as data_file:
 		fieldnames = ('date', 'open', 'high', 'low', 'close', 'volume')
-		delimiter=';'
-		a = csv.writer(data_file, fieldnames, delimiter=delimiter)
+		a = csv.writer(data_file, fieldnames, delimiter=';')
 		for row in new_price_data[i+1:]:
 			a.writerow(row.split(';'))
 
@@ -71,7 +80,8 @@ def requesting(conn, company, duration):
 							)
 	time.sleep(1.5)
 
-def main(conn, set_of_companies):
+def main(conn):
+	set_of_companies = get_set_of_companies_to_update()
 	count = 1
 	for company in set_of_companies:
 		duration = duration_calculate(company)
@@ -80,13 +90,18 @@ def main(conn, set_of_companies):
 		data_adding(new_price_data, company)
 		utils.print_loading(count, len(set_of_companies), company)
 		count += 1
-
-	new_price_data = []
+		new_price_data = []
 
 # # In case of testing:
-if __name__ == '__main__':
-	c = Connection.create(port=7497, clientId=0)
-	c.connect()
-	main(c, {'AAPL'})
-	c.disconnect()
+if __name__ == "__main__":
+	conn = Connection.create(port=7497, clientId=0)
+	conn.connect()
+	try:
+		main(conn)
+	except(KeyboardInterrupt):
+		print('Bye!')
+		conn.disconnect()
+	except():
+		print('FATAL ERROR!')
+		conn.disconnect()
 

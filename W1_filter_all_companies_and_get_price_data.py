@@ -2,8 +2,9 @@ import csv
 
 from ib.opt import Connection
 
-from worker1 import filter_apply_and_collect_price_data_for_company
+import filter_apply_and_collect_price_data_for_company
 import utils
+import write_indicators_in_price_data
 
 def set_of_all_companies():
 	all_companies=set()
@@ -20,11 +21,12 @@ def set_of_all_companies():
 	return my_companies
 
 def main(conn):
-	duration = '1 M'
+	duration = '6 M'
 	set_of_companies = set_of_all_companies()
 	count = 1
 	for company in set_of_companies:
 		filter_apply_and_collect_price_data_for_company.main(conn, company, duration)
+		write_indicators_in_price_data.main(company)
 		utils.print_loading(count, len(set_of_companies), company)
 		count += 1
 
@@ -42,6 +44,7 @@ if __name__ == "__main__":
 	conn = Connection.create(port=7497, clientId=0)
 	conn.connect()
 	try:
+	#	utils.clear_all_about_collected_price_data()
 		main(conn)
 	except(KeyboardInterrupt):
 		print('Bye!')

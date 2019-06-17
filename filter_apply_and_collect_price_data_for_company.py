@@ -1,13 +1,9 @@
-# КАК остановить функцию при получении этой ошибки?
-# Как остановить функцию, если файл не создан?
-
 import csv
 import time
 
 from ib.opt import Connection, message
 from pymongo import MongoClient
 
-from .all_companies import set_of_all_companies
 from settings import MONGO_LINK
 from settings import BAR_SIZE
 from settings import PRICE_FILTER, AVERAGE_VOLUME_FILTER
@@ -16,9 +12,9 @@ import utils
 price_data = []
 def create_price_data_list(msg):
 	if 'finished' not in msg.date:
-		price_data.append(f'{msg.date};{float(msg.open)};{float(msg.high)};{float(msg.low)};{float(msg.close)};{int(msg.volume)};')
+		price_data.append(f'{msg.date};{float(msg.open)};{float(msg.high)};{float(msg.low)};{float(msg.close)};{int(msg.volume)}')
 
-def filter_apply(price_data):
+def filter_apply(price_data, stock_ticker):
 	if price_data != []:
 		sum_volume = 0
 		for i in range(0, len(price_data)):
@@ -26,19 +22,21 @@ def filter_apply(price_data):
 		average_volume = int(sum_volume / len(price_data))
 		last_close = float(price_data[-1].split(';')[2])
 		if average_volume >= AVERAGE_VOLUME_FILTER and last_close >= PRICE_FILTER:
-			return True
+			return True	# good company
 		else:
-			return False
+			with open(f'!RejectedCompanies.csv', 'a', encoding='utf-8') as file:
+				file.write(stock_ticker+';')
+			return False # penny stock or illiquid
 
 def create_csv_from_list(price_data, stock_ticker):
-	with open(f'./historical_data/{stock_ticker}.csv', 'w', encoding='utf-8') as csvfile:
-		fieldnames = ('date', 'open', 'high', 'low', 'close', 'volume')
-		delimiter=';'
-		a = csv.writer(csvfile, fieldnames, delimiter=delimiter)
+	with open(f'historical_data/{stock_ticker}.csv', 'w', encoding='utf-8') as csvfile:
+		a = csv.writer(csvfile, delimiter=';')
+		header = ('date', 'open', 'high', 'low', 'close', 'volume')
+		a.writerow(header)
 		for row in price_data:
 			a.writerow(row.split(';'))
-		with open(f'./!MyCompanies.csv', 'a', encoding='utf-8') as file:
-			file.write(stock_ticker+';')
+	with open(f'!MyCompanies.csv', 'a', encoding='utf-8') as file:
+		file.write(stock_ticker+';')
 	price_data = []
 
 def adding_in_db(stock_ticker, price_data):
@@ -56,9 +54,9 @@ def error_handler(msg):
 		print('CONNECTION ERROR!')
 		exit()
 	else:
-		error_text = str(msg.errorCode) + ';' + msg.errorMsg
+		error_text = str(msg.errorCode) + ';' + str(msg.errorMsg)
 		error_list.append(error_text)
-		print(msg)
+		# print(msg)
 
 def write_errors(error_list, stock_ticker):
 	with open(f'worker1/Errors.csv', 'a', encoding='utf-8') as csvfile:
@@ -85,39 +83,43 @@ def requesting(conn, stock_ticker, duration):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(2.5)
+	time.sleep(4)
 
 	global error_list
 	if error_list != []:
 		write_errors(error_list, stock_ticker)
 		error_list = []
 
-def check_data_existing(stock_ticker):
-	with open(f'./!MyCompanies.csv', 'r', encoding='utf-8') as file:
+def data_already_requested(stock_ticker):
+	requested_companies = []
+	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
 		for x in csv.reader(file):
 			for y in x:
-				companies_with_data = y.split(';')
-	if stock_ticker in companies_with_data:
-		return False	# we do not have any data for this company yet
+				requested_companies = y.split(';')
+	with open(f'!RejectedCompanies.csv', 'r', encoding='utf-8') as file:
+		for x in csv.reader(file):
+			for y in x:
+				requested_companies = y.split(';')
+	if stock_ticker in requested_companies:
+		return False	# we already checked this company
 	else:
-		return True	# we already have data for this company
+		return True	# we heve not checked this company
 
 def main(conn, stock_ticker, duration):
 	global price_data
-	if check_data_existing(stock_ticker):
+	if data_already_requested(stock_ticker):
 		requesting(conn, stock_ticker, duration)
-		if filter_apply(price_data):
+		if filter_apply(price_data, stock_ticker):
 			create_csv_from_list(price_data, stock_ticker)
-		else:
-			write_errors(['filtered'], stock_ticker)
 	else:
-		write_errors(['We already have price data'], stock_ticker)
+		write_errors(['We\'ve already checked this company'], stock_ticker)
 	price_data = []
 
 # In case of testing:
 if __name__ == '__main__':
-	company = 'AAPL'
+	company = 'TQQQ'
 	c = Connection.create(port=7497, clientId=0)
 	c.connect()
-	main(c, company)
+	main(c, company, '6 M')
 	c.disconnect()
+

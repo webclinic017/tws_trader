@@ -31,3 +31,7 @@ def print_loading(done_number, total_number, company):
 		time_now = time.strftime("%m/%d/%Y %I:%M %p", time.gmtime())
 		print(f' {int(round(percentage*3.33, 0))}% |'+'█'*percentage+' '*(30 - percentage)+'|', f'{done_number}/{total_number} Updating complete!', time_now)
 
+def clear_all_about_collected_price_data():
+	open('worker1/Errors.csv', "w+").close()
+	open('!MyCompanies.csv', "w+").close()
+	open('!RejectedCompanies.csv', "w+").close()
