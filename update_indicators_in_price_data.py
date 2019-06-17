@@ -22,7 +22,10 @@ def delete_columns_with_indicator(prices): 	# m.b. with pandas.DataFrame it woul
 		if '%' in title:
 			x = 0	# row number
 			for row in prices:
-				row.remove(row[i])
+				try:
+					row.remove(row[i])
+				except(IndexError):	# if new prices was added without indicator's values
+					continue
 			i -= 1
 		i += 1
 	return prices

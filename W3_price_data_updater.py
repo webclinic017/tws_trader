@@ -6,15 +6,7 @@ from ib.opt import Connection, message
 
 from settings import BAR_SIZE
 import utils
-
-def get_set_of_companies_to_update():
-	companies_with_data = set()
-	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
-		for x in csv.reader(file):
-			for y in x:
-				companies_with_data = set(y.split(';'))
-				companies_with_data -= {''}
-	return companies_with_data
+import W2_sort_companies
 
 new_price_data = []
 def new_price_data_list(msg):
@@ -81,14 +73,15 @@ def requesting(conn, company, duration):
 	time.sleep(1.5)
 
 def main(conn):
-	set_of_companies = get_set_of_companies_to_update()
+	companies = W2_sort_companies.sort()
 	count = 1
-	for company in set_of_companies:
+	for company in companies:
 		duration = duration_calculate(company)
 		requesting(conn, company, duration)
 		global new_price_data
 		data_adding(new_price_data, company)
-		utils.print_loading(count, len(set_of_companies), company)
+		update_indicators_in_price_data.main(company)	# updates whole data! Needs to modify to work faster.
+		utils.print_loading(count, len(companies), company)
 		count += 1
 		new_price_data = []
 

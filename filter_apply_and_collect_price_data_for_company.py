@@ -28,7 +28,7 @@ def filter_apply(price_data, stock_ticker):
 				file.write(stock_ticker+';')
 			return False # penny stock or illiquid
 
-def create_csv_from_list(price_data, stock_ticker):
+def create_csv_from_list(price_data, stock_ticker): # !!!!!!! сделать глобальную переменную или типа того чтобы считывать только один раз
 	with open(f'historical_data/{stock_ticker}.csv', 'w', encoding='utf-8') as csvfile:
 		a = csv.writer(csvfile, delimiter=';')
 		header = ('date', 'open', 'high', 'low', 'close', 'volume')
@@ -83,7 +83,7 @@ def requesting(conn, stock_ticker, duration):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(4)
+	time.sleep(3.6)
 
 	global error_list
 	if error_list != []:
@@ -96,11 +96,12 @@ def data_already_requested(stock_ticker):
 		for x in csv.reader(file):
 			for y in x:
 				requested_companies = y.split(';')
+	requested_companies2 = []
 	with open(f'!RejectedCompanies.csv', 'r', encoding='utf-8') as file:
 		for x in csv.reader(file):
 			for y in x:
-				requested_companies = y.split(';')
-	if stock_ticker in requested_companies:
+				requested_companies2 = y.split(';')
+	if stock_ticker in requested_companies or stock_ticker in requested_companies2:
 		return False	# we already checked this company
 	else:
 		return True	# we heve not checked this company

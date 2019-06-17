@@ -1,5 +1,6 @@
 from ib.ext.Contract import Contract
 
+import csv
 import time
 
 def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch='SMART', curr='USD'):
@@ -35,3 +36,20 @@ def clear_all_about_collected_price_data():
 	open('worker1/Errors.csv', "w+").close()
 	open('!MyCompanies.csv', "w+").close()
 	open('!RejectedCompanies.csv', "w+").close()
+
+def set_with_my_companies():
+	companies_with_data = set()
+	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
+		for x in csv.reader(file):
+			for y in x:
+				companies_with_data = set(y.split(';'))
+				companies_with_data -= {''}
+	return companies_with_data
+
+def get_price_data(stock_ticker):
+	list_with_price_data=[]
+	with open(f'historical_data/{stock_ticker}.csv', 'r', encoding='utf-8') as data_file:
+		for row in csv.reader(data_file, delimiter=';'):
+			list_with_price_data.append(row)
+	return list_with_price_data
+
