@@ -24,8 +24,8 @@ def data_adding(new_price_data, stock_ticker):
 		if last_date in row:
 			i = new_price_data.index(row)	# new prices since next from this index in new_price_data
 	if i == -1 and new_price_data != []:
-		print(f'ERROR: for {stock_ticker} can\'t choose appropriate duration.')
-		exit()
+		print(f'\nERROR: for {stock_ticker} can\'t choose appropriate duration.')
+#		exit()
 
 	with open(f'historical_data/{stock_ticker}.csv', 'a', encoding='utf-8') as data_file:
 		fieldnames = ('date', 'open', 'high', 'low', 'close', 'volume')

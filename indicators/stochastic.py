@@ -44,8 +44,8 @@ def main(prices, parameters=(26, 26, 9)):
 			prices[-i].append(fastaverage)
 			prices[-i].append(slowaverage)
 		else:
-			prices[-i].append(0)
-			prices[-i].append(0)
+			prices[-i].append(-1)
+			prices[-i].append(-1)
 	return prices
 
 # In order to testing:
