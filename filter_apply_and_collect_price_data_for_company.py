@@ -112,8 +112,8 @@ def main(conn, stock_ticker, duration):
 		requesting(conn, stock_ticker, duration)
 		if filter_apply(price_data, stock_ticker):
 			create_csv_from_list(price_data, stock_ticker)
-	else:
-		write_errors(['We\'ve already checked this company'], stock_ticker)
+	# else:
+#		write_errors(['We\'ve already checked this company'], stock_ticker)
 	price_data = []
 
 # In case of testing:

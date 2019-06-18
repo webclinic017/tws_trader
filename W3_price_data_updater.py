@@ -5,6 +5,7 @@ import time
 from ib.opt import Connection, message
 
 from settings import BAR_SIZE
+import update_indicators_in_price_data
 import utils
 import W2_sort_companies
 
@@ -76,13 +77,13 @@ def main(conn):
 	companies = W2_sort_companies.sort()
 	count = 1
 	for company in companies:
+		utils.print_loading(count, len(companies), company)
+		count += 1
 		duration = duration_calculate(company)
 		requesting(conn, company, duration)
 		global new_price_data
 		data_adding(new_price_data, company)
 		update_indicators_in_price_data.main(company)	# updates whole data! Needs to modify to work faster.
-		utils.print_loading(count, len(companies), company)
-		count += 1
 		new_price_data = []
 
 # # In case of testing:
