@@ -11,8 +11,13 @@
 # - перестал торговаться - данные не собираем. последняя дата данных должна быть свежей
 # - Сбор данных - прикрутить вторую попытку на основе определенных ошибок + показывать результат оставшихся "ошибок"
 # - может сразу добавлять данные индекатора в исторические данные?
-# - иногда tws путает close и volume при сборе данных!!! - Как решить? HOME, AXSM (20190611  21:30:00), DUK (20190222  19:30:00)
+# - иногда tws путает close и volume при сборе данных!!! - Как решить? HOME,
+# AXSM (20190611  21:30:00),
+# DUK (20190222  19:30:00)
+# XOM 20190318  21:30:00
 # A (20190102  19:30:00)
+# - исправить эту ошибку
+# - неправильные данные - вообще не те иногда!!!!
 
 # 5. WATCH for signals:
 # - Here I found ... companies to buy - исключить те, которые уже куплены и выставлены ордера
@@ -74,6 +79,82 @@ def main(c):
 	##### needs very seldom
 	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
 	# W1_filter_all_companies_and_get_price_data.main(c)
+
+	if utils.SEs_should_work_now():
+		W3_price_data_updater.main(c)
+
+
+		if portfolio_manager:
+			wait signal...
+
+		else:
+			close?
+
+
+		if want_to_open_position: # no open positions
+			if open_signal[0] == 'buy':	# signal to buy
+				if open_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
+					open_order_price = round((abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2), 2)	# it's not correct, but it must be the closest price to market
+					want_to_open_position = False
+					quantity = int(capital / open_order_price)
+					history.append(f'{date}: bought {quantity} at ${open_order_price}')
+		else:	# checking open position if it is signal to close
+			if stop_loss != None and take_profit != None:
+				sl = open_order_price - ((stop_loss / 100) * open_order_price)
+				tp = (take_profit / 100 + 1) * open_order_price
+				if low_price <= sl:
+					close_order_price = round(sl, 2)
+					profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+					capital += profit
+					history.append(f'{date}: SL, close at ${close_order_price}, profit: -${abs(round(profit))}')				
+					want_to_open_position = True
+				if high_price >= tp and want_to_open_position == False:
+					close_order_price = round(tp, 2)
+					profit = (close_order_price - open_order_price) * quantity - (0.0065 * 2)*10		# comission + *10 smth wrong
+					capital += profit
+					history.append(f'{date}: TP, close at ${close_order_price}, profit: ${round(profit)}')				
+					want_to_open_position = True
+			if close_signal[0] == 'close' and want_to_open_position == False and i < len(list_with_price_data) - 1:
+				if close_signal[1] == 'MKT':
+					close_order_price = round((abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2), 2)	# it's not correct, but it must be the closest price to market
+					profit = (close_order_price - open_order_price) * quantity - (0.0065 * 2)*10		# comission + *10 smth wrong
+					capital += profit
+					history.append(f'{date}: STRATEGY SIGNAL, close at ${close_order_price}, profit: ${round(profit)}')				
+					want_to_open_position = True
+
+
+
+
+
+		time.sleep(60*25)	# 25 mins
+	else:
+		if int(time.strftime("%H", time.gmtime())) == 21:	# = 00:00 MSK
+			continue
+		else:
+			print(' Stock exchange is not working now. Awaiting till it opens.', end = '\r')
+			time.sleep(60*10)	# checking time every 10 mins
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	if True:	#utils.SEs_should_work_now():
 		companies_to_place_order = Worker3_real_signal_awaiter.main(c)

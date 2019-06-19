@@ -37,3 +37,7 @@ def sort():
 		sorted_companies.append(x[0])
 	return sorted_companies
 
+if __name__ == '__main__':
+	print(sort()[:10])
+
+	
