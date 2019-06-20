@@ -6,7 +6,7 @@ from matplotlib import pyplot
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 from mpl_toolkits.mplot3d import Axes3D
 
-from strategy import test_strategy as ts
+#from strategy import test_strategy as ts
 import utils
 import W7_backtest
 

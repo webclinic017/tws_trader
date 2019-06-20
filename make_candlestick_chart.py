@@ -48,22 +48,28 @@ def main(list_with_price_data, history, capital_by_date, company):
 # Trades
 	open_dates = []
 	open_prices = []
+	sell_dates = []
+	sell_prices = []
 	close_dates = []
 	close_prices = []
 	now_date = []
 	now_price = []
 	for deal in history[1:]:
-		if deal[1] == 'buy':
+		if deal[1] == 'long':
 			open_prices.append(deal[3])
 			open_dates.append(dates_dict[deal[0]])
-		if deal[1] == 'close':
+		if deal[1] == 'short':
+			sell_prices.append(deal[3])
+			sell_dates.append(dates_dict[deal[0]])
+		if 'closed' in deal[1]:
 			close_prices.append(deal[3])
 			close_dates.append(dates_dict[deal[0]])
 		if deal[1] == 'now':
 			now_price.append(deal[3])
 			now_date.append(dates_dict[deal[0]])
-	plt.plot(open_dates, open_prices, 'g^', label='buy trades') # open
-	plt.plot(close_dates, close_prices, 'rv', label='close trades')	# close
+	plt.plot(open_dates, open_prices, 'g^', label='buy trades') # buy
+	plt.plot(sell_dates, sell_prices, 'rv', label='sell trades')	# sell
+	plt.plot(close_dates, close_prices, 'kx', label='close trades')	# close
 	plt.plot(now_date, now_price, 'k<', label='now open position')	# now
 
 # Making beauty
@@ -71,7 +77,7 @@ def main(list_with_price_data, history, capital_by_date, company):
 
 	ax.set_xlabel('Date')
 	ax.set_ylabel('Price')
-	ax.legend(loc=2)
+	ax.legend()
 	title = f'{company}\nMy strategy: {profitability}%\nBuy and hold: {buy_and_hold_profitability}%'
 	plt.title(title)
 #	ax.xaxis_date()

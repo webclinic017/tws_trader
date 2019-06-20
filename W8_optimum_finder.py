@@ -5,7 +5,7 @@ import logging
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 
-from strategy import test_strategy as ts
+from strategy import default_strategy as ds
 import utils
 import W7_backtest
 
@@ -38,27 +38,27 @@ def find_optimum_with_all_parameters(price_data, company):
 	parameters_1_list = []
 	parameters_2_list = []
 # open position conditions
-	K_level_to_open = ts.K_level_to_open
-	D_level_to_open = ts.D_level_to_open
-	KD_difference_to_open = ts.KD_difference_to_open
+	K_level_to_open = ds.K_level_to_open
+	D_level_to_open = ds.D_level_to_open
+	KD_difference_to_open = ds.KD_difference_to_open
 # close position conditions
-	stop_loss = ts.stop_loss
-	take_profit = ts.take_profit
-	K_level_to_close = ts.K_level_to_close
-	D_level_to_close = ts.D_level_to_close
-	KD_difference_to_close = ts.KD_difference_to_close
+	stop_loss = ds.stop_loss
+	take_profit = ds.take_profit
+	K_level_to_close = ds.K_level_to_close
+	D_level_to_close = ds.D_level_to_close
+	KD_difference_to_close = ds.KD_difference_to_close
 	try:
-		for stop_loss in my_range(5, 7, 1):	# range(2,5):#my_range(0.5, 4, 0.5): # 5
-			for take_profit in my_range(8, 8.5):	#my_range(1, 10, 1): # 9
-				for K_level_to_close in (None, (1,100), (1,20), (20,80), (80,100)): # 7
-					for D_level_to_close in (None, (1,100), (1,20), (20,80), (80,100)): # 7
+		for stop_loss in my_range(1, 3, 0.2):	# range(2,5):#my_range(0.5, 4, 0.5): # 5
+			for take_profit in my_range(5, 9):	#my_range(1, 10, 1): # 9
+				for K_level_to_close in (None, ):#(1,100), (1,20), (20,80), (80,100)): # 7
+					for D_level_to_close in (None, ):# (1,100), (1,20), (20,80), (80,100)): # 7
 						for KD_difference_to_close in (None, -1, 0, 1): # 4
 							
-							for K_level_to_open in (None, (1,20), (20,80), (80,100)): # 6
-								for D_level_to_open in (None, (1,20), (20,80), (80,100)): # 6
+							for K_level_to_open in (None, ): # (1,20), (20,80), (80,100)): # 6
+								for D_level_to_open in (None, ): # (1,20), (20,80), (80,100)): # 6
 									for KD_difference_to_open in (None, -1, 0, 1): # 4
 										profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, 
-																K_level_to_open,
+																(K_level_to_open,
 																D_level_to_open,
 																KD_difference_to_open,
 																stop_loss,
@@ -66,7 +66,7 @@ def find_optimum_with_all_parameters(price_data, company):
 																K_level_to_close,
 																D_level_to_close,
 																KD_difference_to_close
-																)
+																))
 										strategy['company'] = company
 										strategy['profit'] = profit
 										strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
@@ -105,46 +105,6 @@ def find_optimum_with_all_parameters(price_data, company):
 	return the_best_strategy
 
 
-def find_relation_between_each_2_parameters(price_data):
-	parameters_1_list = []
-	parameters_2_list = []
-# open position conditions
-	K_level_to_open = ts.K_level_to_open
-	D_level_to_open = ts.D_level_to_open
-	KD_difference_to_open = ts.KD_difference_to_open
-# close position conditions
-	stop_loss = ts.stop_loss
-	take_profit = ts.take_profit
-	K_level_to_close = ts.K_level_to_close
-	D_level_to_close = ts.D_level_to_close
-	KD_difference_to_close = ts.KD_difference_to_close
-
-	profit_list = []
-	for param_1 in my_range(0, 2, 0.1):
-		for param_2 in my_range(7, 8, 0.2):#my_range(5, 10, 0.5):
-			print(f'  Calculating param_1: {param_1}, param_2: {param_2}    ', end='\r')
-			parameters_1_list.append(param_1)
-			parameters_2_list.append(param_2)
-
-			stop_loss = param_1
-			take_profit = param_2
-
-			profit, history, buy_and_hold_profitability = W7_backtest.main(price_data, 
-									K_level_to_open,
-									D_level_to_open,
-									KD_difference_to_open,
-									stop_loss,
-									take_profit,
-									K_level_to_close,
-									D_level_to_close,
-									KD_difference_to_close
-									)
-
-			profit_list.append(profit)
-	make_3D_plot(parameters_1_list, parameters_2_list, profit_list)
-	return parameters_1_list, parameters_2_list, profit_list, buy_and_hold_profitability
-
-
 def main(company):
 	# try:
 	price_data = utils.get_price_data(company)
@@ -163,7 +123,7 @@ def main(company):
 
 
 if __name__ == '__main__':
-	for x in {'SPY', 'F', 'MS', 'GM', 'TSLA', 'GE', 'AMD', 'MU'}:
+	for x in ('TSLA', ):#{'SPY', 'F', 'MS', 'GM', 'TSLA', 'GE', 'AMD', 'MU'}:
 		try:
 			print(x)
 			# with open('!BestStrategies.csv', 'w', encoding='utf-8') as file:

@@ -9,11 +9,7 @@ import trade_signals_watcher
 import utils
 
 
-
-
-
 def main(list_with_price_data, strategy):
-	print(strategy)
 	buy_and_hold_profitability = 0
 	buy_and_hold_quantity = None
 	open_order_price = None
@@ -23,6 +19,7 @@ def main(list_with_price_data, strategy):
 	capital = settings.POSITION_QUANTITY
 	capital_by_date = []
 	quantity = None
+	open_position_type = None
 	history = []
 	history.append(('date', 'action', 'quantity', 'price', 'signal', 'profit'))
 
@@ -35,10 +32,13 @@ def main(list_with_price_data, strategy):
 		close_price = float(row[4])
 		K = float(row[6])
 		D = float(row[7])
-		open_signal = trade_signals_watcher.open_position(row, strategy[0], strategy[1], strategy[2])
-		close_signal = trade_signals_watcher.close_position(row, strategy[5], strategy[6], strategy[7])
+		buy_signal = trade_signals_watcher.buy(row, strategy[0], strategy[1], strategy[2])
+		sell_signal = trade_signals_watcher.sell(row, strategy[5], strategy[6], strategy[7])
 		stop_loss = strategy[3]
 		take_profit = strategy[4]
+		if i < len(list_with_price_data) - 1:
+			market_price = round((abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2), 2)
+		# it's not correct, but it must be the closest price to market_price
 
 		if i == 1:
 			buy_and_hold_quantity = int(capital / open_price)
@@ -46,49 +46,139 @@ def main(list_with_price_data, strategy):
 			buy_and_hold_profitability = round((close_price * buy_and_hold_quantity - settings.POSITION_QUANTITY) / settings.POSITION_QUANTITY * 100, 1)
 
 # OPEN POSITIONS functional
-		if want_to_open_position: # no open positions
+
+		if open_position_type == None: # no open positions
 			capital_by_date.append((date, capital))
-			if open_signal[0] == 'buy':	# signal to buy
-				if open_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
-					open_order_price = round((abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2), 2)	# it's not correct, but it must be the closest price to market
-					want_to_open_position = False
+
+	# BUY
+			if buy_signal[0] == 'buy':	# signal to buy
+				if buy_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
+					open_order_price = market_price
+					open_position_type = 'long'
 					quantity = int(capital / open_order_price)
-					history.append((list_with_price_data[i+1][0], 'buy', quantity, open_order_price, '', ''))
-					capital_by_date.append((list_with_price_data[i+1][0], capital))
+					history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, ''))
+					#capital_by_date.append((list_with_price_data[i+1][0], capital))
+	
+	# SELL
+			if sell_signal[0] == 'sell':	# signal to sell
+				if sell_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
+					open_order_price = market_price
+					open_position_type = 'short'
+					quantity = -1 * int(capital / open_order_price)
+					history.append((list_with_price_data[i+1][0], 'short', quantity, open_order_price, ''))
+					#capital_by_date.append((list_with_price_data[i+1][0], capital))
+
+
+
 
 # CLOSE POSITIONS functional
 		else:	# checking open position if it is signal to close
-			capital_by_date.append((date, round(close_price * quantity, 2)))
-			if stop_loss != None and take_profit != None:
-				sl = open_order_price - ((stop_loss / 100) * open_order_price)
-				tp = (take_profit / 100 + 1) * open_order_price
-				if low_price <= sl:
-					if open_price <= sl:
-						close_order_price = open_price
-					else:
-						close_order_price = round(sl, 2)
-					profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
-					capital += profit
-					history.append((date, 'close', quantity, close_order_price, 'SL', profit))
-					want_to_open_position = True
-				if high_price >= tp and want_to_open_position == False: # if gap tp = tp (it is not correct, but it is better for estimation - the worst case)
-					close_order_price = round(tp, 2)
-					profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
-					capital += profit
-					history.append((date, 'close', quantity, close_order_price, 'TP', profit))		
-					want_to_open_position = True
-			if close_signal[0] == 'close' and want_to_open_position == False and i < len(list_with_price_data) - 1:
-				if close_signal[1] == 'MKT':
-					close_order_price = round((abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2), 2)	# it's not correct, but it must be the closest price to market
-					profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
-					capital += profit
-					history.append((list_with_price_data[i+1][0], 'close', quantity, close_order_price, 'Strategy', profit))			
-					capital_by_date.remove((date, round(close_price * quantity, 2)))
-					capital_by_date.append((date, capital))
-					capital_by_date.append((list_with_price_data[i+1][0], round(close_price * quantity, 2)))
-					want_to_open_position = True
 
-		if i == len(list_with_price_data) - 1 and want_to_open_position == False:
+	# close LONG
+			if open_position_type == 'long':
+				if date == history[-1][0]:
+					capital_by_date.append((date, capital))
+				else:
+					capital_by_date.append((date, round(close_price * quantity, 2)))
+
+		# close long by SL/TP
+				if stop_loss != None and take_profit != None:
+					
+					sl = open_order_price - ((stop_loss / 100) * open_order_price)
+					if low_price <= sl:
+						if open_price <= sl:	 # if opens with gap
+							close_order_price = open_price
+						else:
+							close_order_price = round(sl, 2)
+						profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+						capital += profit
+						history.append((date, 'closed by SL', quantity, close_order_price, profit))
+						capital_by_date.pop(-1)
+						capital_by_date.append((date, capital))
+						open_position_type = None
+					
+					tp = (take_profit / 100 + 1) * open_order_price				
+					if high_price >= tp and open_position_type != None:
+						if open_price >= tp:	 # if opens with gap
+							close_order_price = open_price
+						else:
+							close_order_price = round(sl, 2)
+						close_order_price = round(tp, 2)
+						profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+						capital += profit
+						history.append((date, 'closed by TP', quantity, close_order_price, profit))	
+						capital_by_date.pop(-1)
+						capital_by_date.append((date, capital))	
+						open_position_type = None
+		# close long by SIGNAL
+				if sell_signal[0] == 'sell' and open_position_type != None and i < len(list_with_price_data) - 1:
+					if sell_signal[1] == 'MKT':
+						close_order_price = market_price
+						profit = round((close_order_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+						capital += profit
+						history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))			
+						capital_by_date.pop(-1)
+						capital_by_date.append((date, capital))
+						open_position_type = None
+	
+		# + open opposite position
+						open_order_price = market_price
+						open_position_type = 'short'
+						quantity = -1 * int(capital / open_order_price)
+						history.append((list_with_price_data[i+1][0], 'short', quantity, open_order_price, '', ''))
+
+
+	# close SHORT
+			if open_position_type == 'short':
+				if date == history[-1][0]:
+					capital_by_date.append((date, capital))
+				else:
+					capital_by_date.append((date, capital * 2 + round(close_price * quantity, 2)))
+		
+		# close short by SL/TP				
+				if stop_loss != None and take_profit != None:
+					
+					sl = open_order_price + ((stop_loss / 100) * open_order_price)
+					if high_price >= sl:
+						if open_price >= sl:	# if opens with gap
+							close_order_price = open_price
+						else:
+							close_order_price = round(sl, 2)
+						profit = round((open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+						capital += profit
+						history.append((date, 'closed by SL', quantity, close_order_price, profit))
+						capital_by_date.pop(-1)
+						capital_by_date.append((date, capital))
+						open_position_type = None
+					tp = (1 - take_profit / 100) * open_order_price
+					if low_price <= tp and open_position_type != None:
+						if open_price <= tp: # if opens with gap
+							close_order_price = open_price
+						else:
+							close_order_price = round(tp, 2)
+						profit = round((open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+						capital += profit
+						history.append((date, 'closed by TP', quantity, close_order_price, profit))		
+						open_position_type = None
+						capital_by_date.pop(-1)
+						capital_by_date.append((date, capital))
+		# close short by SIGNAL
+				if sell_signal[0] == 'buy' and open_position_type != None and i < len(list_with_price_data) - 1:
+					if sell_signal[1] == 'MKT':
+						close_order_price = market_price
+						profit = round((open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
+						capital += profit
+						history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))			
+						capital_by_date.pop(-1)
+						capital_by_date.append((date, capital))
+						open_position_type = None		
+		# + open opposite position
+						open_order_price = market_price
+						open_position_type = 'long'
+						quantity = int(capital / open_order_price)
+						history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, '', ''))
+
+		if i == len(list_with_price_data) - 1 and open_position_type != None:
 			profit = round((close_price - open_order_price) * quantity - (0.0065 * 2)*10, 2)		# comission + *10 smth wrong
 			capital += profit
 			history.append((date, 'now', quantity, close_price, '', profit))
@@ -98,7 +188,7 @@ def main(list_with_price_data, strategy):
 
 
 if __name__ == '__main__':
-	company = 'MCD'
+	company = 'TSLA'
 	list_with_price_data = utils.get_price_data(company)
 	try:
 		strategy = utils.the_best_known_strategy(company)
