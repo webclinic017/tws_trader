@@ -30,8 +30,9 @@ def my_range(start, stop, step=0.5):	# stop is included
 	return float_list
 
 
-def find_optimum_with_all_parameters(price_data):
+def find_optimum_with_all_parameters(price_data, company):
 	the_best_strategy = {}
+	strategy = {}
 	the_best_strategy['profit'] = 0
 
 	parameters_1_list = []
@@ -47,8 +48,8 @@ def find_optimum_with_all_parameters(price_data):
 	D_level_to_close = ts.D_level_to_close
 	KD_difference_to_close = ts.KD_difference_to_close
 	try:
-		for stop_loss in range(2,5):#my_range(0.5, 4, 0.5): # 5
-			for take_profit in range(6,9):	#my_range(1, 10, 1): # 9
+		for stop_loss in my_range(5, 7, 1):	# range(2,5):#my_range(0.5, 4, 0.5): # 5
+			for take_profit in my_range(8, 8.5):	#my_range(1, 10, 1): # 9
 				for K_level_to_close in (None, (1,100), (1,20), (20,80), (80,100)): # 7
 					for D_level_to_close in (None, (1,100), (1,20), (20,80), (80,100)): # 7
 						for KD_difference_to_close in (None, -1, 0, 1): # 4
@@ -66,9 +67,28 @@ def find_optimum_with_all_parameters(price_data):
 																D_level_to_close,
 																KD_difference_to_close
 																)
+										strategy['company'] = company
+										strategy['profit'] = profit
+										strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
+										strategy['K_level_to_open'] = K_level_to_open
+										strategy['D_level_to_open'] = D_level_to_open
+										strategy['KD_difference_to_open'] = KD_difference_to_open
+										strategy['stop_loss'] = stop_loss
+										strategy['take_profit'] = take_profit
+										strategy['K_level_to_close'] = K_level_to_close
+										strategy['D_level_to_close'] = D_level_to_close
+										strategy['KD_difference_to_close'] = KD_difference_to_close
+
+										with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
+											fieldnames = ['company', 'profit', 'buy_and_hold_profitability',
+												'K_level_to_open', 'D_level_to_open', 'KD_difference_to_open',
+												'stop_loss', 'take_profit', 'K_level_to_close', 'D_level_to_close', 'KD_difference_to_close']
+											writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
+											writer.writerow(strategy)
+										
 										if profit > the_best_strategy['profit']:
-											the_best_strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
 											the_best_strategy['profit'] = profit
+											the_best_strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
 											the_best_strategy['K_level_to_open'] = K_level_to_open
 											the_best_strategy['D_level_to_open'] = D_level_to_open
 											the_best_strategy['KD_difference_to_open'] = KD_difference_to_open
@@ -85,7 +105,7 @@ def find_optimum_with_all_parameters(price_data):
 	return the_best_strategy
 
 
-def find_optimum_with_2_parameters(price_data):
+def find_relation_between_each_2_parameters(price_data):
 	parameters_1_list = []
 	parameters_2_list = []
 # open position conditions
@@ -128,10 +148,10 @@ def find_optimum_with_2_parameters(price_data):
 def main(company):
 	# try:
 	price_data = utils.get_price_data(company)
-	the_best_strategy = find_optimum_with_all_parameters(price_data)
+	the_best_strategy = find_optimum_with_all_parameters(price_data, company)
 	the_best_strategy['company'] = company
 	with open('!BestStrategies.csv', 'a', encoding='utf-8') as file:
-		fieldnames = ['company', 'profit', 'buy_and_hold_profitability', 
+		fieldnames = ['company', 'profit', 'buy_and_hold_profitability',
 			'K_level_to_open', 'D_level_to_open', 'KD_difference_to_open',
 			'stop_loss', 'take_profit', 'K_level_to_close', 'D_level_to_close', 'KD_difference_to_close']
 		writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
@@ -143,9 +163,7 @@ def main(company):
 
 
 if __name__ == '__main__':
-	for x in {'AMZN', 'AMD', 'NVDA', 'TWTR', 'WMT', 'C', 'BA', 'EBAY', 'F', 'FB', 'GE', 
-				'GM', 'GS', 'IBM', 'KO', 'MS', 'QQQ', 'AAPL'
-				}:# utils.set_with_my_companies():
+	for x in {'SPY', 'F', 'MS', 'GM', 'TSLA', 'GE', 'AMD', 'MU'}:
 		try:
 			print(x)
 			# with open('!BestStrategies.csv', 'w', encoding='utf-8') as file:

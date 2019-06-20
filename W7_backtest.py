@@ -1,21 +1,19 @@
 # + max losses
 # + count of deals, the shortest and the longest deals
+import csv
 
 import make_candlestick_chart
 import settings
-from strategy import test_strategy as ts
+from strategy import default_strategy as ds
 import trade_signals_watcher
 import utils
 
-def main(list_with_price_data,
-		K_level_to_open,
-		D_level_to_open,
-		KD_difference_to_open,
-		stop_loss,
-		take_profit,
-		K_level_to_close,
-		D_level_to_close,
-		KD_difference_to_close):
+
+
+
+
+def main(list_with_price_data, strategy):
+	print(strategy)
 	buy_and_hold_profitability = 0
 	buy_and_hold_quantity = None
 	open_order_price = None
@@ -37,9 +35,11 @@ def main(list_with_price_data,
 		close_price = float(row[4])
 		K = float(row[6])
 		D = float(row[7])
-		open_signal = trade_signals_watcher.open_position(row, K_level_to_open, D_level_to_open, KD_difference_to_open)
-		close_signal = trade_signals_watcher.close_position(row, K_level_to_close, D_level_to_close, KD_difference_to_close)
-		
+		open_signal = trade_signals_watcher.open_position(row, strategy[0], strategy[1], strategy[2])
+		close_signal = trade_signals_watcher.close_position(row, strategy[5], strategy[6], strategy[7])
+		stop_loss = strategy[3]
+		take_profit = strategy[4]
+
 		if i == 1:
 			buy_and_hold_quantity = int(capital / open_price)
 		if i == len(list_with_price_data) - 1:
@@ -54,7 +54,6 @@ def main(list_with_price_data,
 					want_to_open_position = False
 					quantity = int(capital / open_order_price)
 					history.append((list_with_price_data[i+1][0], 'buy', quantity, open_order_price, '', ''))
-					capital_by_date.remove((date, capital))
 					capital_by_date.append((list_with_price_data[i+1][0], capital))
 
 # CLOSE POSITIONS functional
@@ -85,6 +84,7 @@ def main(list_with_price_data,
 					capital += profit
 					history.append((list_with_price_data[i+1][0], 'close', quantity, close_order_price, 'Strategy', profit))			
 					capital_by_date.remove((date, round(close_price * quantity, 2)))
+					capital_by_date.append((date, capital))
 					capital_by_date.append((list_with_price_data[i+1][0], round(close_price * quantity, 2)))
 					want_to_open_position = True
 
@@ -98,27 +98,14 @@ def main(list_with_price_data,
 
 
 if __name__ == '__main__':
-	company = 'KO'
+	company = 'MCD'
 	list_with_price_data = utils.get_price_data(company)
+	try:
+		strategy = utils.the_best_known_strategy(company)
+	except:
+		strategy = ds.strategy
+	profit, history, buy_and_hold_profitability, capital_by_date = main(list_with_price_data, strategy)
 
-	stop_loss = ts.stop_loss
-	take_profit = ts.take_profit
-	K_level_to_open = ts.K_level_to_open
-	D_level_to_open = ts.D_level_to_open
-	KD_difference_to_open = ts.KD_difference_to_open
-	K_level_to_close = ts.K_level_to_close
-	D_level_to_close = ts.D_level_to_close
-	KD_difference_to_close = ts.KD_difference_to_close
-
-	profit, history, buy_and_hold_profitability, capital_by_date = main(list_with_price_data,
-							K_level_to_open,
-							D_level_to_open,
-							KD_difference_to_open,
-							stop_loss,
-							take_profit,
-							K_level_to_close,
-							D_level_to_close,
-							KD_difference_to_close)
 	for row in history:
 		print(row)
 	print(f'\nProfitability: {profit}%')

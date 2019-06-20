@@ -83,7 +83,7 @@ def main(c):
 	if utils.SEs_should_work_now():
 		W3_price_data_updater.main(c)
 
-
+		company = ''
 		if portfolio_manager:
 			wait signal...
 
