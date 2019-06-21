@@ -27,7 +27,7 @@ def buy(row, K_level=None, D_level=None, KD_difference=None):	# levels - turple(
 	# KD_difference only matters
 		if K_level == None and D_level == None and KD_difference != None:
 			if KD_difference == 0:	# needs to K=D
-				if -2 < (K - D) < 2.0:
+				if -2.0 < (K - D) < 2.0:
 					return ('buy', 'MKT')
 			if KD_difference == -1:	# needs to K<D
 				if (K - D) < -2.0:
@@ -44,7 +44,7 @@ def buy(row, K_level=None, D_level=None, KD_difference=None):	# levels - turple(
 		if K_level != None and D_level == None and KD_difference != None:
 			if K_level[0] <= K <= K_level[1]:
 				if KD_difference == 0:	# needs to K=D
-					if -2 < (K - D) < 2.0:
+					if -2.0 < (K - D) < 2.0:
 						return ('buy', 'MKT')
 				if KD_difference == -1:	# needs to K<D
 					if (K - D) < -2.0:
@@ -56,7 +56,7 @@ def buy(row, K_level=None, D_level=None, KD_difference=None):	# levels - turple(
 		if K_level == None and D_level != None and KD_difference != None:
 			if D_level[0] <= D <= D_level[1]:
 				if KD_difference == 0:	# needs to K=D
-					if -2 < (K - D) < 2.0:
+					if -2.0 < (K - D) < 2.0:
 						return ('buy', 'MKT')
 				if KD_difference == -1:	# needs to K<D
 					if (K - D) < -2.0:
@@ -69,7 +69,7 @@ def buy(row, K_level=None, D_level=None, KD_difference=None):	# levels - turple(
 			if K_level[0] <= K <= K_level[1]:
 				if D_level[0] <= D <= D_level[1]:
 					if KD_difference == 0:	# needs to K=D
-						if -2 < (K - D) < 2.0:
+						if -2.0 < (K - D) < 2.0:
 							return ('buy', 'MKT')
 					if KD_difference == -1:	# needs to K<D
 						if (K - D) < -2.0:
@@ -109,7 +109,7 @@ def sell(row, K_level=None, D_level=None, KD_difference=None):
 	# KD_difference only matters
 		if K_level == None and D_level == None and KD_difference != None:
 			if KD_difference == 0:	# needs to K=D
-				if -2 < (K - D) < 2.0:
+				if -2.0 < (K - D) < 2.0:
 					return ('sell', 'MKT')
 			if KD_difference == -1:	# needs to K<D
 				if (K - D) < -2.0:
@@ -126,7 +126,7 @@ def sell(row, K_level=None, D_level=None, KD_difference=None):
 		if K_level != None and D_level == None and KD_difference != None:
 			if K_level[0] <= K <= K_level[1]:
 				if KD_difference == 0:	# needs to K=D
-					if -2 < (K - D) < 2.0:
+					if -2.0 < (K - D) < 2.0:
 						return ('sell', 'MKT')
 				if KD_difference == -1:	# needs to K<D
 					if (K - D) < -2.0:
@@ -138,7 +138,7 @@ def sell(row, K_level=None, D_level=None, KD_difference=None):
 		if K_level == None and D_level != None and KD_difference != None:
 			if D_level[0] <= D <= D_level[1]:
 				if KD_difference == 0:	# needs to K=D
-					if -2 < (K - D) < 2.0:
+					if -2.0 < (K - D) < 2.0:
 						return ('sell', 'MKT')
 				if KD_difference == -1:	# needs to K<D
 					if (K - D) < -2.0:
@@ -151,7 +151,7 @@ def sell(row, K_level=None, D_level=None, KD_difference=None):
 			if K_level[0] <= K <= K_level[1]:
 				if D_level[0] <= D <= D_level[1]:
 					if KD_difference == 0:	# needs to K=D
-						if -2 < (K - D) < 2.0:
+						if -2.0 < (K - D) < 2.0:
 							return ('sell', 'MKT')
 					if KD_difference == -1:	# needs to K<D
 						if (K - D) < -2.0:
