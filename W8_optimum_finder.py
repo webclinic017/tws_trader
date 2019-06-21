@@ -1,10 +1,12 @@
 import csv
 from datetime import datetime
 import logging
+import time
 
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 
+from indicators import stochastic
 from strategy import default_strategy as ds
 import utils
 import W7_backtest
@@ -27,7 +29,7 @@ def my_range(start, stop, step=0.5):	# stop is included
 	while x <= stop:
 		float_list.append(round(x, 1))
 		x += step
-	return float_list
+	return tuple(float_list)
 
 
 def find_optimum_with_all_parameters(price_data, company):
@@ -35,8 +37,7 @@ def find_optimum_with_all_parameters(price_data, company):
 	strategy = {}
 	the_best_strategy['profit'] = 0
 
-	parameters_1_list = []
-	parameters_2_list = []
+	stoch_parameters = None
 # open position conditions
 	K_level_to_open = ds.K_level_to_open
 	D_level_to_open = ds.D_level_to_open
@@ -48,56 +49,64 @@ def find_optimum_with_all_parameters(price_data, company):
 	D_level_to_close = ds.D_level_to_close
 	KD_difference_to_close = ds.KD_difference_to_close
 	try:
-		for stop_loss in my_range(1, 3, 0.2):	# range(2,5):#my_range(0.5, 4, 0.5): # 5
-			for take_profit in my_range(5, 9):	#my_range(1, 10, 1): # 9
-				for K_level_to_close in (None, ):#(1,100), (1,20), (20,80), (80,100)): # 7
-					for D_level_to_close in (None, ):# (1,100), (1,20), (20,80), (80,100)): # 7
-						for KD_difference_to_close in (None, -1, 0, 1): # 4
-							
-							for K_level_to_open in (None, ): # (1,20), (20,80), (80,100)): # 6
-								for D_level_to_open in (None, ): # (1,20), (20,80), (80,100)): # 6
-									for KD_difference_to_open in (None, -1, 0, 1): # 4
-										profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, 
-																(K_level_to_open,
-																D_level_to_open,
-																KD_difference_to_open,
-																stop_loss,
-																take_profit,
-																K_level_to_close,
-																D_level_to_close,
-																KD_difference_to_close
-																))
-										strategy['company'] = company
-										strategy['profit'] = profit
-										strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
-										strategy['K_level_to_open'] = K_level_to_open
-										strategy['D_level_to_open'] = D_level_to_open
-										strategy['KD_difference_to_open'] = KD_difference_to_open
-										strategy['stop_loss'] = stop_loss
-										strategy['take_profit'] = take_profit
-										strategy['K_level_to_close'] = K_level_to_close
-										strategy['D_level_to_close'] = D_level_to_close
-										strategy['KD_difference_to_close'] = KD_difference_to_close
-
-										with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
-											fieldnames = ['company', 'profit', 'buy_and_hold_profitability',
-												'K_level_to_open', 'D_level_to_open', 'KD_difference_to_open',
-												'stop_loss', 'take_profit', 'K_level_to_close', 'D_level_to_close', 'KD_difference_to_close']
-											writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
-											writer.writerow(strategy)
+		for stoch_period in range(3,51):
+			for slow_avg in range(3,51):
+				for fast_avg in range(3,51):
+					stoch_parameters = (stoch_period, slow_avg, fast_avg)
+					price_data = stochastic.main(price_data, stoch_parameters)
+					for stop_loss in my_range(3, 5, 2):	# range(2,5):#my_range(0.5, 4, 0.5):
+						for take_profit in my_range(7, 9, 1):	#my_range(1, 10, 1):
+							for K_level_to_close in (None, ):	# (1,20), (20,80), (80,100)):
+								for D_level_to_close in (None, ):# (1,20), (20,80), (80,100)):
+									for KD_difference_to_close in (None, -1, 0, 1):
 										
-										if profit > the_best_strategy['profit']:
-											the_best_strategy['profit'] = profit
-											the_best_strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
-											the_best_strategy['K_level_to_open'] = K_level_to_open
-											the_best_strategy['D_level_to_open'] = D_level_to_open
-											the_best_strategy['KD_difference_to_open'] = KD_difference_to_open
-											the_best_strategy['stop_loss'] = stop_loss
-											the_best_strategy['take_profit'] = take_profit
-											the_best_strategy['K_level_to_close'] = K_level_to_close
-											the_best_strategy['D_level_to_close'] = D_level_to_close
-											the_best_strategy['KD_difference_to_close'] = KD_difference_to_close
-										print(f"  {the_best_strategy['profit']}% vs. {buy_and_hold_profitability}%. Calculating: {stop_loss}, {take_profit}, {K_level_to_close}, {D_level_to_close}, {KD_difference_to_close}, {K_level_to_open}, {D_level_to_open}, {KD_difference_to_open}     ", end='\r')
+										for K_level_to_open in (None, ):	# (1,20), (20,80), (80,100)):
+											for D_level_to_open in (None, ): # (1,20), (20,80), (80,100)):
+												for KD_difference_to_open in (None, -1, 0, 1):
+													profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, 
+																			(K_level_to_open,
+																			D_level_to_open,
+																			KD_difference_to_open,
+																			stop_loss,
+																			take_profit,
+																			K_level_to_close,
+																			D_level_to_close,
+																			KD_difference_to_close,
+																			(stoch_period, slow_avg, fast_avg)
+																			))
+													strategy['company'] = company
+													strategy['profit'] = profit
+													strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
+													strategy['K_level_to_open'] = K_level_to_open
+													strategy['D_level_to_open'] = D_level_to_open
+													strategy['KD_difference_to_open'] = KD_difference_to_open
+													strategy['stop_loss'] = stop_loss
+													strategy['take_profit'] = take_profit
+													strategy['K_level_to_close'] = K_level_to_close
+													strategy['D_level_to_close'] = D_level_to_close
+													strategy['KD_difference_to_close'] = KD_difference_to_close
+													strategy['Stoch_parameters'] = stoch_parameters
+
+													with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
+														fieldnames = ['company', 'profit', 'buy_and_hold_profitability',
+															'K_level_to_open', 'D_level_to_open', 'KD_difference_to_open',
+															'stop_loss', 'take_profit', 'K_level_to_close', 'D_level_to_close', 'KD_difference_to_close', 'Stoch_parameters']
+														writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
+														writer.writerow(strategy)
+													
+													if profit > the_best_strategy['profit']:
+														the_best_strategy['profit'] = profit
+														the_best_strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
+														the_best_strategy['K_level_to_open'] = K_level_to_open
+														the_best_strategy['D_level_to_open'] = D_level_to_open
+														the_best_strategy['KD_difference_to_open'] = KD_difference_to_open
+														the_best_strategy['stop_loss'] = stop_loss
+														the_best_strategy['take_profit'] = take_profit
+														the_best_strategy['K_level_to_close'] = K_level_to_close
+														the_best_strategy['D_level_to_close'] = D_level_to_close
+														the_best_strategy['KD_difference_to_close'] = KD_difference_to_close
+														the_best_strategy['Stoch_parameters'] = stoch_parameters
+													print(f"  {round(the_best_strategy['profit'],1)}% vs. {round(buy_and_hold_profitability,1)}%. Calculating: {stoch_period}, {slow_avg}, {fast_avg}, {stop_loss}, {take_profit}, {K_level_to_close}, {D_level_to_close}, {KD_difference_to_close}, {K_level_to_open}, {D_level_to_open}, {KD_difference_to_open}: {round(strategy['profit'],1)}%     ", end='\r')
 		print('\n')
 	except(KeyboardInterrupt):
 		print(the_best_strategy)
@@ -108,12 +117,13 @@ def find_optimum_with_all_parameters(price_data, company):
 def main(company):
 	# try:
 	price_data = utils.get_price_data(company)
+	open(f'!Strategies_for_{company}.csv', "w+").close()
 	the_best_strategy = find_optimum_with_all_parameters(price_data, company)
 	the_best_strategy['company'] = company
 	with open('!BestStrategies.csv', 'a', encoding='utf-8') as file:
 		fieldnames = ['company', 'profit', 'buy_and_hold_profitability',
 			'K_level_to_open', 'D_level_to_open', 'KD_difference_to_open',
-			'stop_loss', 'take_profit', 'K_level_to_close', 'D_level_to_close', 'KD_difference_to_close']
+			'stop_loss', 'take_profit', 'K_level_to_close', 'D_level_to_close', 'KD_difference_to_close', 'Stoch_parameters']
 		writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
 		writer.writerow(the_best_strategy)
 	print(the_best_strategy, '\n')
@@ -123,7 +133,9 @@ def main(company):
 
 
 if __name__ == '__main__':
-	for x in ('TSLA', ):#{'SPY', 'F', 'MS', 'GM', 'TSLA', 'GE', 'AMD', 'MU'}:
+	for x in {'TSLA',}:# 'WMT', 'SPY', 'F', 'MS', 'GM', 'TSLA',
+				#'GE', 'AMD', 'MU', 'NVDA', 'AAPL', 'BA', 'FB',
+				#'GS', 'EBAY', 'C', 'TWTR', 'AMZN', 'IBM', 'KO', 'TQQQ'}:
 		try:
 			print(x)
 			# with open('!BestStrategies.csv', 'w', encoding='utf-8') as file:

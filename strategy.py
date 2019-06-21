@@ -35,7 +35,7 @@ class default_strategy:
 							KD_difference_to_close
 							)
 
-
+#{'profit': 175.4, 'buy_and_hold_profitability': -28.7, 'K_level_to_open': None, 'D_level_to_open': None, 'KD_difference_to_open': 1, 'stop_loss': 4.5, 'take_profit': 9.0, 'K_level_to_close': None, 'D_level_to_close': None, 'KD_difference_to_close': 0, 'Stoch_parameters': (3, 18, 7), 'company': 'TSLA'}
 
 '''
 FLEX

@@ -1,18 +1,9 @@
-# + убрать временные пустоты на графике !!!!!!
-# + график стохастика
-
-from datetime import datetime
 import logging
 
 import matplotlib
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from mpl_finance import candlestick_ohlc
-# import pandas as pd
-
-import settings
-import utils
 
 # In order to launch without matplotlib debugging:
 mpl_logger = logging.getLogger('matplotlib') 
@@ -20,30 +11,47 @@ mpl_logger.setLevel(logging.WARNING)
 
 
 def main(list_with_price_data, history, capital_by_date, company):
-	fig, ax = plt.subplots()
+	#fig, ax = plt.subplots()
+	fig = plt.figure()
+	ax_main = fig.add_subplot(2, 1, 1)
+	ax_main.set_position([0.05, 0.15, 0.9, 0.7])
+	ax_stoch = fig.add_subplot(8, 1, 5)
+	ax_stoch.set_position([0.05, 0.05, 0.9, 0.1])
 
 # Capital	
-	koef = capital_by_date[0][1] / history[1][3]
+	koef = capital_by_date[0][1] / float(list_with_price_data[1][1])	# history[1][3]
 	capital_x = []
 	capital_y = []
 	dates_dict = {}
 	x = 1
 	for row in capital_by_date:
-		# date = datetime.strptime(row[0], "%Y%m%d  %H:%M:%S").timestamp()
 		capital_x.append(x)
 		dates_dict[row[0]] = x
 		x += 1
 		capital_y.append(row[1] / koef)
 	buy_and_hold_profitability = round((float(list_with_price_data[-1][4]) - float(list_with_price_data[1][1])) / float(list_with_price_data[1][1]) * 100, 1)
 	profitability = round((capital_y[-1] - capital_y[0]) / capital_y[0] * 100, 1)
-	plt.plot(capital_x, capital_y, label=f'capital ({profitability}% vs. {buy_and_hold_profitability}%)', linewidth = 0.7)
+	ax_main.plot(capital_x, capital_y, label=f'capital ({profitability}% vs. {buy_and_hold_profitability}%)', linewidth = 0.7)
 
-# Candlestick chart
+# Candlestick chart + stoch
+	stoch_time = []
+	stoch_K = []
+	stoch_D = []
 	quotes = []
 	for row in list_with_price_data[1:]:
-		# date = datetime.strptime(row[0], "%Y%m%d  %H:%M:%S").timestamp()
 		quotes.append((dates_dict[row[0]], float(row[1]), float(row[2]), float(row[3]), float(row[4])))
-	candlestick_ohlc(ax, quotes, width=0.3, colorup='g', colordown='r')
+		if row[6] != '' and row[7] != '':
+			stoch_K.append(float(row[6]))
+			stoch_D.append(float(row[7]))
+			stoch_time.append(dates_dict[row[0]])
+		else:
+			stoch_K.append(0)
+			stoch_D.append(0)
+			stoch_time.append(dates_dict[row[0]])
+
+	candlestick_ohlc(ax_main, quotes, width=0.3, colorup='g', colordown='r')
+	ax_stoch.plot(stoch_time, stoch_K, 'g', linewidth=0.4, label='%K')
+	ax_stoch.plot(stoch_time, stoch_D, 'k', linewidth=0.5, label='%D')
 
 # Trades
 	open_dates = []
@@ -67,27 +75,26 @@ def main(list_with_price_data, history, capital_by_date, company):
 		if deal[1] == 'now':
 			now_price.append(deal[3])
 			now_date.append(dates_dict[deal[0]])
-	plt.plot(open_dates, open_prices, 'g^', label='buy trades') # buy
-	plt.plot(sell_dates, sell_prices, 'rv', label='sell trades')	# sell
-	plt.plot(close_dates, close_prices, 'kx', label='close trades')	# close
-	plt.plot(now_date, now_price, 'k<', label='now open position')	# now
+	ax_main.plot(open_dates, open_prices, 'k^', label='buy trades') # buy
+	ax_main.plot(sell_dates, sell_prices, 'kv', label='sell trades')	# sell
+	ax_main.plot(close_dates, close_prices, 'kx', label='close trades')	# close
+	ax_main.plot(now_date, now_price, 'k<', label='now open position')	# now
 
 # Making beauty
-
-
-	ax.set_xlabel('Date')
-	ax.set_ylabel('Price')
-	ax.legend()
+	ax_stoch.set_xlabel('Date')
+	ax_main.set_ylabel('Price')
+	ax_stoch.set_ylabel('Stoch')
+	ax_main.legend()
 	title = f'{company}\nMy strategy: {profitability}%\nBuy and hold: {buy_and_hold_profitability}%'
 	plt.title(title)
-#	ax.xaxis_date()
-#	ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y.%m.%d"))
 
-	ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-	ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
-	ax.yaxis.set_minor_locator(ticker.MultipleLocator(2))
-	ax.minorticks_on()
+	ax_main.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+	ax_main.yaxis.set_major_locator(ticker.MultipleLocator(10))
+	ax_main.yaxis.set_minor_locator(ticker.MultipleLocator(10))
+	ax_stoch.yaxis.set_major_locator(ticker.MultipleLocator(10))
+	ax_main.minorticks_on()
 	plt.grid(which='major', linestyle='--')
-	ax.grid(which='minor', color = 'gray', linestyle = ':')
+	ax_main.grid(which='minor', color = 'gray', linestyle = ':')
+
 	plt.show()
 

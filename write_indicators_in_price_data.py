@@ -35,5 +35,5 @@ def main(stock_ticker):
 
 # In order to testing:
 if __name__ == '__main__':
-	main('EA')
+	main('TSLA')
 

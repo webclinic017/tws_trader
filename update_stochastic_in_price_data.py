@@ -1,19 +1,15 @@
 import csv
 
 from indicators import stochastic
+import utils
 
-def get_data(stock_ticker):
-	list_with_price_data=[]
-	with open(f'historical_data/{stock_ticker}.csv', 'r', encoding='utf-8') as data_file:
-		for row in csv.reader(data_file, delimiter=';'):
-			list_with_price_data.append(row)	# list with entire our csv-file
-	return list_with_price_data
 
 def rewrite_csv_with_prices(new_price_data, stock_ticker):
 	with open(f'historical_data/{stock_ticker}.csv', 'w', encoding='utf-8') as csvfile:
 		a = csv.writer(csvfile, delimiter=';')
 		for row in new_price_data:
 			a.writerow(row)
+
 
 def delete_columns_with_indicator(prices): 	# m.b. with pandas.DataFrame it would be easier ?!
 	i = 0	# column number
@@ -30,10 +26,11 @@ def delete_columns_with_indicator(prices): 	# m.b. with pandas.DataFrame it woul
 		i += 1
 	return prices
 
-def main(stock_ticker):
-	prices = get_data(stock_ticker)
+
+def main(stock_ticker, parameters=(26, 26, 9)):
+	prices = utils.get_price_data(stock_ticker)
 	prices = delete_columns_with_indicator(prices)
-	prices_with_indicators = stochastic.main(prices)
+	prices_with_indicators = stochastic.main(prices, parameters)
 	rewrite_csv_with_prices(prices_with_indicators, stock_ticker)
 
 # In order to testing:
