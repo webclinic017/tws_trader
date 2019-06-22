@@ -1,16 +1,18 @@
 def fast_K_list(list_with_price_data, period, slow_average_period, fast_average_period):	# list_with_price_data must include: [date, open, close, high, low, volume]
-	fast_K_list = []																		# list_with_price_data must include: [date, open, high, low, close, volume]
-	for i in range(1, slow_average_period+fast_average_period-1):
-		close_price = float(list_with_price_data[-i][4])
-		lows_prices = tuple(float(x[3]) for x in list_with_price_data[-period-i:-i])
-		highs_prices = tuple(float(x[2]) for x in list_with_price_data[-period-i:-i])
+	fast_K_list = []
+	data_length = len(list_with_price_data)																		# list_with_price_data must include: [date, open, high, low, close, volume]
+	for i in range(0, slow_average_period+fast_average_period-1):	
+		close_price = float(list_with_price_data[data_length-1-i][4])	
+		lows_prices = tuple(float(x[3]) for x in list_with_price_data[data_length-period-i:data_length-i])
+		highs_prices = tuple(float(x[2]) for x in list_with_price_data[data_length-period-i:data_length-i])		
 		lowest_price_for_period = min(lows_prices)
-		highest_price_for_period = max(highs_prices)
+		highest_price_for_period = max(highs_prices)		
 		if highest_price_for_period != lowest_price_for_period:
 			fast_K = (close_price - lowest_price_for_period) / (highest_price_for_period - lowest_price_for_period) * 100
 		else:
 			fast_K = 50
-		fast_K_list.insert(0, round(fast_K, 2))
+		fast_K_list.insert(0, fast_K)
+
 	return tuple(fast_K_list)
 
 
@@ -18,13 +20,13 @@ def fast_average(fast_K_list, slow_average_period, fast_average_period):	# fast_
 	fast_average_list = []
 	for i in range(1, slow_average_period+1):
 		slow_k = sum(fast_K_list[-fast_average_period-i:-i]) / fast_average_period
-		fast_average_list.insert(0, round(slow_k, 2))
+		fast_average_list.insert(0, slow_k)
 	return tuple(fast_average_list)
 
 
 def slow_average(fast_average_list, slow_average_period):	# slow_average = SMA of the fast_average
 	slow_average = sum(fast_average_list) / slow_average_period
-	return round(slow_average, 2)
+	return slow_average
 
 
 def delete_columns_with_indicator(prices): 	# m.b. with pandas.DataFrame it would be easier ?!

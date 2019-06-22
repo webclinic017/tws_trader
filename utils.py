@@ -61,26 +61,42 @@ def get_price_data(stock_ticker):
 
 
 def the_best_known_strategy(company):
-	best_strategy = None
+	the_best_strategy = {}
 	with open(f'!BestStrategies.csv', 'r', encoding='utf-8') as file:
 		for x in csv.reader(file, delimiter=';'):
 			if x[0] == company:
-				best_strategy = [
-								x[3],	# K level to open
-								x[4],	# D level to open
-								x[5],	# KD difference to open
-								x[6],	# Stop loss
-								x[7],	# Take profit
-								x[8],	# K level to close
-								x[9],	# D level to close
-								x[10]	#KD difference to close
-								]
-	for i in range(len(best_strategy)):
-		if best_strategy[i] != '':
-			best_strategy.insert(i, eval(best_strategy.pop(i)))
+				the_best_strategy['K_level_to_buy'] = x[4]
+				the_best_strategy['D_level_to_buy'] = x[5]
+				the_best_strategy['KD_difference_to_buy'] = x[6]
+				the_best_strategy['stop_loss'] = x[7]
+				the_best_strategy['take_profit'] = x[8]
+				the_best_strategy['K_level_to_sell'] = x[9]
+				the_best_strategy['D_level_to_sell'] = x[10]
+				the_best_strategy['KD_difference_to_sell'] = x[11]
+				the_best_strategy['Stoch_parameters'] = x[12]
+	for key, value in the_best_strategy.items():
+		if value != '':
+			the_best_strategy[key] = eval(value)
 		else:
-			best_strategy.pop(i)
-			best_strategy.insert(i, None)
-	best_strategy = tuple(best_strategy)
-	return best_strategy
+			the_best_strategy[key] = None
+	return the_best_strategy
+
+
+def max_drawdown_calculate(capital_by_date):
+	max_drawdown = 0
+	for i in range(0,len(capital_by_date)-1):
+		capital = capital_by_date[:len(capital_by_date)-i]
+		max_capital = max(tuple(x[1] for x in capital))
+		max_capital_date_index = None
+		for row in capital:
+			if max_capital == row[1]:
+				max_capital_date_index = capital.index(row)	
+		if max_capital == capital[-1][1]:
+			min_capital_since_max_capital = max_capital
+		else:
+			min_capital_since_max_capital = min(tuple(x[1] for x in capital[max_capital_date_index+1:]))
+		new_max_drawdown = (max_capital - min_capital_since_max_capital) / max_capital * 100
+		if new_max_drawdown > max_drawdown:
+			max_drawdown = new_max_drawdown
+	return max_drawdown
 

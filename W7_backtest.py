@@ -5,7 +5,6 @@ import csv
 import make_candlestick_chart
 import settings
 from indicators import stochastic
-from strategy import default_strategy as ds
 import trade_signals_watcher
 import utils
 
@@ -40,11 +39,9 @@ def main(list_with_price_data, strategy):
 		else:
 			K = ''
 			D = ''
-
-		buy_signal = trade_signals_watcher.buy(row, strategy[0], strategy[1], strategy[2])
-		sell_signal = trade_signals_watcher.sell(row, strategy[5], strategy[6], strategy[7])
-		stop_loss = strategy[3]
-		take_profit = strategy[4]
+	
+		#stop_loss = strategy['stop_loss']
+		#take_profit = strategy['take_profit']
 		if i < len(list_with_price_data) - 1:
 			market_price = (abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2)
 		# it's not correct, but it must be the closest price to market_price
@@ -57,25 +54,37 @@ def main(list_with_price_data, strategy):
 # OPEN POSITIONS functional
 
 		if open_position_type == None: # no open positions
-			capital_by_date.append((date, capital, 2))
+			capital_by_date.append((date, capital))
+
+				
+
+
 
 	# BUY
+			buy_signal = trade_signals_watcher.buy(row, 
+													strategy['K_level_to_buy'],
+													strategy['D_level_to_buy'],
+													strategy['KD_difference_to_buy']
+													)
 			if buy_signal[0] == 'buy':	# signal to buy
 				if buy_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'long'
 					quantity = int(capital / open_order_price)
 					history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, ''))
-					#capital_by_date.append((list_with_price_data[i+1][0], capital))
 	
 	# SELL
+			sell_signal = trade_signals_watcher.sell(row, 
+													strategy['K_level_to_sell'],
+													strategy['D_level_to_sell'],
+													strategy['KD_difference_to_sell']
+													)
 			if sell_signal[0] == 'sell' and open_position_type != 'long':	# signal to sell
 				if sell_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'short'
 					quantity = -1 * int(capital / open_order_price)
 					history.append((list_with_price_data[i+1][0], 'short', quantity, open_order_price, ''))
-					#capital_by_date.append((list_with_price_data[i+1][0], capital))
 
 # CLOSE POSITIONS functional
 		else:	# checking open position if it is signal to close
@@ -83,47 +92,61 @@ def main(list_with_price_data, strategy):
 	# close LONG
 			if open_position_type == 'long':
 				if date == history[-1][0]:
-					capital_by_date.append((date, capital, 2))
+					capital_by_date.append((date, capital))
 				else:
-					capital_by_date.append((date, close_price * quantity, 2))
+					capital_by_date.append((date, close_price * quantity))
 
 		# close long by SL/TP
-				if stop_loss != None and take_profit != None:
+				if strategy['stop_loss'] != None and strategy['take_profit'] != None:
 					
-					sl = open_order_price - ((stop_loss / 100) * open_order_price)
+					sl = open_order_price - ((strategy['stop_loss'] / 100) * open_order_price)
 					if low_price <= sl:
 						if open_price <= sl:	 # if opens with gap
 							close_order_price = open_price
 						else:
 							close_order_price = sl
-						profit = (close_order_price - open_order_price) * quantity - (0.0065 * 2)*10		# comission + *10 smth wrong
+						comission = (0.0035 * 2) * quantity
+						if comission < 0.35:
+							comission = 0.35
+						profit = (close_order_price - open_order_price) * quantity - comission
 						capital += profit
 						history.append((date, 'closed by SL', quantity, close_order_price, profit))
 						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital, 2))
+						capital_by_date.append((date, capital))
 						open_position_type = None
 					
-					tp = (take_profit / 100 + 1) * open_order_price				
+					tp = (strategy['take_profit'] / 100 + 1) * open_order_price				
 					if high_price >= tp and open_position_type != None:
 						if open_price >= tp:	 # if opens with gap
 							close_order_price = open_price
 						else:
 							close_order_price = tp
-						profit = (close_order_price - open_order_price) * quantity - (0.0065 * 2)*10		# comission + *10 smth wrong
+						comission = (0.0035 * 2) * quantity
+						if comission < 0.35:
+							comission = 0.35
+						profit = (close_order_price - open_order_price) * quantity - comission
 						capital += profit
 						history.append((date, 'closed by TP', quantity, close_order_price, profit))	
 						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital, 2))
+						capital_by_date.append((date, capital))
 						open_position_type = None
 		# close long by SIGNAL
+				sell_signal = trade_signals_watcher.sell(row, 
+														strategy['K_level_to_sell'],
+														strategy['D_level_to_sell'],
+														strategy['KD_difference_to_sell']
+														)
 				if sell_signal[0] == 'sell' and open_position_type != None and i < len(list_with_price_data) - 1:
 					if sell_signal[1] == 'MKT':
 						close_order_price = market_price
-						profit = (close_order_price - open_order_price) * quantity - (0.0065 * 2)*10	# comission + *10 smth wrong
+						comission = (0.0035 * 2) * quantity
+						if comission < 0.35:
+							comission = 0.35
+						profit = (close_order_price - open_order_price) * quantity - comission
 						capital += profit
 						history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))			
 						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital, 2))
+						capital_by_date.append((date, capital))
 						open_position_type = None
 	
 		# + open opposite position
@@ -136,45 +159,59 @@ def main(list_with_price_data, strategy):
 	# close SHORT
 			if open_position_type == 'short':
 				if date == history[-1][0]:
-					capital_by_date.append((date, capital, 2))
+					capital_by_date.append((date, capital))
 				else:
-					capital_by_date.append((date, capital * 2 + (close_price * quantity), 2))
+					capital_by_date.append((date, capital * 2 + (close_price * quantity)))
 		
 		# close short by SL/TP				
-				if stop_loss != None and take_profit != None:
-					sl = open_order_price + ((stop_loss / 100) * open_order_price)
+				if strategy['stop_loss'] != None and strategy['take_profit'] != None:
+					sl = open_order_price + ((strategy['stop_loss'] / 100) * open_order_price)
 					if high_price >= sl:
 						if open_price >= sl:	# if opens with gap
 							close_order_price = open_price
 						else:
 							close_order_price = sl
-						profit = (open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10		# comission + *10 smth wrong
+						comission = (0.0035 * 2) * quantity
+						if comission < 0.35:
+							comission = 0.35
+						profit = (open_order_price - close_order_price) * abs(quantity) - comission
 						capital += profit
 						history.append((date, 'closed by SL', quantity, close_order_price, profit))
 						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital, 2))
+						capital_by_date.append((date, capital))
 						open_position_type = None
-					tp = (1 - take_profit / 100) * open_order_price
+					tp = (1 - strategy['take_profit'] / 100) * open_order_price
 					if low_price <= tp and open_position_type != None:
 						if open_price <= tp: # if opens with gap
 							close_order_price = open_price
 						else:
 							close_order_price = tp
-						profit = (open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10		# comission + *10 smth wrong
+						comission = (0.0035 * 2) * quantity
+						if comission < 0.35:
+							comission = 0.35
+						profit = (open_order_price - close_order_price) * abs(quantity) - comission
 						capital += profit
 						history.append((date, 'closed by TP', quantity, close_order_price, profit))		
 						open_position_type = None
 						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital, 2))
+						capital_by_date.append((date, capital))
 		# close short by SIGNAL
+				buy_signal = trade_signals_watcher.buy(row, 
+														strategy['K_level_to_buy'],
+														strategy['D_level_to_buy'],
+														strategy['KD_difference_to_buy']
+														)
 				if buy_signal[0] == 'buy' and open_position_type != None and i < len(list_with_price_data) - 1:	# signal to buy
 					if buy_signal[1] == 'MKT':
 						close_order_price = market_price
-						profit = (open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10		# comission + *10 smth wrong
+						comission = (0.0035 * 2) * quantity
+						if comission < 0.35:
+							comission = 0.35
+						profit = (open_order_price - close_order_price) * abs(quantity) - comission
 						capital += profit
 						history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))
 						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital, 2))
+						capital_by_date.append((date, capital))
 						open_position_type = None
 		# + open opposite position
 						open_order_price = market_price
@@ -183,10 +220,13 @@ def main(list_with_price_data, strategy):
 						history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, '', ''))
 
 		if i == len(list_with_price_data) - 1 and open_position_type != None:
+			comission = (0.0035 * 2) * quantity
+			if comission < 0.35:
+				comission = 0.35
 			if open_position_type == 'long':
-				profit = (close_price - open_order_price) * quantity - (0.0065 * 2)*10		# comission + *10 smth wrong
+				profit = (close_price - open_order_price) * quantity - comission
 			if open_position_type == 'short':
-				profit = (open_order_price - close_order_price) * abs(quantity) - (0.0065 * 2)*10		# comission + *10 smth wrong
+				profit = (open_order_price - close_price) * abs(quantity) - comission
 			capital += profit
 			history.append((date, 'now', quantity, close_price, '', profit))
 	
@@ -198,17 +238,24 @@ if __name__ == '__main__':
 	company = 'TSLA'
 	list_with_price_data = utils.get_price_data(company)
 	try:
-		strategy = (None, None, 1, 4.5, 9.0, None, None, 0, (3, 18, 7))
-		#(None,None,1,4.5,9.0,None,None,-1,(3, 4, 11))	#utils.the_best_known_strategy(company)
+		strategy = utils.the_best_known_strategy(company)
 	except:
-		strategy = ds.strategy
-	stoch_parameters = (strategy[8][0], strategy[8][1], strategy[8][2])
-	list_with_price_data = stochastic.main(list_with_price_data, stoch_parameters)
+		strategy = {'K_level_to_buy': None,
+			'D_level_to_buy': (1, 20),
+			'KD_difference_to_buy': 1,
+			'stop_loss': 4,
+			'take_profit': 9,
+			'K_level_to_sell': None,
+			'D_level_to_sell': None,
+			'KD_difference_to_sell': 0,
+			'Stoch_parameters': (20, 13, 4)
+			}
+	list_with_price_data = stochastic.main(list_with_price_data, strategy['Stoch_parameters'])
 	profit, history, buy_and_hold_profitability, capital_by_date = main(list_with_price_data, strategy)
-
+	max_drawdown = utils.max_drawdown_calculate(capital_by_date)
 	for row in history:
 		print(row)
-	print(f'\nProfitability: {round(profit, 1)}%')
+	print(f'\nProfitability: {round(profit, 1)}%, max drawdown: {round(max_drawdown, 1)}%')
 	print(f'\nBuy and hold profitability: {round(buy_and_hold_profitability, 1)}%')
 	make_candlestick_chart.main(list_with_price_data, history, capital_by_date, company)
 
