@@ -31,19 +31,19 @@ def my_range(start, stop, step=0.5):	# stop is included
 		x += step
 	return tuple(float_list)
 
-#TSLA;177.8995879999996;None;-28.706049999999994;None;(1, 20);1;4;9;;;0;(20, 13, 4)
+#TSLA;196.28667599999903;12.0595401895667;-28.706049999999994;;(20, 30);1;4;8.5;;;0;(19, 12, 5)
 class ranges:
 	K_level_to_buy = (None,)
-	D_level_to_buy = ((20,30), (30,40))
-	KD_difference_to_buy = (1,)
-	stop_loss = (None, 3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
-	take_profit = (None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
+	D_level_to_buy = ((15,20),(20,25),(25,30))	#None, (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
+	KD_difference_to_buy = (1, -1, 0, None)
+	stop_loss = (4,)#(None, 3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
+	take_profit = (8.5, )#(None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
 	K_level_to_sell = (None,)
-	D_level_to_sell = (None, )
-	KD_difference_to_sell = (0,)
-	stoch_period = (19, 20, 21)	#range(3,101, 10)
-	slow_avg = (12,13,14)	#range(3,101, 10)
-	fast_avg = (3,4,5)	#range(3,51, 5)
+	D_level_to_sell = (None,)	# (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
+	KD_difference_to_sell = (0,)	# -1, 1, None)
+	stoch_period = range(10,90, 10)#range(7, 50, 7)	#range(3,101, 10)
+	slow_avg = range(12, 50, 10)#range(7,50,7)	#range(3,101, 10)
+	fast_avg = range(5, 25, 5)#range(3,13,3)	#range(3,51, 5)
 
 
 def print_status(info):
@@ -80,10 +80,10 @@ Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - perce
 	print('\033[F'*20)
 
 def find_optimum_with_all_parameters(price_data, company):
-	all_strategies = []
 	the_best_strategy = {}
 	strategy = {}
 	the_best_strategy['profit'] = 0
+	the_best_strategy['max_drawdown'] = 0
 	try:
 		i = 1
 		for fast_avg in ranges.fast_avg:
@@ -125,19 +125,17 @@ def find_optimum_with_all_parameters(price_data, company):
 													strategy['KD_difference_to_sell'] = KD_difference_to_sell
 													strategy['Stoch_parameters'] = stoch_parameters
 
-													all_strategies.append(strategy)
-
-			
-
-														# fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
-														# 				'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
-														# 				'stop_loss', 'take_profit',
-														# 				'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',
-														# 				'Stoch_parameters']
-														# writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
-														# writer.writerow(strategy)
+													with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
+														fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
+																		'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
+																		'stop_loss', 'take_profit',
+																		'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',
+																		'Stoch_parameters']
+														writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
+														writer.writerow(strategy)
 													
 													if profit > the_best_strategy['profit']:
+														the_best_strategy['company'] = company
 														the_best_strategy['profit'] = profit
 														the_best_strategy['max_drawdown'] = max_drawdown
 														the_best_strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
@@ -165,26 +163,34 @@ def find_optimum_with_all_parameters(price_data, company):
 																i
 																))
 													i += 1
-		print('\n')
-		with open(f'!Strategies_for_{company}.json', 'a', encoding='utf-8') as file:
-				json.dumps(all_strategies)
-				json.dump(all_strategies, file)
 	except(KeyboardInterrupt):
-		with open(f'!Strategies_for_{company}.json', 'a', encoding='utf-8') as file:
-			json.dumps(all_strategies)
-			json.dump(all_strategies, file)
 		print('\n'*18)
-		print(f'The best strategy was founded is:\n{the_best_strategy}')
-											
+		print(f"""  The best strategy was found is:
+K level to buy:			{the_best_strategy['K_level_to_buy']}              
+D level to buy:			{the_best_strategy['D_level_to_buy']}           
+KD difference to buy:		{the_best_strategy['KD_difference_to_buy']}           
+stop loss:			{the_best_strategy['stop_loss']}           
+take profit:			{the_best_strategy['take_profit']}           
+K level to sell:		{the_best_strategy['K_level_to_sell']}           
+D level to sell:		{the_best_strategy['D_level_to_sell']}           
+KD difference to sell:		{the_best_strategy['KD_difference_to_sell']}           
+Stoch period:			{the_best_strategy['Stoch_parameters'][0]}           
+Stoch slow average:		{the_best_strategy['Stoch_parameters'][1]}           
+Stoch fast average:		{the_best_strategy['Stoch_parameters'][2]}           
+=========================================================================
+Profitability:			{round(the_best_strategy['profit'],1)}%      
+Max drawdown:			{round(the_best_strategy['max_drawdown'],1)}%     
+Buy and hold profitability:	{round(the_best_strategy['buy_and_hold_profitability'],1)}%       
+=========================================================================
+""")
+														
 	return the_best_strategy
 
 
 def main(company):
-	# try:
 	price_data = utils.get_price_data(company)
-	open(f'!Strategies_for_{company}.json', "w+").close()
+	#open(f'!Strategies_for_{company}.csv', "w+").close()
 	the_best_strategy = find_optimum_with_all_parameters(price_data, company)
-	the_best_strategy['company'] = company
 	with open('!BestStrategies.csv', 'a', encoding='utf-8') as file:
 		fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
 						'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
@@ -193,10 +199,7 @@ def main(company):
 						'Stoch_parameters']
 		writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
 		writer.writerow(the_best_strategy)
-	print(the_best_strategy, '\n'*13)
-
-	# except(IndexError):
-	# 	print('no data yet')
+	print('\n'*18)
 
 
 if __name__ == '__main__':

@@ -235,7 +235,7 @@ def main(list_with_price_data, strategy):
 
 
 if __name__ == '__main__':
-	company = 'TSLA'
+	company = 'AAPL'
 	list_with_price_data = utils.get_price_data(company)
 	try:
 		strategy = utils.the_best_known_strategy(company)

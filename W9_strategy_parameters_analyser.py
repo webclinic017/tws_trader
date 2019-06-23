@@ -16,11 +16,46 @@ mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING) 
 
 
-def make_3D_plot(x, y, z, labels, company, axes_ticks={'x_ticks':'default', 'y_ticks': 'default'}):
+def make_3D_plot(x, y, z, labels, company):
 	fig = pyplot.figure()
 
 	ax = Axes3D(fig)
-	ax.scatter(x, y, z)
+	if 'level' in labels[0] or 'level' in labels[1]:
+		scatter_x_list = []
+		scatter_y_list = []
+		scatter_z_list = []
+		plot_x_list = []
+		plot_y_list = []
+		plot_z_list = []
+		for i, val in enumerate(x):
+			if val == -3:
+				scatter_x_list.append(x[i])
+				scatter_y_list.append(y[i])
+				scatter_z_list.append(z[i])
+		for i, val in enumerate(y):
+			if val == -3:
+				scatter_x_list.append(x[i])
+				scatter_y_list.append(y[i])
+				scatter_z_list.append(z[i])
+		for i, val in enumerate(x):
+			if val != -3 and y[i] != -3:
+				plot_x_list.append(x[i])
+				plot_y_list.append(y[i])
+				plot_z_list.append(z[i])
+		# print(scatter_x_list)
+		# print(scatter_y_list)
+		# print(scatter_z_list)
+		# print(plot_x_list)
+		# print(plot_y_list)
+		# print(plot_z_list)
+		ax.scatter(scatter_x_list, scatter_y_list, scatter_z_list)
+		if len(plot_x_list) >=4:
+			for i in range(0, len(plot_x_list)-1, 2):
+				ax.plot([plot_x_list[i], plot_x_list[i+1]], [plot_y_list[i], plot_y_list[i+1]], [plot_z_list[i], plot_z_list[i+1]], '#1f77b4')
+		else:
+			ax.plot([plot_x_list[0], plot_x_list[1]], [plot_y_list[0], plot_y_list[1]], [plot_z_list[0], plot_z_list[1]], '#1f77b4')
+	if 'level' not in labels[0] and 'level' not in labels[1]: # Why 'else:' does not work?!!
+	 	ax.scatter(x, y, z)
 
 	ax.set_xlabel(labels[0])
 	ax.set_ylabel(labels[1])
@@ -54,260 +89,231 @@ def make_3D_plot(x, y, z, labels, company, axes_ticks={'x_ticks':'default', 'y_t
 	pyplot.show()
 
 
-def find_relation_between_each_2_parameters(all_strategies, best_params, company):
+def find_relation_between_each_2_parameters(all_strategies, best_strategy, company):
 	x_list = []
 	y_list = []
 	z_list = []
 	i = 1
-	parameters = best_params[0]
-
-	repeats = []
-	axes_ticks={'x_ticks':'default', 'y_ticks': 'default'}
 	
 	all_parameters_combinations = []
-	for x_index in range(len(parameters)):# range(2):	#
-		repeats.append(x_index)
-		for y_index in range(len(parameters)):	# range(2): #
-			if x_index != y_index and y_index not in repeats:
-					all_parameters_combinations.append(({parameters[x_index]:x_index}, {parameters[y_index]:y_index}))
-	print(best_params[1])
-	print(all_strategies[0])
-	for combination in all_parameters_combinations:
-		print(combination)
+	repeats = []
+	for key_x in best_strategy.keys():
+		repeats.append(key_x)
+		for key_y in best_strategy.keys():
+			if key_y not in repeats:
+				all_parameters_combinations.append((key_x, key_y))
+	# for combination in all_parameters_combinations:
+	# 	print(combination)
 		
 	parameters_vars = {}
-	for x in range(0, len(parameters)):
-		parameters_vars[parameters[x]] = set(row[x] for row in all_strategies)
-	print(parameters_vars)
-	
-	x = 0
-	y = 1
-	
-	viewing_strategies = set()
-	strategy = best_params[1].copy()
-	#for x in range(0, len(parameters)):
-	for parameter_value in parameters_vars[parameters[0]]:
-		strategy.pop(0)
-		strategy.insert(0, parameter_value)
-		viewing_strategies.add(tuple(strategy))
-
-	for parameter_value in parameters_vars[parameters[1]]:
-		strategy.pop(1)
-		strategy.insert(1, parameter_value)
-		viewing_strategies.add(tuple(strategy))	
-	# for y in range(0, len(parameters)):
-	# 	for parameter_value in parameters_vars[parameters[y]]:
-	# 		strategy.pop(0)
-	# 		strategy.insert(y, parameter_value)
-	# 		viewing_strategies.add(tuple(strategy))
-	for strat in viewing_strategies:
-		print(strat)
-
-	for strat in viewing_strategies:
+	for parameter in best_strategy.keys():
+		set_of_vars = set()
 		for strategy in all_strategies:
-			print(tuple(strategy), strat)
-			if tuple(strategy) == strat:
-				print(strategy, all_strategies.index(strategy))
+			set_of_vars.add(strategy[0][parameter])
+		parameters_vars[parameter] = set_of_vars
+	# print(parameters_vars)
 	
+	for combination in all_parameters_combinations:
+		for x_var in parameters_vars[combination[0]]:
+			for y_var in parameters_vars[combination[1]]:
+				strategy = best_strategy.copy()
+				strategy[combination[0]] = x_var
+				strategy[combination[1]] = y_var
+				for strategy_and_profit in all_strategies:
+					if strategy == strategy_and_profit[0]:
+						x_list.append(x_var)
+						y_list.append(y_var)
+						z_list.append(strategy_and_profit[1])
+						#print(strategy, combination2[0])
 
-
-	# 			for x in x_vars:
-	# 				strategy = best_params[1].copy()
-	# 				strategy = list(strategy)
-	# 				strategy.pop(x_index)
-	# 				strategy.insert(x_index, x)
-	# 				for y in y_vars:
-	# 					strategy = list(strategy)
-	# 					strategy.pop(y_index)
-	# 					strategy.insert(y_index, y)
-	# 					strategy = tuple(strategy)
-	# 					viewing_strategies.add(strategy)
-
-
-	# for relation in all_parameters_combinations:
-
-
-
-
-
-
+						#print('Combination:', combination, 'x:', x_var, 'y:', y_var, 'z:', strategy_and_profit[1])
+		print(f'Graph #{i}: {combination[0]} vs. {combination[1]}')
+		i += 1
+		# print('X-list:', len(x_list), x_list[:11])
+		# print('Y-list:', len(y_list), y_list[:11])
+		# print('Z-list:', len(z_list), z_list[:11],'\n')
 	
-	# print(x_vars)
-	# print(y_vars)
-				
-	# 			x_vars = set()
-	# 			y_vars = set()
-	# 			for row in all_strategies:
-	# 				x_vars.add(row[x_index])
-	# 				y_vars.add(row[y_index])
-				
-	# 			viewing_strategies = set()
-	# 			for x in x_vars:
-	# 				strategy = best_params[1].copy()
-	# 				strategy = list(strategy)
-	# 				strategy.pop(x_index)
-	# 				strategy.insert(x_index, x)
-	# 				for y in y_vars:
-	# 					strategy = list(strategy)
-	# 					strategy.pop(y_index)
-	# 					strategy.insert(y_index, y)
-	# 					strategy = tuple(strategy)
-	# 					viewing_strategies.add(strategy)
-	
+		labels = (combination[0], combination[1], 'Profit')
+		# if level is X axe
+		if 'level' in labels[0] and 'level' not in labels[1]:
+			new_x_list = []
+			new_y_list = []
+			new_z_list = []
+			for i in range(0, len(x_list)):
+				if x_list[i] == -3:
+					new_x_list.append(x_list[i])
+					new_y_list.append(y_list[i])
+					new_z_list.append(z_list[i])
+			for i in range(0, len(x_list)):
+				if x_list[i] != -3:
+					new_x_list.append(x_list[i][0])
+					new_x_list.append(x_list[i][1])
+					new_y_list.append(y_list[i])
+					new_y_list.append(y_list[i])
+					new_z_list.append(z_list[i])
+					new_z_list.append(z_list[i])
+			x_list = new_x_list
+			y_list = new_y_list
+			z_list = new_z_list
 
-	# 			# print(best_params[1])
-	# 			# print(viewing_strategies)
-	# 			for strategy in viewing_strategies:
-	# 				for row in all_strategies:
-	# 					print('Stratege:', strategy)
-	# 					print('Row:', row[4:-1])
-	# 					if tuple(strategy) == row[4:-1]:
-	# 						print('Found:', row[1])
-	# 						z_list.append(float(row[1]))
-	# 			# if x level
-	# 						if 'level' in parameters[x_index]:
-	# 							axes_ticks['x_ticks'] = 'stoch level'
-	# 							if strategy[x_index] == '' or strategy[x_index] == '(1, 100)':
-	# 								x_list.append(0)
-	# 							if strategy[x_index] == '(1, 10)':
-	# 								x_list.append(1)
-	# 							if strategy[x_index] == '(10, 20)':
-	# 								x_list.append(2)
-	# 							if strategy[x_index] == '(20, 30)':
-	# 								x_list.append(3)
-	# 			# x KD
-	# 						if 'KD_difference_to' in parameters[x_index]:
-	# 							axes_ticks['x_ticks'] = 'stoch KD cross'
-	# 							if strategy[x_index] == '':
-	# 								x_list.append(-2)
-	# 							else:
-	# 								x_list.append(int(strategy[x_index]))
-	# 						if 'stop_loss' in parameters[x_index] or 'take_profit' in parameters[x_index]:
-	# 							#print('I want to add: ', strategy[x_index])
-	# 							x_list.append(float(strategy[x_index]))
-	# 			# if y level
-	# 						if 'level' in parameters[y_index]:
-	# 							axes_ticks['y_ticks'] = 'stoch level'
-	# 							if strategy[y_index] == '' or strategy[y_index] == '(1, 100)':
-	# 								y_list.append(0)
-	# 							if strategy[y_index] == '(1, 10)':
-	# 								y_list.append(1)
-	# 							if strategy[y_index] == '(10, 20)':
-	# 								y_list.append(2)
-	# 							if strategy[y_index] == '(20, 30)':
-	# 								y_list.append(3)
-	# 			# y KD
-	# 						if 'KD_difference_to' in parameters[y_index]:
-	# 							axes_ticks['y_ticks'] = 'stoch KD cross'
-	# 							if strategy[y_index] == '':
-	# 								y_list.append(-2)
-	# 							else:
-	# 								y_list.append(int(strategy[y_index]))
-	# 						if 'stop_loss' in parameters[y_index] or 'take_profit' in parameters[y_index]:
-	# 							y_list.append(float(strategy[y_index]))
-	# 			print(f'Graph #{i}: {parameters[x_index]} vs. {parameters[y_index]}')
-	# 			i += 1
-	# 			print('X-list:', len(x_list), x_list[:11])
-	# 			print('Y-list:', len(y_list), y_list[:11])
-	# 			print('Z-list:', len(z_list), z_list[:11],'\n')
-				
-	# 			labels = (parameters[x_index], parameters[y_index], 'Profit')
-	# 			#make_3D_plot(x_list, y_list, z_list, labels, company, axes_ticks)
-	# 			x_list = []
-	# 			y_list = []
-	# 			z_list = []
+		# if level is Y axe
+		if 'level' not in labels[0] and 'level' in labels[1]:
+			new_x_list = []
+			new_y_list = []
+			new_z_list = []
+			for i in range(0, len(y_list)):
+				if y_list[i] == -3:
+					new_x_list.append(x_list[i])
+					new_y_list.append(y_list[i])
+					new_z_list.append(z_list[i])
+			for i in range(0, len(y_list)):
+				if y_list[i] != -3:
+					new_x_list.append(x_list[i])
+					new_x_list.append(x_list[i])
+					new_y_list.append(y_list[i][0])
+					new_y_list.append(y_list[i][1])
+					new_z_list.append(z_list[i])
+					new_z_list.append(z_list[i])
+			x_list = new_x_list
+			y_list = new_y_list
+			z_list = new_z_list
 
+		# if level are X and Y axes
+		if 'level' in labels[0] and 'level' in labels[1]:
+			new_x_list = []
+			new_y_list = []
+			new_z_list = []
+			for i in range(0, len(x_list)):
+				if x_list[i] != -3 and y_list[i] != -3:
+					new_x_list.append(x_list[i][0])
+					new_x_list.append(x_list[i][1])
+					new_y_list.append(y_list[i][0])
+					new_y_list.append(y_list[i][1])
+					new_z_list.append(z_list[i])
+					new_z_list.append(z_list[i])
+			for i, val in enumerate(x_list):
+				if val == -3:
+					if y_list[i] != -3:
+						new_x_list.append(x_list[i])
+						new_x_list.append(x_list[i])
+						new_y_list.append(y_list[i][0])
+						new_y_list.append(y_list[i][1])
+						new_z_list.append(z_list[i])
+						new_z_list.append(z_list[i])
+					else:
+						new_x_list.append(x_list[i])
+						new_y_list.append(y_list[i])
+						new_z_list.append(z_list[i])
+			for i, val in enumerate(y_list):
+				if val == -3:
+					if x_list[i] != -3:
+						new_x_list.append(x_list[i][0])
+						new_x_list.append(x_list[i][1])
+						new_y_list.append(y_list[i])
+						new_y_list.append(y_list[i])
+						new_z_list.append(z_list[i])
+						new_z_list.append(z_list[i])
+			x_list = new_x_list
+			y_list = new_y_list
+			z_list = new_z_list
 
-def list_of_lists_with_title_and_the_best_strategy_values():
-	strategy = utils.the_best_known_strategy('TSLA')
-	best_params = []
-	best_params.append((
-						#'K_level_to_buy',
-						#'D_level_to_buy',
-						#'KD_difference_to_buy'
-						'stop_loss',
-						'take_profit',
-						#'K_level_to_sell',
-						#'D_level_to_sell',
-						#'KD_difference_to_sell',
-						'Stoch period',
-						'Stoch slow avg (D)',
-						'Stoch fast avg (K)'
-						))
-	best_params.append([
-						#strategy['K_level_to_buy'],
-						#strategy['D_level_to_buy'],
-						#strategy['KD_difference_to_buy'],
-						strategy['stop_loss'],
-						strategy['take_profit'],
-						#strategy['K_level_to_sell'],
-						#strategy['D_level_to_sell'],
-						#strategy['KD_difference_to_sell'],
-						strategy['Stoch_parameters'][0],
-						strategy['Stoch_parameters'][1],
-						strategy['Stoch_parameters'][2]
-						])
-	return best_params
+		# print(x_list)
+		# print(y_list)
+		# print(z_list)
 
 
-def all_strategies_maker():
-	all_strategies_raw = None
-	with open(f'!Strategies_for_{company}.json', 'r', encoding='utf-8') as file:
-		all_strategies_raw = json.load(file)
+		make_3D_plot(x_list, y_list, z_list, labels, company)
+		x_list = []
+		y_list = []
+		z_list = []
 
 
-
-	# 	tuple(tuple(x) for x in csv.reader(file, delimiter=';'))
-	
-
-
-	# all_strategies = tuple([#row[4],
-	# 						#row[5],
-	# 						#row[6],
-	# 						row[7],
-	# 						row[8],
-	# 						#row[9],
-	# 						#row[10],
-	# 						#row[11],
-	# 						row[12][0],
-	# 						row[12][1],
-	# 						row[12][2]] for row in all_strategies_raw
-	# 						)
-		
-	print(all_strategies_raw)
-	# for row in all_strategies:
-	# 	for n, i in enumerate(row):
-	# 		if i == '':
-	# 			row[n] = -10
-	# 		# else:
-	# 		# 	# try:
-	# 		# 	row[n] = eval(i)
-	# 		# 	# except:
-	# 			# 	pass
-	# 			# 	#print(i)
+def all_strategies_maker(company):
+	all_strategies = []
+	with open(f'!Strategies_for_{company}.csv', 'r', encoding='utf-8') as file:
+		for x in csv.reader(file, delimiter=';'):
+			strategy = {}
+			for parameter in choosen.parameters:
+				if parameter:
+					strategy[parameter[0]] = x[parameter[1]]
+			for key, value in strategy.items():
+				if value != '':
+					strategy[key] = eval(value)
+				else:
+					strategy[key] = -3
+			for key, value in strategy.items():
+				if key == 'Stoch_period':
+					strategy['Stoch_period'] = value[0]
+				if key == 'Stoch_slow_D':
+					strategy['Stoch_slow_D'] = value[1]
+				if key == 'Stoch_fast_K':
+					strategy['Stoch_fast_K'] = value[2]
+			all_strategies.append((strategy, float(x[1])))
+	return all_strategies
 
 
+def the_best_known_strategy(company):
+	the_best_strategy = {}
+	with open(f'!BestStrategies.csv', 'r', encoding='utf-8') as file:
+		for x in csv.reader(file, delimiter=';'):
+			if x[0] == company:
+				for parameter in choosen.parameters:
+					if parameter:
+						the_best_strategy[parameter[0]] = x[parameter[1]]
+	for key, value in the_best_strategy.items():
+		if value != '':
+			the_best_strategy[key] = eval(value)
+		else:
+			the_best_strategy[key] = -3
+	for key, value in the_best_strategy.items():
+		if key == 'Stoch_period':
+			the_best_strategy['Stoch_period'] = value[0]
+		if key == 'Stoch_slow_D':
+			the_best_strategy['Stoch_slow_D'] = value[1]
+		if key == 'Stoch_fast_K':
+			the_best_strategy['Stoch_fast_K'] = value[2]
 
-	return all_strategies_raw
+	return the_best_strategy
+
+
+class choosen:
+	K_level_to_buy = False	# ('K_level_to_buy', 4)
+	D_level_to_buy = ('D_level_to_buy', 5)	# False	# 
+	KD_difference_to_buy = False	# ('KD_difference_to_buy', 6)
+	stop_loss = False #('stop_loss', 7)
+	take_profit = False	#('take_profit', 8)
+	K_level_to_sell = False	# ('K_level_to_sell', 9)
+	D_level_to_sell = False	#('D_level_to_sell', 10)	#False	# 
+	KD_difference_to_sell = False	# ('KD_difference_to_sell', 11)	#False		#
+	Stoch_period = ('Stoch_period', 12)
+	Stoch_slow_D = False	#('Stoch_slow_D', 12)
+	Stoch_fast_K = False	#('Stoch_fast_K', 12)
+	parameters = (K_level_to_buy, D_level_to_buy, KD_difference_to_buy,
+				stop_loss, take_profit, K_level_to_sell, D_level_to_sell, KD_difference_to_sell,
+				Stoch_period, Stoch_slow_D, Stoch_fast_K)
 
 
 def main(company):
-
-
-
-	best_params = list_of_lists_with_title_and_the_best_strategy_values()
-	all_strategies = all_strategies_maker()
-	
-	# print(best_params)
-	# print(all_strategies[:11])
-	
-
-
-	#find_relation_between_each_2_parameters(all_strategies, best_params, company)
+	the_best_strategy = the_best_known_strategy(company)
+	all_strategies = all_strategies_maker(company)
+	#print(all_strategies[0])
+	#print(the_best_strategy)
+	find_relation_between_each_2_parameters(all_strategies, the_best_strategy, company)
 
 
 if __name__ == '__main__':
 	company = 'TSLA'
 	main(company)
+
+
+
+
+
+
+
+
+
+
+
 
 
