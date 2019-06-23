@@ -278,16 +278,16 @@ def the_best_known_strategy(company):
 
 class choosen:
 	K_level_to_buy = False	# ('K_level_to_buy', 4)
-	D_level_to_buy = ('D_level_to_buy', 5)	# False	# 
-	KD_difference_to_buy = False	# ('KD_difference_to_buy', 6)
-	stop_loss = False #('stop_loss', 7)
-	take_profit = False	#('take_profit', 8)
+	D_level_to_buy = False	# ('D_level_to_buy', 5)	# False	# 
+	KD_difference_to_buy = False	#	('KD_difference_to_buy', 6)
+	stop_loss = False	#	('stop_loss', 7)
+	take_profit = False	# ('take_profit', 8)
 	K_level_to_sell = False	# ('K_level_to_sell', 9)
 	D_level_to_sell = False	#('D_level_to_sell', 10)	#False	# 
-	KD_difference_to_sell = False	# ('KD_difference_to_sell', 11)	#False		#
-	Stoch_period = ('Stoch_period', 12)
-	Stoch_slow_D = False	#('Stoch_slow_D', 12)
-	Stoch_fast_K = False	#('Stoch_fast_K', 12)
+	KD_difference_to_sell = ('KD_difference_to_sell', 11)	#False		#
+	Stoch_period =  False	#	('Stoch_period', 12)
+	Stoch_slow_D = False	#	(('Stoch_slow_D', 12)
+	Stoch_fast_K = ('Stoch_fast_K', 12)
 	parameters = (K_level_to_buy, D_level_to_buy, KD_difference_to_buy,
 				stop_loss, take_profit, K_level_to_sell, D_level_to_sell, KD_difference_to_sell,
 				Stoch_period, Stoch_slow_D, Stoch_fast_K)
@@ -302,7 +302,7 @@ def main(company):
 
 
 if __name__ == '__main__':
-	company = 'TSLA'
+	company = 'AAPL'
 	main(company)
 
 

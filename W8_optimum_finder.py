@@ -8,6 +8,7 @@ from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 
 from indicators import stochastic
+import settings
 import utils
 import W7_backtest
 
@@ -31,19 +32,19 @@ def my_range(start, stop, step=0.5):	# stop is included
 		x += step
 	return tuple(float_list)
 
-#TSLA;196.28667599999903;12.0595401895667;-28.706049999999994;;(20, 30);1;4;8.5;;;0;(19, 12, 5)
+#TSLA;203.89400549999928;12.0595401895667;-28.706049999999994;;(19, 29);1;4;8.5;;;0;(19, 12, 5)
 class ranges:
-	K_level_to_buy = (None,)
-	D_level_to_buy = ((15,20),(20,25),(25,30))	#None, (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
-	KD_difference_to_buy = (1, -1, 0, None)
-	stop_loss = (4,)#(None, 3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
-	take_profit = (8.5, )#(None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
-	K_level_to_sell = (None,)
-	D_level_to_sell = (None,)	# (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
-	KD_difference_to_sell = (0,)	# -1, 1, None)
-	stoch_period = range(10,90, 10)#range(7, 50, 7)	#range(3,101, 10)
-	slow_avg = range(12, 50, 10)#range(7,50,7)	#range(3,101, 10)
-	fast_avg = range(5, 25, 5)#range(3,13,3)	#range(3,51, 5)
+	K_level_to_buy = (None,)	#(1,20),(20,60), (40,80),(80,100))
+	D_level_to_buy = (None,(20,30))	#(19,28),(20,28),(18,29),(20,29),(18,30))	#None, (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
+	KD_difference_to_buy = (None,-1,)	# -1, 0, None)
+	stop_loss = (6,10)#(None, 3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
+	take_profit = (None, 1,2,5)#(None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
+	K_level_to_sell = (None,)	#(1,20),(20,60), (40,80),(80,100))
+	D_level_to_sell = (None,(70,80))	#(80,100),(60,80))	# (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
+	KD_difference_to_sell = (0,)	#1, -1, 0, None)	# -1, 1, None)
+	stoch_period = (5,6,7,8,9)#range(7, 50, 7)	#range(3,101, 10)
+	slow_avg = (11,12,13,14,15,16,17)#range(7,50,7)	#range(3,101, 10)
+	fast_avg = range(2,16)#range(3,13,3)	#range(3,51, 5)
 
 
 def print_status(info):
@@ -203,12 +204,13 @@ def main(company):
 
 
 if __name__ == '__main__':
-	for x in {'TSLA',}:# 'WMT', 'SPY', 'F', 'MS', 'GM', 'TSLA',
-				#'GE', 'AMD', 'MU', 'NVDA', 'AAPL', 'BA', 'FB',
-				#'GS', 'EBAY', 'C', 'TWTR', 'AMZN', 'IBM', 'KO', 'TQQQ'}:
-		#try:
-		print(x)
-		main(x)
+	# for x in {'TSLA',}:# 'WMT', 'SPY', 'F', 'MS', 'GM', 'TSLA',
+	# 			#'GE', 'AMD', 'MU', 'NVDA', 'AAPL', 'BA', 'FB',
+	# 			#'GS', 'EBAY', 'C', 'TWTR', 'AMZN', 'IBM', 'KO', 'TQQQ'}:
+	# 	#try:
+	company = settings.company
+	print(company)
+	main(company)
 	#	except(ValueError):
 	#		print('incorrect data                         \n')
 

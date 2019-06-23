@@ -235,20 +235,21 @@ def main(list_with_price_data, strategy):
 
 
 if __name__ == '__main__':
-	company = 'AAPL'
+	company = 'TSLA'
 	list_with_price_data = utils.get_price_data(company)
 	try:
-		strategy = utils.the_best_known_strategy(company)
+		strategy = utils.the_best_known_strategy(company, 423)
 	except:
+		#TSLA;203.89400549999928;12.0595401895667;-28.706049999999994;;(19, 29);1;4;8.5;;;0;(19, 12, 5)
 		strategy = {'K_level_to_buy': None,
-			'D_level_to_buy': (1, 20),
+			'D_level_to_buy': (20, 30),
 			'KD_difference_to_buy': 1,
 			'stop_loss': 4,
-			'take_profit': 9,
+			'take_profit': 8.5,
 			'K_level_to_sell': None,
 			'D_level_to_sell': None,
 			'KD_difference_to_sell': 0,
-			'Stoch_parameters': (20, 13, 4)
+			'Stoch_parameters': (19, 12, 5)
 			}
 	list_with_price_data = stochastic.main(list_with_price_data, strategy['Stoch_parameters'])
 	profit, history, buy_and_hold_profitability, capital_by_date = main(list_with_price_data, strategy)
