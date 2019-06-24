@@ -7,6 +7,7 @@ from matplotlib import pyplot
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 from mpl_toolkits.mplot3d import Axes3D
 
+import settings
 import utils
 import W7_backtest
 from W8_optimum_finder import ranges
@@ -302,18 +303,6 @@ def main(company):
 
 
 if __name__ == '__main__':
-	company = 'AAPL'
+	company = settings.company
 	main(company)
-
-
-
-
-
-
-
-
-
-
-
-
 

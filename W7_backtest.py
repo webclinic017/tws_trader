@@ -235,10 +235,10 @@ def main(list_with_price_data, strategy):
 
 
 if __name__ == '__main__':
-	company = 'TSLA'
+	company = settings.company
 	list_with_price_data = utils.get_price_data(company)
 	try:
-		strategy = utils.the_best_known_strategy(company, 423)
+		strategy = utils.the_best_known_strategy(company)
 	except:
 		#TSLA;203.89400549999928;12.0595401895667;-28.706049999999994;;(19, 29);1;4;8.5;;;0;(19, 12, 5)
 		strategy = {'K_level_to_buy': None,

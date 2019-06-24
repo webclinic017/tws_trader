@@ -81,6 +81,7 @@ def main(c):
 	# W1_filter_all_companies_and_get_price_data.main(c)
 
 	if utils.SEs_should_work_now():
+		
 		W3_price_data_updater.main(c)
 
 		company = ''
