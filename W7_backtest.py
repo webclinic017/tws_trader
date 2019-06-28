@@ -23,8 +23,6 @@ def main(list_with_price_data, strategy):
 	history = []
 	history.append(('date', 'action', 'quantity', 'price', 'signal', 'profit'))
 
-	
-
 	for i in range(1, len(list_with_price_data)):
 		row = list_with_price_data[i]
 		date = row[0]
@@ -32,16 +30,12 @@ def main(list_with_price_data, strategy):
 		high_price = float(row[2])
 		low_price = float(row[3])
 		close_price = float(row[4])
-		
 		if row[6] != '' and row[7] != '':
 			K = float(row[6])
 			D = float(row[7])
 		else:
 			K = ''
 			D = ''
-	
-		#stop_loss = strategy['stop_loss']
-		#take_profit = strategy['take_profit']
 		if i < len(list_with_price_data) - 1:
 			market_price = (abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2)
 		# it's not correct, but it must be the closest price to market_price
@@ -50,16 +44,9 @@ def main(list_with_price_data, strategy):
 			buy_and_hold_quantity = int(capital / open_price)
 		if i == len(list_with_price_data) - 1:
 			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - settings.POSITION_QUANTITY) / settings.POSITION_QUANTITY * 100
-
 # OPEN POSITIONS functional
-
 		if open_position_type == None: # no open positions
 			capital_by_date.append((date, capital))
-
-				
-
-
-
 	# BUY
 			buy_signal = trade_signals_watcher.buy(row, 
 													strategy['K_level_to_buy'],
@@ -85,10 +72,8 @@ def main(list_with_price_data, strategy):
 					open_position_type = 'short'
 					quantity = -1 * int(capital / open_order_price)
 					history.append((list_with_price_data[i+1][0], 'short', quantity, open_order_price, ''))
-
 # CLOSE POSITIONS functional
 		else:	# checking open position if it is signal to close
-
 	# close LONG
 			if open_position_type == 'long':
 				if date == history[-1][0]:
@@ -154,7 +139,6 @@ def main(list_with_price_data, strategy):
 						open_position_type = 'short'
 						quantity = -1 * int(capital / open_order_price)
 						history.append((list_with_price_data[i+1][0], 'short', quantity, open_order_price, '', ''))
-
 
 	# close SHORT
 			if open_position_type == 'short':

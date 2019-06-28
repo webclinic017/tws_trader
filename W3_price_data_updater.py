@@ -19,11 +19,10 @@ def data_adding(new_price_data, stock_ticker):
 	with open(f'historical_data/{stock_ticker}.csv', 'r', encoding='utf-8') as data_file:
 		last_date = list(csv.reader(data_file, delimiter=';'))[-1][0]	# last date in collected data
 	
-	for x in new_price_data:
-		print(x)
+	# for x in new_price_data:
+	# 	print(x)
 	i = -1	# index of the last row in file with data
 	for row in new_price_data:
-
 		if last_date in row:
 			i = new_price_data.index(row)	# new prices since next from this index in new_price_data
 			print(i)
@@ -33,9 +32,6 @@ def data_adding(new_price_data, stock_ticker):
 			a = csv.writer(data_file, fieldnames, delimiter=';')
 			for row in new_price_data[i+1:]:
 				a.writerow(row.split(';'))
-	else:
-		print('ERROR UPDATING!')
-		exit()
 
 def error_handler(msg):
 	if msg.errorCode == 2104 or msg.errorCode == 2106:
@@ -53,10 +49,7 @@ def duration_calculate(company):
 		last_date = list(csv.reader(data_file, delimiter=';'))[-1][0]	# last date in collected data
 	last_date = datetime.strptime(last_date, "%Y%m%d  %H:%M:%S")
 	now = datetime.now()
-	print('last:', last_date)
-	print('now', now)
 	difference = now - last_date
-	print(difference)
 	duration = f"{difference.days + 2} D" # difference + today + last_date (IB counts date, datetime count 24-hours)
 	return duration
 
@@ -82,7 +75,6 @@ def requesting(conn, company, duration):
 
 def main(conn, company):
 	duration = duration_calculate(company)
-	print(duration)
 	requesting(conn, company, duration)
 	global new_price_data
 	data_adding(new_price_data, company)
