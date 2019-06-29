@@ -42,15 +42,13 @@
 import csv
 import time
 
-from ib.opt import Connection
+from ib.opt import Connection, sender
 
 import account_checking
 import W1_filter_all_companies_and_get_price_data
 import W2_sort_companies
 import W3_price_data_updater
 
-import Worker4_open_position
-import positions_and_orderId_checking
 import settings
 import utils
 
@@ -64,25 +62,38 @@ def main(conn, company):
 		conn.registerAll(print)	# this is for errors searching
 		W3_price_data_updater.main(conn, company, strategy['Stoch_parameters'])
 
-
 		open_position_type = account_checking.open_position(conn, company)
-		# check orders
+		# open_order = account_checking.open_order(conn, company)
+		# +check orders
 
-		if open_position_type == None:
-			# last row with price data --> trade_signals_watcher.py
-			# if buy -> order to buy
-			# if sell -> order to sell
-			print('Buy or sell with signal')
-		if open_position_type == 'long':
-			# last row with price data --> trade_signals_watcher.py
-			# if sell:
-				# close position + order to sell (order to sell with quantity*2)
-			print('Sell with a signal')
-		if open_position_type == 'short':
-			# last row with price data --> trade_signals_watcher.py
-			# if buy:
-				# order to buy with quantity*2	
-			print('Buy with a signal')	
+		last_row_with_price_data = get_price_data(company)[-1]
+		buy_signal = trade_signals_watcher.buy(last_row_with_price_data, 
+												strategy['K_level_to_buy'],
+												strategy['D_level_to_buy'],
+												strategy['KD_difference_to_buy']
+												)
+		sell_signal = trade_signals_watcher.sell(last_row_with_price_data, 
+												strategy['K_level_to_buy'],
+												strategy['D_level_to_buy'],
+												strategy['KD_difference_to_buy']
+												)
+
+		# if open_position_type == None and open_order == None:
+		# 	if buy_signal[0] == 'buy':
+		# 		# W4 - buy, SL, TP
+		# 	if sell_signal[0] == 'sell':
+		# 		# W4 - buy, SL, TP
+		# 	print('Buy or sell with signal')
+		# if open_position_type == 'long' and open_order == None:
+		# 	# last row with price data --> trade_signals_watcher.py
+		# 	# if sell:
+		# 		# close position + order to sell (order to sell with quantity*2)
+		# 	print('Sell with a signal')
+		# if open_position_type == 'short' and open_order == None:
+		# 	# last row with price data --> trade_signals_watcher.py
+		# 	# if buy:
+		# 		# order to buy with quantity*2	
+		# 	print('Buy with a signal')	
 
 
 
@@ -99,19 +110,6 @@ def main(conn, company):
 
 
 
-
-
-
-
-	
-
-
-		
-
-
-
-
-
 	else:
 		print(' Stock exchange is not working now. Awaiting till it opens.', end = '\r')
 		time.sleep(60*25)	# 25 mins
@@ -119,13 +117,23 @@ def main(conn, company):
 if __name__ == "__main__":
 	try:
 		conn = Connection.create(port=7497, clientId=0)
-		conn.connect()	
+		conn.connect()
+		count = 1
 		while True:
-			company = settings.company
-			main(conn, company)
+			if conn.isConnected():
+				company = settings.company
+				main(conn, company)
+				print('khbkbr')
+				time.sleep(60)
+				print('everg')
+			else:
+				print(f'  CONNECTION ERROR! TRYING TO RECONNECT! Attempt: {count}', end='\r')
+				time.sleep(40)
+				count += 1
+				conn.connect()
 		conn.disconnect()
 	except(KeyboardInterrupt):
-		print('Bye!')
+		print('\nBye!')
 		conn.disconnect()
 	except():
 		print('ERROR!')

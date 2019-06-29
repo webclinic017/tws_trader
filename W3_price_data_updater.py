@@ -93,7 +93,7 @@ if __name__ == "__main__":
 	conn.connect()
 	try:
 		company = settings.company
-		main(conn, company)
+		main(conn, company, (26,26,9))
 	except():
 		print('FATAL ERROR!')
 		conn.disconnect()
