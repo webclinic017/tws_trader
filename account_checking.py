@@ -3,8 +3,6 @@ import time
 
 from ib.opt import message, Connection
 
-import settings
-
 
 open_positions = []
 def get_open_positions_info(msg):

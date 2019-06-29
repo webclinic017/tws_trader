@@ -1,5 +1,5 @@
-import csv
 import utils
+
 
 def volatility_calculate(prices):
 	all_intraday_volatilities = []
@@ -19,6 +19,7 @@ def volatility_calculate(prices):
 	average_daily_volatility = sum(all_daily_volatilities) / len(all_daily_volatilities)
 	return (round(average_intraday_volatility, 1), round(average_daily_volatility, 1))
 
+
 def sort():
 	volatility_dict = dict()
 	companies = utils.set_with_my_companies()
@@ -36,6 +37,7 @@ def sort():
 	for x in sorted(volatility_dict.items(), key=lambda item: item[1], reverse=True):
 		sorted_companies.append(x[0])
 	return sorted_companies
+
 
 if __name__ == '__main__':
 	print(sort()[:10])

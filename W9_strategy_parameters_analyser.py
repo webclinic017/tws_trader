@@ -1,6 +1,5 @@
 import csv
 from datetime import datetime
-import json
 import logging
 
 from matplotlib import pyplot
@@ -8,9 +7,6 @@ from matplotlib.ticker import FuncFormatter, MaxNLocator
 from mpl_toolkits.mplot3d import Axes3D
 
 import settings
-import utils
-import W7_backtest
-from W8_optimum_finder import ranges
 
 # In order to launch without matplotlib debugging:
 mpl_logger = logging.getLogger('matplotlib') 
@@ -288,7 +284,7 @@ class choosen:
 	KD_difference_to_sell = ('KD_difference_to_sell', 11)	#False		#
 	Stoch_period =  False	#	('Stoch_period', 12)
 	Stoch_slow_D = False	#	(('Stoch_slow_D', 12)
-	Stoch_fast_K = ('Stoch_fast_K', 12)
+	Stoch_fast_K = False	#	('Stoch_fast_K', 12)
 	parameters = (K_level_to_buy, D_level_to_buy, KD_difference_to_buy,
 				stop_loss, take_profit, K_level_to_sell, D_level_to_sell, KD_difference_to_sell,
 				Stoch_period, Stoch_slow_D, Stoch_fast_K)

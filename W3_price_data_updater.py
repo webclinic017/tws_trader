@@ -7,12 +7,13 @@ from ib.opt import Connection, message
 import settings
 import update_stochastic_in_price_data
 import utils
-import W2_sort_companies
+
 
 new_price_data = []
 def new_price_data_list(msg):
 	if 'finished' not in msg.date:
 		new_price_data.append(f'{msg.date};{float(msg.open)};{float(msg.high)};{float(msg.low)};{float(msg.close)};{int(msg.volume)}')
+
 
 def data_adding(new_price_data, stock_ticker):
 	last_date = None
@@ -33,6 +34,7 @@ def data_adding(new_price_data, stock_ticker):
 			for row in new_price_data[i+1:]:
 				a.writerow(row.split(';'))
 
+
 def error_handler(msg):
 	if msg.errorCode == 2104 or msg.errorCode == 2106:
 		pass
@@ -43,6 +45,7 @@ def error_handler(msg):
 	else:
 		print(msg)
 
+
 def duration_calculate(company):
 	last_date = None
 	with open(f'historical_data/{company}.csv', 'r', encoding='utf-8') as data_file:
@@ -52,6 +55,7 @@ def duration_calculate(company):
 	difference = now - last_date
 	duration = f"{difference.days + 2} D" # difference + today + last_date (IB counts date, datetime count 24-hours)
 	return duration
+
 
 def requesting(conn, company, duration):
 	my_contract = utils.create_contract_from_ticker(company)
@@ -73,13 +77,15 @@ def requesting(conn, company, duration):
 							)
 	time.sleep(1.5)
 
-def main(conn, company):
+
+def main(conn, company, stoch_parameters):
 	duration = duration_calculate(company)
 	requesting(conn, company, duration)
 	global new_price_data
 	data_adding(new_price_data, company)
-	update_stochastic_in_price_data.main(company)	# updates whole data! Needs to modify to work faster.
+	update_stochastic_in_price_data.main(company, stoch_parameters)	# updates whole data! Needs to modify to work faster.
 	new_price_data = []
+
 
 # # In case of testing:
 if __name__ == "__main__":

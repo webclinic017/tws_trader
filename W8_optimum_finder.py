@@ -2,7 +2,6 @@ import csv
 from datetime import datetime
 import logging
 import time
-import json
 
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D

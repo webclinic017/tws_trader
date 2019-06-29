@@ -1,3 +1,6 @@
+# this functions get list of price data in format: [date, open, high, low, close, volume, stoch %K, stoch %D]
+# and return (0, 0) or signal to buy/sell
+
 def buy(row, K_level=None, D_level=None, KD_difference=None):	# levels - turple(min, max)
 
 	date = row[0]

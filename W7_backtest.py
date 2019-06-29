@@ -1,6 +1,4 @@
-# + max losses
 # + count of deals, the shortest and the longest deals
-import csv
 
 import make_candlestick_chart
 import settings

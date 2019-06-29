@@ -27,10 +27,10 @@ def delete_columns_with_indicator(prices): 	# m.b. with pandas.DataFrame it woul
 	return prices
 
 
-def main(stock_ticker, parameters=(26, 26, 9)):
+def main(stock_ticker, stoch_parameters):
 	prices = utils.get_price_data(stock_ticker)
 	prices = delete_columns_with_indicator(prices)
-	prices_with_indicators = stochastic.main(prices, parameters)
+	prices_with_indicators = stochastic.main(prices, stoch_parameters)
 	rewrite_csv_with_prices(prices_with_indicators, stock_ticker)
 
 # In order to testing:
