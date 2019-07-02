@@ -29,7 +29,7 @@
 # 2. SORT companies						| 4/10		|			| 	list of companies	| !MyCompanies + ...
 #######################################################################################################################
 # 3. UPDATE data 						| 10/10		|			| 	list of companies	| !MyCompanies + ...
-# 4. MANAGE portfolio					| 10/10		|			| 						|
+# 4. CHECKING account 					| 10/10		|			| 						|
 # 5. WATCH for trade signals			| 10/10		| strategy	| 	buy or sell signal	| 
 # 6. TRADE with strong trading signals	| 10/10		|			| 						|
 #######################################################################################################################
@@ -44,71 +44,94 @@ import time
 
 from ib.opt import Connection, sender
 
-import account_checking
+import W4_checking_account
 import W1_filter_all_companies_and_get_price_data
 import W2_sort_companies
 import W3_price_data_updater
+import W6_open_position
 
 import settings
+import trade_signals_watcher
 import utils
 
-def main(conn, company):
+
+def print_status(info):
+	print(f'''
+Time:			{time.strftime('%H:%M', time.gmtime())}
+Buy signal:		{info[0]}
+Sell signal:		{info[1]}
+Open position type:	{info[2]}
+Price data row:		{info[3]}
+Order id:		{info[4]}
+''')
+	# print('\033[F'*8)
+
+# СДЕЛАТЬ ОТТАЛКИВАНИЕ ОТ ДАТЫ РЯДА С ЦЕНАМИ!!
+# И НЕ проверять позиции, а верить себе, что если отправлялся ордер, то сейчас открыта позиция (или узнавать только первый раз как с ордер айди)
+
+def main(conn, company, orderId):
 	##### needs very seldom
 	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
 	# W1_filter_all_companies_and_get_price_data.main(c)
 	
 	strategy = utils.the_best_known_strategy(company)
-	if True:	#utils.SEs_should_work_now():
-		conn.registerAll(print)	# this is for errors searching
+	if utils.SEs_should_work_now():
 		W3_price_data_updater.main(conn, company, strategy['Stoch_parameters'])
+		last_row_with_price_data = utils.get_price_data(company)[-1]
 
-		open_position_type = account_checking.open_position(conn, company)
-		# open_order = account_checking.open_order(conn, company)
-		# +check orders
+		open_position_type = W4_checking_account.open_position(conn, company)
+		quantity = int((W4_checking_account.buying_power(conn) * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
 
-		last_row_with_price_data = get_price_data(company)[-1]
 		buy_signal = trade_signals_watcher.buy(last_row_with_price_data, 
 												strategy['K_level_to_buy'],
 												strategy['D_level_to_buy'],
 												strategy['KD_difference_to_buy']
 												)
 		sell_signal = trade_signals_watcher.sell(last_row_with_price_data, 
-												strategy['K_level_to_buy'],
-												strategy['D_level_to_buy'],
-												strategy['KD_difference_to_buy']
+												strategy['K_level_to_sell'],
+												strategy['D_level_to_sell'],
+												strategy['KD_difference_to_sell']
 												)
 
-		# if open_position_type == None and open_order == None:
-		# 	if buy_signal[0] == 'buy':
-		# 		# W4 - buy, SL, TP
-		# 	if sell_signal[0] == 'sell':
-		# 		# W4 - buy, SL, TP
-		# 	print('Buy or sell with signal')
-		# if open_position_type == 'long' and open_order == None:
-		# 	# last row with price data --> trade_signals_watcher.py
-		# 	# if sell:
-		# 		# close position + order to sell (order to sell with quantity*2)
-		# 	print('Sell with a signal')
-		# if open_position_type == 'short' and open_order == None:
-		# 	# last row with price data --> trade_signals_watcher.py
-		# 	# if buy:
-		# 		# order to buy with quantity*2	
-		# 	print('Buy with a signal')	
+		print_status((buy_signal, sell_signal, open_position_type, last_row_with_price_data, orderId))
 
+		if open_position_type == None:
+			if buy_signal[0] == 'buy':
+				print(f'Buying {company}')
+				action = 'BUY'
+				stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
+				take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
+				orderId += 3
+			if sell_signal[0] == 'sell':
+				print(f'Selling {company}')
+				action = 'SELL'
+				stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
+				take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
+				orderId += 3
+		if open_position_type == 'long':
+			if sell_signal[0] == 'sell':
+				print('Close long by signal + open short')
+				W6_open_position.close_position(conn, company, orderId)
+				orderId += 1
+				action = 'SELL'
+				stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
+				take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
+				orderId += 3
+		if open_position_type == 'short':
+			if sell_signal[0] == 'sell':
+				print('Close short by signal + open long')
+				W6_open_position.close_position(conn, company, orderId)
+				orderId += 1
+				action = 'BUY'
+				stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
+				take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
+				orderId += 3
 
-
-
-
-
-		time.sleep(60*25)
-
-
-
-
-		#print(strategy)
-
-
-
+		time.sleep(60*15)
 
 	else:
 		print(' Stock exchange is not working now. Awaiting till it opens.', end = '\r')
@@ -118,14 +141,13 @@ if __name__ == "__main__":
 	try:
 		conn = Connection.create(port=7497, clientId=0)
 		conn.connect()
+		conn.registerAll(print)	# this is for errors searching
 		count = 1
+		orderId = W4_checking_account.next_valid_order_Id(conn)
 		while True:
 			if conn.isConnected():
 				company = settings.company
-				main(conn, company)
-				print('khbkbr')
-				time.sleep(60)
-				print('everg')
+				main(conn, company, orderId)
 			else:
 				print(f'  CONNECTION ERROR! TRYING TO RECONNECT! Attempt: {count}', end='\r')
 				time.sleep(40)
@@ -133,6 +155,7 @@ if __name__ == "__main__":
 				conn.connect()
 		conn.disconnect()
 	except(KeyboardInterrupt):
+		print('\n'*10)
 		print('\nBye!')
 		conn.disconnect()
 	except():

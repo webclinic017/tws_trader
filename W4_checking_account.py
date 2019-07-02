@@ -3,6 +3,8 @@ import time
 
 from ib.opt import message, Connection
 
+from settings import ACCOUNT_NUMBER
+
 
 open_positions = []
 def get_open_positions_info(msg):
@@ -25,6 +27,7 @@ def read_positions_from_csv():
 		a = csv.DictReader(csvfile, fieldnames, delimiter=';')
 		for row in a:
 			open_positions.append(row)
+	# print(open_positions)
 	return open_positions
 
 
@@ -50,11 +53,46 @@ def open_position(c, company):
 	open_positions = []
 
 
+def get_order_id(msg):
+	# print(msg.orderId)
+	with open('!NextValidId.csv', 'w', encoding='utf-8') as csvfile:
+		csvfile.write(str(msg.orderId))
+	print(msg.orderId)
+
+
+def next_valid_order_Id(c):
+	c.register(get_order_id, message.nextValidId)
+	c.reqPositions()
+	time.sleep(2)
+	orderid = None
+	with open('!NextValidId.csv', 'r', encoding='utf-8') as file:
+		for next_id in csv.reader(file):
+			orderid = next_id[0]
+	return int(orderid)
+
+
+buying_power_total = []
+def printing(msg):
+	if msg.key == 'BuyingPower':
+		buying_power_total.append(float(msg.value))
+
+
+def buying_power(c):
+	global buying_power_total
+	c.register(printing, message.updateAccountValue)
+	c.reqAccountUpdates(True, ACCOUNT_NUMBER)
+	time.sleep(2)
+	return buying_power_total[0]
+
+
 # In case of testing:
 if __name__ == '__main__':
 	c = Connection.create(port=7497, clientId=0)
 	c.connect()
-	c.registerAll(print)
-	print(open_position(c, 'TSLA'))
+	# c.registerAll(print)
+	company = 'TSLA'
+	print(f'Open position for {company}:', open_position(c, company))
+	print('Next valid order id:', next_valid_order_Id(c))
+	print('Buying power:', buying_power(c))
 	c.disconnect()
 

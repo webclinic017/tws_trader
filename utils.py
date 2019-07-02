@@ -17,7 +17,7 @@ def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch=
 def SEs_should_work_now():
 	hours_now = int(time.strftime("%H", time.gmtime()))
 	work_day = int(time.strftime("%w", time.gmtime()))
-	if work_day == 1 or work_day == 6: # if it is weekend
+	if work_day == 6 or work_day == 7: # if it is weekend
 		work_day = False
 		return False
 	else:

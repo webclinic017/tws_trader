@@ -26,7 +26,7 @@ def data_adding(new_price_data, stock_ticker):
 	for row in new_price_data:
 		if last_date in row:
 			i = new_price_data.index(row)	# new prices since next from this index in new_price_data
-			print(i)
+			# print(i)
 	if i != -1 and new_price_data != []:
 		with open(f'historical_data/{stock_ticker}.csv', 'a', encoding='utf-8') as data_file:
 			fieldnames = ('date', 'open', 'high', 'low', 'close', 'volume')

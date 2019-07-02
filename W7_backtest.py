@@ -14,7 +14,7 @@ def main(list_with_price_data, strategy):
 	close_order_price = None
 	profit = 0
 	want_to_open_position = True
-	capital = settings.POSITION_QUANTITY
+	capital = 100000 * settings.POSITION_QUANTITY / 100
 	capital_by_date = []
 	quantity = None
 	open_position_type = None
@@ -41,7 +41,7 @@ def main(list_with_price_data, strategy):
 		if i == 1:
 			buy_and_hold_quantity = int(capital / open_price)
 		if i == len(list_with_price_data) - 1:
-			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - settings.POSITION_QUANTITY) / settings.POSITION_QUANTITY * 100
+			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - (100000 * settings.POSITION_QUANTITY / 100)) / (100000 * settings.POSITION_QUANTITY / 100) * 100
 # OPEN POSITIONS functional
 		if open_position_type == None: # no open positions
 			capital_by_date.append((date, capital))
