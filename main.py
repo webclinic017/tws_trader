@@ -69,18 +69,24 @@ Order id:		{info[4]}
 # СДЕЛАТЬ ОТТАЛКИВАНИЕ ОТ ДАТЫ РЯДА С ЦЕНАМИ!!
 # И НЕ проверять позиции, а верить себе, что если отправлялся ордер, то сейчас открыта позиция (или узнавать только первый раз как с ордер айди)
 
-def main(conn, company, orderId):
+def main(company):
 	##### needs very seldom
 	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
 	# W1_filter_all_companies_and_get_price_data.main(c)
+
+	conn = Connection.create(port=7497, clientId=0)
 	
 	strategy = utils.the_best_known_strategy(company)
 	if utils.SEs_should_work_now():
+		conn.connect()
 		W3_price_data_updater.main(conn, company, strategy['Stoch_parameters'])
+
 		last_row_with_price_data = utils.get_price_data(company)[-1]
 
 		open_position_type = W4_checking_account.open_position(conn, company)
 		quantity = int((W4_checking_account.buying_power(conn) * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+		orderId = W4_checking_account.next_valid_order_Id(conn)
+		conn.disconnect()
 
 		buy_signal = trade_signals_watcher.buy(last_row_with_price_data, 
 												strategy['K_level_to_buy'],
@@ -101,35 +107,47 @@ def main(conn, company, orderId):
 				action = 'BUY'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
-				orderId += 3
+				conn.disconnect()
+				# orderId += 3
 			if sell_signal[0] == 'sell':
 				print(f'Selling {company}')
 				action = 'SELL'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
-				orderId += 3
+				conn.disconnect()
+				# orderId += 3
 		if open_position_type == 'long':
 			if sell_signal[0] == 'sell':
 				print('Close long by signal + open short')
+				conn.connect()
 				W6_open_position.close_position(conn, company, orderId)
-				orderId += 1
+				conn.disconnect()
+				# orderId += 1
 				action = 'SELL'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
-				orderId += 3
+				conn.disconnect()
+				# orderId += 3
 		if open_position_type == 'short':
 			if sell_signal[0] == 'sell':
 				print('Close short by signal + open long')
+				conn.connect()
 				W6_open_position.close_position(conn, company, orderId)
-				orderId += 1
+				conn.disconnect()
+				# orderId += 1
 				action = 'BUY'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
-				orderId += 3
+				conn.disconnect()
+				# orderId += 3
 
 		time.sleep(60*15)
 
@@ -138,22 +156,10 @@ def main(conn, company, orderId):
 		time.sleep(60*25)	# 25 mins
 
 if __name__ == "__main__":
+	company = settings.company
 	try:
-		conn = Connection.create(port=7497, clientId=0)
-		conn.connect()
-		conn.registerAll(print)	# this is for errors searching
-		count = 1
-		orderId = W4_checking_account.next_valid_order_Id(conn)
 		while True:
-			if conn.isConnected():
-				company = settings.company
-				main(conn, company, orderId)
-			else:
-				print(f'  CONNECTION ERROR! TRYING TO RECONNECT! Attempt: {count}', end='\r')
-				time.sleep(40)
-				count += 1
-				conn.connect()
-		conn.disconnect()
+			main(company)
 	except(KeyboardInterrupt):
 		print('\n'*10)
 		print('\nBye!')
