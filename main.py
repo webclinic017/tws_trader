@@ -66,8 +66,6 @@ Order id:		{info[4]}
 ''')
 	# print('\033[F'*8)
 
-# СДЕЛАТЬ ОТТАЛКИВАНИЕ ОТ ДАТЫ РЯДА С ЦЕНАМИ!!
-# И НЕ проверять позиции, а верить себе, что если отправлялся ордер, то сейчас открыта позиция (или узнавать только первый раз как с ордер айди)
 
 def main(company):
 	##### needs very seldom
@@ -78,6 +76,7 @@ def main(company):
 	
 	strategy = utils.the_best_known_strategy(company)
 	if utils.SEs_should_work_now():
+		start = time.clock()
 		conn.connect()
 		W3_price_data_updater.main(conn, company, strategy['Stoch_parameters'])
 
@@ -98,8 +97,8 @@ def main(company):
 												strategy['D_level_to_sell'],
 												strategy['KD_difference_to_sell']
 												)
-
 		print_status((buy_signal, sell_signal, open_position_type, last_row_with_price_data, orderId))
+
 
 		if open_position_type == None:
 			if buy_signal[0] == 'buy':
@@ -110,7 +109,6 @@ def main(company):
 				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
 				conn.disconnect()
-				# orderId += 3
 			if sell_signal[0] == 'sell':
 				print(f'Selling {company}')
 				action = 'SELL'
@@ -119,41 +117,46 @@ def main(company):
 				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
 				conn.disconnect()
-				# orderId += 3
 		if open_position_type == 'long':
 			if sell_signal[0] == 'sell':
-				print('Close long by signal + open short')
+				print('Closing long by signal...')
 				conn.connect()
+				orderId += 1
 				W6_open_position.close_position(conn, company, orderId)
+				orderId += 1
 				conn.disconnect()
-				# orderId += 1
+				time.sleep(20)
 				action = 'SELL'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+				print('...and open short')
 				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
 				conn.disconnect()
-				# orderId += 3
 		if open_position_type == 'short':
-			if sell_signal[0] == 'sell':
-				print('Close short by signal + open long')
+			if buy_signal[0] == 'buy':
+				print('Closing short by signal...')
 				conn.connect()
+				orderId += 1
 				W6_open_position.close_position(conn, company, orderId)
+				orderId += 1
 				conn.disconnect()
-				# orderId += 1
+				time.sleep(20)
 				action = 'BUY'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+				print('...and open long')
 				conn.connect()
 				W6_open_position.place_bracket_order(conn, company, action, stop_loss, take_profit, quantity, orderId)
 				conn.disconnect()
-				# orderId += 3
-
-		time.sleep(60*15)
+		end = time.clock()
+		cycle_executed_in_seconds = (end - start) / (24 * 60 * 60)
+		time.sleep((60 * 30) - cycle_executed_in_seconds)	# new cycle runs every 30 mins
 
 	else:
 		print(' Stock exchange is not working now. Awaiting till it opens.', end = '\r')
 		time.sleep(60*25)	# 25 mins
+
 
 if __name__ == "__main__":
 	company = settings.company
@@ -161,10 +164,7 @@ if __name__ == "__main__":
 		while True:
 			main(company)
 	except(KeyboardInterrupt):
-		print('\n'*10)
 		print('\nBye!')
-		conn.disconnect()
 	except():
 		print('ERROR!')
-		conn.disconnect()
 

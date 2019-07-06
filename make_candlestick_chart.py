@@ -31,7 +31,7 @@ def main(list_with_price_data, history, capital_by_date, company):
 		capital_y.append(row[1] / koef)
 	buy_and_hold_profitability = round((float(list_with_price_data[-1][4]) - float(list_with_price_data[1][1])) / float(list_with_price_data[1][1]) * 100, 1)
 	profitability = round((capital_y[-1] - capital_y[0]) / capital_y[0] * 100, 1)
-	ax_main.plot(capital_x, capital_y, label=f'capital ({profitability}% vs. {buy_and_hold_profitability}%)', linewidth = 0.7)
+	ax_main.plot(capital_x, capital_y, label='capital', linewidth = 0.7)
 
 # Candlestick chart + stoch
 	stoch_time = []
