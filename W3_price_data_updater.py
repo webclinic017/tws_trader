@@ -4,7 +4,7 @@ import time
 
 from ib.opt import Connection, message
 
-import settings
+from settings import TWS_CONNECTION, BAR_SIZE
 import update_stochastic_in_price_data
 import utils
 
@@ -57,16 +57,17 @@ def duration_calculate(company):
 	return duration
 
 
-def requesting(conn, company, duration):
+def requesting(company, duration):
 	my_contract = utils.create_contract_from_ticker(company)
-#	conn.registerAll(print)	# this is for errors searching
-	conn.register(new_price_data_list, message.historicalData)
-	conn.register(error_handler, message.Error)
-	conn.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
+	TWS_CONNECTION.connect()
+#	TWS_CONNECTION.registerAll(print)	# this is for errors searching
+	TWS_CONNECTION.register(new_price_data_list, message.historicalData)
+	TWS_CONNECTION.register(error_handler, message.Error)
+	TWS_CONNECTION.reqHistoricalData(1,	# tickerId, A unique identifier which will serve to identify the incoming data.
 							my_contract,	# your Contract()
 							'',	# endDateTime, The request's end date and time (the empty string indicates current present moment)
 							duration,	# durationString, S D W M Y (seconds, days, weeks, months, year)
-							settings.BAR_SIZE,	# barSizeSetting, 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
+							BAR_SIZE,	# barSizeSetting, 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
 							"TRADES",	# whatToShow
 							1,	# useRTH, Whether (1) or not (0) to retrieve data generated only within Regular Trading Hours (RTH)
 							1	# formatDate, The format in which the incoming bars' date should be presented. Note that for day bars, only yyyyMMdd format is available.
@@ -75,12 +76,13 @@ def requesting(conn, company, duration):
 									# If True, and endDateTime cannot be specified.
 									# 10th argument is from ibapi, it doesn't work with IbPy
 							)
-	time.sleep(1.5)
+	time.sleep(2)
+	TWS_CONNECTION.disconnect()
 
 
-def main(conn, company, stoch_parameters):
+def main(company, stoch_parameters):
 	duration = duration_calculate(company)
-	requesting(conn, company, duration)
+	requesting(company, duration)
 	global new_price_data
 	data_adding(new_price_data, company)
 	update_stochastic_in_price_data.main(company, stoch_parameters)	# updates whole data! Needs to modify to work faster.
@@ -89,11 +91,9 @@ def main(conn, company, stoch_parameters):
 
 # # In case of testing:
 if __name__ == "__main__":
-	conn = Connection.create(port=7497, clientId=0)
-	conn.connect()
 	try:
 		company = settings.company
-		main(conn, company, (26,26,9))
+		main(company, (26,26,9))
 	except():
 		print('FATAL ERROR!')
 		conn.disconnect()
