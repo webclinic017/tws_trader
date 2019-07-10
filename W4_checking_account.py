@@ -6,6 +6,7 @@ from ib.opt import message, Connection
 from settings import ACCOUNT_NUMBER, TWS_CONNECTION
 
 
+# it takes <7 secs
 def what_position_is_open_now_for(company, try_count=1):
 # Register messages with positions from TWS
 	open_positions = []
@@ -67,7 +68,7 @@ def what_position_is_open_now_for(company, try_count=1):
 					if int(position.get('Quantity')) < 0:
 						return 'short'
 
-
+# It takes <3 secs
 def orders_ids_are_open_now_for(company):
 # Register messages with orders from TWS
 	open_orders = []

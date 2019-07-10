@@ -80,7 +80,7 @@ def main(company):
 
 
 		open_position_type = W4_checking_account.what_position_is_open_now_for(company)
-		time.sleep(3)
+		time.sleep(7)
 		orderId = W4_checking_account.next_valid_order_Id()
 		time.sleep(3)
 		buying_power = W4_checking_account.buying_power()
@@ -118,7 +118,6 @@ def main(company):
 			if sell_signal[0] == 'sell':
 				print('Closing long by signal...')
 				W6_position_manager.close_position(company, orderId)
-				#	+ Delete SL TP orders or real close existing position
 				orderId += 1
 				time.sleep(20)
 				action = 'SELL'

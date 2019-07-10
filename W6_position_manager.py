@@ -9,45 +9,95 @@ from settings import TWS_CONNECTION
 import W4_checking_account
 
 
-def place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id):
-	def create_bracket_order(action, stop_loss, take_profit, quantity, order_id):
-		parent_order = Order()
-		parent_order.m_orderType = 'MKT'
-		parent_order.m_totalQuantity = quantity
-		parent_order.m_action = action
-		parent_order.order_id = order_id
-		parent_order.transmit = False
+def create_MKT_order(action, quantity, order_id):
+	parent_order = Order()
+	parent_order.m_orderType = 'MKT'
+	parent_order.m_totalQuantity = quantity
+	parent_order.m_action = action
+	parent_order.order_id = order_id
+	return parent_order
 
-		tp = Order()
-		tp.m_orderType = 'LMT'
-		tp.m_totalQuantity = quantity
-		tp.m_action = "SELL" if action == "BUY" else "BUY"
-		tp.m_lmtPrice = take_profit
-		tp.order_id = order_id + 1
-		tp.m_parentId = order_id
-		tp.transmit = False
 
-		sl = Order()
-		sl.m_orderType = 'STP'
-		sl.m_totalQuantity = quantity
-		sl.m_action = "SELL" if action == "BUY" else "BUY"
-		sl.m_auxPrice = stop_loss
-		sl.order_id = order_id + 2
-		sl.m_parentId = order_id
-		sl.transmit = True
+def create_TP_order(action, take_profit, quantity, parent_order_id):
+	tp = Order()
+	tp.m_orderType = 'LMT'
+	tp.m_totalQuantity = quantity
+	tp.m_action = "SELL" if action == "BUY" else "BUY"
+	tp.m_lmtPrice = take_profit
+	tp.order_id = parent_order_id + 1
+	tp.m_parentId = parent_order_id
+	return tp
 
-		return [parent_order, tp, sl]
 
+def create_SL_order(action, stop_loss, quantity, parent_order_id):
+	sl = Order()
+	sl.m_orderType = 'STP'
+	sl.m_totalQuantity = quantity
+	sl.m_action = "SELL" if action == "BUY" else "BUY"
+	sl.m_auxPrice = stop_loss
+	sl.order_id = parent_order_id + 2
+	sl.m_parentId = parent_order_id
+	return sl
+
+
+def create_bracket_order(action, stop_loss, take_profit, quantity, order_id):
+	parent_order = create_MKT_order(action, quantity, order_id)
+	tp = create_TP_order(action, take_profit, quantity, order_id)
+	sl = create_SL_order(action, stop_loss, quantity, order_id)
+	parent_order.m_orderType = 'MKT'
+	parent_order.transmit = False
+	tp.transmit = False
+	sl.transmit = True
+	return [parent_order, tp, sl]
+
+# Takes 15 - 45 secs
+def place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id, try_count=1):
 	contract = utils.create_contract_from_ticker(company)
 	bracket_order = create_bracket_order(action, stop_loss, take_profit, quantity, order_id)
 	for order in bracket_order:
 		TWS_CONNECTION.connect()
 		TWS_CONNECTION.placeOrder(order.order_id, contract, order)
+		time.sleep(5)
+		TWS_CONNECTION.disconnect()
+# Check opened position
+	position = W4_checking_account.what_position_is_open_now_for(company)
+	time.sleep(7)
+	if position == None and utils.SEs_should_work_now():
+		if try_count <= 3:
+			try_count += 1
+			place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id, try_count)
+		else:
+			print('ERROR with braket order placing or execution!')
+# Check opened orders
+	W4_checking_account.orders_ids_are_open_now_for(company)
+	time.sleep(3)
+	placed_orders = []
+	with open('!MyOrders.csv', 'r', encoding='utf-8') as csvfile:
+		fieldnames = ('OrderId', 'Company', 'Quantity', 'OrderType')
+		a = csv.DictReader(csvfile, fieldnames, delimiter=';')
+		for row in a:
+			if row.get('Company') == company:
+				if row.get('OrderType') == 'LMT':
+					placed_orders.append('TP')
+				if row.get('OrderType') == 'STP':
+					placed_orders.append('SL')
+	if 'LMT' not in placed_orders:
+		tp = create_TP_order(action, take_profit, quantity, order_id)
+		tp.transmit = True
+		TWS_CONNECTION.connect()
+		TWS_CONNECTION.placeOrder(tp.order_id+2, contract, tp)
 		time.sleep(3)
 		TWS_CONNECTION.disconnect()
-#### + ADD CHECKING SL-TP - IF TWS ANSWERED: <error id={order_id}, errorCode=201, errorMsg=Order rejected - reason:Parent order is partially or fully filled>
-#### in this case I'll place single SL order and single TP order
+	if 'STP' not in placed_orders:
+		sl = create_SL_order(action, stop_loss, quantity, order_id)
+		sl.transmit = True
+		TWS_CONNECTION.connect()
+		TWS_CONNECTION.placeOrder(sl.order_id+2, contract, sl)
+		time.sleep(3)
+		TWS_CONNECTION.disconnect()		
+			
 
+# it takes <6 secs
 def close_position(company, order_id):
 # Getting position quantity
 	open_positions = []
@@ -85,7 +135,7 @@ def close_position(company, order_id):
 		for order_id in open_orders_ids:
 			TWS_CONNECTION.cancelOrder(order_id)
 		TWS_CONNECTION.disconnect()
-		
+
 
 if __name__ == "__main__":
 	company = 'TSLA'
