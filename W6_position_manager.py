@@ -25,7 +25,6 @@ def create_TP_order(action, take_profit, quantity, parent_order_id):
 	tp.m_action = "SELL" if action == "BUY" else "BUY"
 	tp.m_lmtPrice = take_profit
 	tp.order_id = parent_order_id + 1
-	tp.m_parentId = parent_order_id
 	return tp
 
 
@@ -36,7 +35,6 @@ def create_SL_order(action, stop_loss, quantity, parent_order_id):
 	sl.m_action = "SELL" if action == "BUY" else "BUY"
 	sl.m_auxPrice = stop_loss
 	sl.order_id = parent_order_id + 2
-	sl.m_parentId = parent_order_id
 	return sl
 
 
@@ -46,6 +44,8 @@ def create_bracket_order(action, stop_loss, take_profit, quantity, order_id):
 	sl = create_SL_order(action, stop_loss, quantity, order_id)
 	parent_order.m_orderType = 'MKT'
 	parent_order.transmit = False
+	tp.m_parentId = order_id
+	sl.m_parentId = order_id
 	tp.transmit = False
 	sl.transmit = True
 	return [parent_order, tp, sl]
@@ -97,6 +97,7 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 		TWS_CONNECTION.disconnect()		
 			
 
+#### NEEDS TO AWAIT TILL POSITION FULLY CLOSES!!! ####
 # it takes <6 secs
 def close_position(company, order_id):
 # Getting position quantity

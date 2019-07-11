@@ -74,9 +74,9 @@ def main(company):
 	
 	strategy = utils.the_best_known_strategy(company)
 	if utils.SEs_should_work_now():
-		W3_price_data_updater.main(company, strategy['Stoch_parameters'])
-		time.sleep(4)
-		last_row_with_price_data = utils.get_price_data(company)[-1]
+		W3_price_data_updater.main(company, strategy['Stoch_parameters'], strategy['bar_size'])
+		time.sleep(6)
+		last_row_with_price_data = utils.get_price_data(company, strategy['bar_size'])[-1]
 
 
 		open_position_type = W4_checking_account.what_position_is_open_now_for(company)

@@ -52,9 +52,9 @@ def set_with_my_companies():
 	return companies_with_data
 
 
-def get_price_data(stock_ticker):
+def get_price_data(stock_ticker, bar_size):
 	list_with_price_data=[]
-	with open(f'historical_data/{stock_ticker}.csv', 'r', encoding='utf-8') as data_file:
+	with open(f'historical_data/{stock_ticker} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
 		for row in csv.reader(data_file, delimiter=';'):
 			list_with_price_data.append(row)
 	return list_with_price_data
@@ -65,19 +65,20 @@ def the_best_known_strategy(company):
 	with open(f'!BestStrategies.csv', 'r', encoding='utf-8') as file:
 		for x in csv.reader(file, delimiter=';'):
 			if x[0] == company:
-				the_best_strategy['K_level_to_buy'] = x[4]
-				the_best_strategy['D_level_to_buy'] = x[5]
-				the_best_strategy['KD_difference_to_buy'] = x[6]
-				the_best_strategy['stop_loss'] = x[7]
-				the_best_strategy['take_profit'] = x[8]
-				the_best_strategy['K_level_to_sell'] = x[9]
-				the_best_strategy['D_level_to_sell'] = x[10]
-				the_best_strategy['KD_difference_to_sell'] = x[11]
-				the_best_strategy['Stoch_parameters'] = x[12]
+				the_best_strategy['bar_size'] = x[4]
+				the_best_strategy['K_level_to_buy'] = x[5]
+				the_best_strategy['D_level_to_buy'] = x[6]
+				the_best_strategy['KD_difference_to_buy'] = x[7]
+				the_best_strategy['stop_loss'] = x[8]
+				the_best_strategy['take_profit'] = x[9]
+				the_best_strategy['K_level_to_sell'] = x[10]
+				the_best_strategy['D_level_to_sell'] = x[11]
+				the_best_strategy['KD_difference_to_sell'] = x[12]
+				the_best_strategy['Stoch_parameters'] = x[13]
 	for key, value in the_best_strategy.items():
-		if value != '':
+		if value != '' and key != 'bar_size':
 			the_best_strategy[key] = eval(value)
-		else:
+		if value == '':
 			the_best_strategy[key] = None
 	return the_best_strategy
 
