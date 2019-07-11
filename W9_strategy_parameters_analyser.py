@@ -10,135 +10,123 @@ import settings
 mpl_logger = logging.getLogger('matplotlib') 
 mpl_logger.setLevel(logging.WARNING) 
 
-def main(company):
-	fig = plt.figure()
 
-	ax1 = fig.add_subplot(4, 3, 1)
-	ax2 = fig.add_subplot(4, 3, 2)
-	ax3 = fig.add_subplot(4, 3, 3)
-	ax4 = fig.add_subplot(4, 3, 4)
-	ax5 = fig.add_subplot(4, 3, 5)
-	ax6 = fig.add_subplot(4, 3, 6)
-	ax7 = fig.add_subplot(4, 3, 7)
-	ax8 = fig.add_subplot(4, 3, 8)
-	ax9 = fig.add_subplot(4, 3, 9)
-	ax10 = fig.add_subplot(4, 3, 10)
-	ax11 = fig.add_subplot(4, 3, 11)
-	ax12 = fig.add_subplot(4, 3, 12)
+class constant:
+	Bar_size = '5 mins'
+	K_level_to_buy = False	# ('K_level_to_buy', 5)
+	D_level_to_buy = False	# ('D_level_to_buy', 6)	# False	# 
+	KD_difference_to_buy = 	False	# ('KD_difference_to_buy', 7)
+	stop_loss = 	False 	#	('stop_loss', 8)
+	take_profit = False 	#	('take_profit', 9)
+	K_level_to_sell = False	#	('K_level_to_sell', 10)
+	D_level_to_sell = False	#	('D_level_to_sell', 11)	#False	# 
+	KD_difference_to_sell =  False	# ('KD_difference_to_sell', 12)	#False		#
+	Stoch_period = False 	# 	('Stoch_period', 13)
+	Stoch_slow_D =	False	#  ('Stoch_slow_D', 13)
+	Stoch_fast_K = False	# ('Stoch_fast_K', 13)
+	parameters = (Bar_size,
+				K_level_to_buy, D_level_to_buy, KD_difference_to_buy,
+				stop_loss, take_profit, K_level_to_sell, D_level_to_sell, KD_difference_to_sell,
+				Stoch_period, Stoch_slow_D, Stoch_fast_K)
 
+
+def get_all_strategies(company):
 	all_strategies = []
 	with open(f'!Strategies_for_{company}.csv', 'r', encoding='utf-8') as file:
 		for x in csv.DictReader(file, delimiter=';'):
-			if float(x['profit']) >= 140:
-				all_strategies.append(x)
+			if float(x['profit']) >= 100:
+				x['Stoch_period'] = str(eval(x['Stoch_parameters'])[0])
+				x['Stoch_slow_D'] = str(eval(x['Stoch_parameters'])[1])
+				x['Stoch_fast_K'] = str(eval(x['Stoch_parameters'])[2])
+				x.pop('Stoch_parameters')
+				if x['bar_size'] == '10 mins':
+					all_strategies.append(x)
 	for strategy in all_strategies:
 		for key, value in strategy.items():
 			if value != '' and key != 'bar_size' and key != 'company':
 				strategy[key] = eval(value)
 			if value == '':
 				strategy[key] = -3
+	return all_strategies
 
+
+def draw_scatter(x_y_param_tuple, index, fig):
+	ax = fig.add_subplot(4, 3, index)
+	ax.scatter(x_y_param_tuple[0], x_y_param_tuple[1], s=0.3)
+	ax.set_xlabel(x_y_param_tuple[2])
+	ax.set_ylabel('Profit')
+	return ax
+
+
+def draw_plot(x_y_param_tuple, index, fig):
+	ax = fig.add_subplot(4, 3, index)
+	ax.plot(x_y_param_tuple[0], x_y_param_tuple[1], linewidth=0.5)
+	ax.set_xlabel(x_y_param_tuple[2])
+	ax.set_ylabel('Profit')
+	return ax
+
+
+def make_scatters(parameter, all_strategies):
+	if 'level' not in parameter:
+		x_vars = []
+		y_vars = []
+		for strategy in all_strategies:
+			x_vars.append(strategy[parameter])
+			y_vars.append(int(strategy['profit']))			
+		return (x_vars, y_vars, parameter)
+	if 'level' in parameter:
+		x_vars = []
+		y_vars = []
+		for strategy in all_strategies:
+			x_vars.append(strategy[parameter])
+			y_vars.append(int(strategy['profit']))
+		new_x_vars = []
+		new_y_vars = []
+		for i, val in enumerate(x_vars):
+			if val == -3:
+				new_x_vars.append(val)
+				new_y_vars.append(y_vars[i])
+			if 	val != -3:
+				j = 0
+				while val[0]+j <= val[1]:
+					new_x_vars.append(val[0]+j)
+					new_y_vars.append(y_vars[i])
+					j += 1
+		return (new_x_vars, new_y_vars, parameter)
+
+
+def make_points_for_plot(parameter, all_strategies):
 	x_vars = []
 	y_vars = []
+	scatters = {}
 	for strategy in all_strategies:
-		x_vars.append(strategy['bar_size'])
-		y_vars.append(strategy['profit'])
-	ax1.scatter(x_vars, y_vars, s=0.3)
-	ax1.set_xlabel('bar_size')
-	ax1.set_ylabel('Profit')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['K_level_to_buy'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax2.scatter(x_vars, y_vars, s=0.3)
-	ax2.set_xlabel('K_level_to_buy')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['D_level_to_buy'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax3.scatter(x_vars, y_vars, s=0.3)
-	ax3.set_xlabel('D_level_to_buy')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['KD_difference_to_buy'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax4.scatter(x_vars, y_vars, s=0.3)
-	ax4.set_xlabel('KD_difference_to_buy')
-	ax4.set_ylabel('Profit')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['stop_loss'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax5.scatter(x_vars, y_vars, s=0.3)
-	ax5.set_xlabel('stop_loss')
+		x = scatters.get(strategy[parameter], None)
+		if x == None:
+			scatters[strategy[parameter]] = int(strategy['profit'])
+		else:
+			if scatters[strategy[parameter]] < int(strategy['profit']):
+				scatters[strategy[parameter]] = int(strategy['profit'])
+	for x, y in sorted(scatters.items(), key=lambda item:item[0]):
+		x_vars.append(x)
+		y_vars.append(y)
+	return (x_vars, y_vars, parameter)
 
 
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['take_profit'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax6.scatter(x_vars, y_vars, s=0.3)
-	ax6.set_xlabel('take_profit')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['K_level_to_sell'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax7.scatter(x_vars, y_vars, s=0.3)
-	ax7.set_xlabel('K_level_to_sell')
-	ax7.set_ylabel('Profit')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['D_level_to_sell'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax8.scatter(x_vars, y_vars, s=0.3)
-	ax8.set_xlabel('D_level_to_sell')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['KD_difference_to_sell'])
-		y_vars.append(int(float(strategy['profit'])))
-	ax9.scatter(x_vars, y_vars, s=0.3)
-	ax9.set_xlabel('KD_difference_to_sell')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['Stoch_parameters'][0])
-		y_vars.append(int(float(strategy['profit'])))
-	ax10.scatter(x_vars, y_vars, s=0.3)
-	ax10.set_xlabel('Stoch')
-	ax10.set_ylabel('Profit')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['Stoch_parameters'][1])
-		y_vars.append(int(float(strategy['profit'])))
-	ax11.scatter(x_vars, y_vars, s=0.3)
-	ax11.set_xlabel('Stoch_slow_D')
-
-	x_vars = []
-	y_vars = []
-	for strategy in all_strategies:
-		x_vars.append(strategy['Stoch_parameters'][2])
-		y_vars.append(int(float(strategy['profit'])))
-	ax12.scatter(x_vars, y_vars, s=0.3)
-	ax12.set_xlabel('Stoch_fast_K')
-
+def main(company):
+	all_strategies = get_all_strategies(company)
+	fig = plt.figure()
+	ax1 = draw_scatter(make_scatters('bar_size', all_strategies), 1, fig)
+	ax2 = draw_scatter(make_scatters('K_level_to_buy', all_strategies), 2, fig)
+	ax3 = draw_scatter(make_scatters('D_level_to_buy', all_strategies), 3, fig)
+	ax4 = draw_scatter(make_scatters('KD_difference_to_buy', all_strategies), 4, fig)
+	ax5 = draw_plot(make_points_for_plot('stop_loss', all_strategies), 5, fig)
+	ax6 = draw_plot(make_points_for_plot('take_profit', all_strategies), 6, fig)
+	ax7 = draw_scatter(make_scatters('K_level_to_sell', all_strategies), 7, fig)
+	ax8 = draw_scatter(make_scatters('D_level_to_sell', all_strategies), 8, fig)
+	ax9 = draw_scatter(make_scatters('KD_difference_to_sell', all_strategies), 9, fig)
+	ax10 = draw_plot(make_points_for_plot('Stoch_period', all_strategies), 10, fig)
+	ax11 = draw_plot(make_points_for_plot('Stoch_slow_D', all_strategies), 11, fig)
+	ax12 = draw_plot(make_points_for_plot('Stoch_fast_K', all_strategies), 12, fig)
 	plt.show()
 
 
