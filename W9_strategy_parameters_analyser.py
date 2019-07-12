@@ -39,8 +39,8 @@ def get_all_strategies(company):
 				x['Stoch_slow_D'] = str(eval(x['Stoch_parameters'])[1])
 				x['Stoch_fast_K'] = str(eval(x['Stoch_parameters'])[2])
 				x.pop('Stoch_parameters')
-				if x['bar_size'] == '10 mins':
-					all_strategies.append(x)
+				# if x['bar_size'] == '10 mins':
+				all_strategies.append(x)
 	for strategy in all_strategies:
 		for key, value in strategy.items():
 			if value != '' and key != 'bar_size' and key != 'company':
@@ -60,7 +60,7 @@ def draw_scatter(x_y_param_tuple, index, fig):
 
 def draw_plot(x_y_param_tuple, index, fig):
 	ax = fig.add_subplot(4, 3, index)
-	ax.plot(x_y_param_tuple[0], x_y_param_tuple[1], linewidth=0.5)
+	ax.plot(x_y_param_tuple[0], x_y_param_tuple[1], linewidth=0.7)
 	ax.set_xlabel(x_y_param_tuple[2])
 	ax.set_ylabel('Profit')
 	return ax
