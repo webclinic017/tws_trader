@@ -75,8 +75,10 @@ def the_best_known_strategy(company):
 				the_best_strategy['D_level_to_sell'] = x[11]
 				the_best_strategy['KD_difference_to_sell'] = x[12]
 				the_best_strategy['Stoch_parameters'] = x[13]
+				the_best_strategy['Weekday_buy'] = x[14]
+				the_best_strategy['Weekday_sell'] = x[15]
 	for key, value in the_best_strategy.items():
-		if value != '' and key != 'bar_size':
+		if value != '' and key != 'bar_size' and 'Weekday' not in key:
 			the_best_strategy[key] = eval(value)
 		if value == '':
 			the_best_strategy[key] = None

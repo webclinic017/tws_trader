@@ -86,16 +86,8 @@ def main(company):
 		buying_power = W4_checking_account.buying_power()
 		time.sleep(3)
 
-		buy_signal = trade_signals_watcher.buy(last_row_with_price_data, 
-												strategy['K_level_to_buy'],
-												strategy['D_level_to_buy'],
-												strategy['KD_difference_to_buy']
-												)
-		sell_signal = trade_signals_watcher.sell(last_row_with_price_data, 
-												strategy['K_level_to_sell'],
-												strategy['D_level_to_sell'],
-												strategy['KD_difference_to_sell']
-												)
+		buy_signal = trade_signals_watcher.buy(last_row_with_price_data, strategy)
+		sell_signal = trade_signals_watcher.sell(last_row_with_price_data, strategy)
 
 		print_status((buy_signal, sell_signal, open_position_type, last_row_with_price_data, orderId))
 

@@ -46,26 +46,18 @@ def main(list_with_price_data, strategy):
 		if open_position_type == None: # no open positions
 			capital_by_date.append((date, capital))
 	# BUY
-			buy_signal = trade_signals_watcher.buy(row, 
-													strategy['K_level_to_buy'],
-													strategy['D_level_to_buy'],
-													strategy['KD_difference_to_buy']
-													)
-			if buy_signal[0] == 'buy':	# signal to buy
-				if buy_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
+			buy_signal = trade_signals_watcher.buy(row, strategy)
+			if buy_signal == ('buy', 'buy'):
+				if i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'long'
 					quantity = int(capital / open_order_price)
 					history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, ''))
 	
 	# SELL
-			sell_signal = trade_signals_watcher.sell(row, 
-													strategy['K_level_to_sell'],
-													strategy['D_level_to_sell'],
-													strategy['KD_difference_to_sell']
-													)
-			if sell_signal[0] == 'sell' and open_position_type != 'long':	# signal to sell
-				if sell_signal[1] == 'MKT' and i < len(list_with_price_data) - 1:
+			sell_signal = trade_signals_watcher.sell(row, strategy)
+			if sell_signal == ('sell', 'sell'):
+				if i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'short'
 					quantity = -1 * int(capital / open_order_price)
@@ -114,25 +106,21 @@ def main(list_with_price_data, strategy):
 						capital_by_date.append((date, capital))
 						open_position_type = None
 		# close long by SIGNAL
-				sell_signal = trade_signals_watcher.sell(row, 
-														strategy['K_level_to_sell'],
-														strategy['D_level_to_sell'],
-														strategy['KD_difference_to_sell']
-														)
+				sell_signal = trade_signals_watcher.sell(row, strategy)
 				if sell_signal[0] == 'sell' and open_position_type != None and i < len(list_with_price_data) - 1:
-					if sell_signal[1] == 'MKT':
-						close_order_price = market_price
-						comission = (0.0035 * 2) * quantity
-						if comission < 0.35:
-							comission = 0.35
-						profit = (close_order_price - open_order_price) * quantity - comission
-						capital += profit
-						history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))			
-						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital))
-						open_position_type = None
+					close_order_price = market_price
+					comission = (0.0035 * 2) * quantity
+					if comission < 0.35:
+						comission = 0.35
+					profit = (close_order_price - open_order_price) * quantity - comission
+					capital += profit
+					history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))			
+					capital_by_date.pop(-1)
+					capital_by_date.append((date, capital))
+					open_position_type = None
 	
 		# + open opposite position
+					if sell_signal[1] == 'sell':
 						open_order_price = market_price
 						open_position_type = 'short'
 						quantity = -1 * int(capital / open_order_price)
@@ -178,24 +166,20 @@ def main(list_with_price_data, strategy):
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 		# close short by SIGNAL
-				buy_signal = trade_signals_watcher.buy(row, 
-														strategy['K_level_to_buy'],
-														strategy['D_level_to_buy'],
-														strategy['KD_difference_to_buy']
-														)
+				buy_signal = trade_signals_watcher.buy(row, strategy)
 				if buy_signal[0] == 'buy' and open_position_type != None and i < len(list_with_price_data) - 1:	# signal to buy
-					if buy_signal[1] == 'MKT':
-						close_order_price = market_price
-						comission = (0.0035 * 2) * quantity
-						if comission < 0.35:
-							comission = 0.35
-						profit = (open_order_price - close_order_price) * abs(quantity) - comission
-						capital += profit
-						history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))
-						capital_by_date.pop(-1)
-						capital_by_date.append((date, capital))
-						open_position_type = None
+					close_order_price = market_price
+					comission = (0.0035 * 2) * quantity
+					if comission < 0.35:
+						comission = 0.35
+					profit = (open_order_price - close_order_price) * abs(quantity) - comission
+					capital += profit
+					history.append((list_with_price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))
+					capital_by_date.pop(-1)
+					capital_by_date.append((date, capital))
+					open_position_type = None
 		# + open opposite position
+					if buy_signal[1] == 'buy':
 						open_order_price = market_price
 						open_position_type = 'long'
 						quantity = int(capital / open_order_price)

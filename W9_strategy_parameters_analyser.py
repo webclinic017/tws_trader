@@ -11,47 +11,30 @@ mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING) 
 
 
-class constant:
-	Bar_size = '5 mins'
-	K_level_to_buy = False	# ('K_level_to_buy', 5)
-	D_level_to_buy = False	# ('D_level_to_buy', 6)	# False	# 
-	KD_difference_to_buy = 	False	# ('KD_difference_to_buy', 7)
-	stop_loss = 	False 	#	('stop_loss', 8)
-	take_profit = False 	#	('take_profit', 9)
-	K_level_to_sell = False	#	('K_level_to_sell', 10)
-	D_level_to_sell = False	#	('D_level_to_sell', 11)	#False	# 
-	KD_difference_to_sell =  False	# ('KD_difference_to_sell', 12)	#False		#
-	Stoch_period = False 	# 	('Stoch_period', 13)
-	Stoch_slow_D =	False	#  ('Stoch_slow_D', 13)
-	Stoch_fast_K = False	# ('Stoch_fast_K', 13)
-	parameters = (Bar_size,
-				K_level_to_buy, D_level_to_buy, KD_difference_to_buy,
-				stop_loss, take_profit, K_level_to_sell, D_level_to_sell, KD_difference_to_sell,
-				Stoch_period, Stoch_slow_D, Stoch_fast_K)
-
-
 def get_all_strategies(company):
 	all_strategies = []
 	with open(f'!Strategies_for_{company}.csv', 'r', encoding='utf-8') as file:
 		for x in csv.DictReader(file, delimiter=';'):
-			if float(x['profit']) >= 100:
+			if float(x['profit']) >= -100:
 				x['Stoch_period'] = str(eval(x['Stoch_parameters'])[0])
 				x['Stoch_slow_D'] = str(eval(x['Stoch_parameters'])[1])
 				x['Stoch_fast_K'] = str(eval(x['Stoch_parameters'])[2])
 				x.pop('Stoch_parameters')
-				# if x['bar_size'] == '10 mins':
-				all_strategies.append(x)
+				if x['bar_size'] == '30 mins':
+					all_strategies.append(x)
 	for strategy in all_strategies:
 		for key, value in strategy.items():
-			if value != '' and key != 'bar_size' and key != 'company':
+			if value != '' and key != 'bar_size' and key != 'company' and 'Weekday' not in key:
 				strategy[key] = eval(value)
 			if value == '':
 				strategy[key] = -3
+			if 'Weekday' in key:
+				strategy[key] = str(value)
 	return all_strategies
 
 
 def draw_scatter(x_y_param_tuple, index, fig):
-	ax = fig.add_subplot(4, 3, index)
+	ax = fig.add_subplot(4, 4, index)
 	ax.scatter(x_y_param_tuple[0], x_y_param_tuple[1], s=0.3)
 	ax.set_xlabel(x_y_param_tuple[2])
 	ax.set_ylabel('Profit')
@@ -59,7 +42,7 @@ def draw_scatter(x_y_param_tuple, index, fig):
 
 
 def draw_plot(x_y_param_tuple, index, fig):
-	ax = fig.add_subplot(4, 3, index)
+	ax = fig.add_subplot(4, 4, index)
 	ax.plot(x_y_param_tuple[0], x_y_param_tuple[1], linewidth=0.7)
 	ax.set_xlabel(x_y_param_tuple[2])
 	ax.set_ylabel('Profit')
@@ -115,18 +98,20 @@ def make_points_for_plot(parameter, all_strategies):
 def main(company):
 	all_strategies = get_all_strategies(company)
 	fig = plt.figure()
-	ax1 = draw_scatter(make_scatters('bar_size', all_strategies), 1, fig)
-	ax2 = draw_scatter(make_scatters('K_level_to_buy', all_strategies), 2, fig)
-	ax3 = draw_scatter(make_scatters('D_level_to_buy', all_strategies), 3, fig)
-	ax4 = draw_scatter(make_scatters('KD_difference_to_buy', all_strategies), 4, fig)
-	ax5 = draw_plot(make_points_for_plot('stop_loss', all_strategies), 5, fig)
-	ax6 = draw_plot(make_points_for_plot('take_profit', all_strategies), 6, fig)
-	ax7 = draw_scatter(make_scatters('K_level_to_sell', all_strategies), 7, fig)
-	ax8 = draw_scatter(make_scatters('D_level_to_sell', all_strategies), 8, fig)
-	ax9 = draw_scatter(make_scatters('KD_difference_to_sell', all_strategies), 9, fig)
-	ax10 = draw_plot(make_points_for_plot('Stoch_period', all_strategies), 10, fig)
-	ax11 = draw_plot(make_points_for_plot('Stoch_slow_D', all_strategies), 11, fig)
-	ax12 = draw_plot(make_points_for_plot('Stoch_fast_K', all_strategies), 12, fig)
+	
+	# ax1 = draw_scatter(make_scatters('K_level_to_buy', all_strategies), 1, fig)
+	# ax2 = draw_scatter(make_scatters('D_level_to_buy', all_strategies), 2, fig)
+	# ax3 = draw_scatter(make_scatters('KD_difference_to_buy', all_strategies), 3, fig)
+	# ax4 = draw_plot(make_points_for_plot('stop_loss', all_strategies), 4, fig)
+	# ax5 = draw_plot(make_points_for_plot('take_profit', all_strategies), 5, fig)
+	# ax6 = draw_scatter(make_scatters('K_level_to_sell', all_strategies), 6, fig)
+	# ax7 = draw_scatter(make_scatters('D_level_to_sell', all_strategies), 7, fig)
+	# ax8 = draw_scatter(make_scatters('KD_difference_to_sell', all_strategies), 8, fig)
+	# ax9 = draw_plot(make_points_for_plot('Stoch_period', all_strategies), 9, fig)
+	# ax10 = draw_plot(make_points_for_plot('Stoch_slow_D', all_strategies), 10, fig)
+	# ax11 = draw_plot(make_points_for_plot('Stoch_fast_K', all_strategies), 11, fig)
+	ax12 = draw_scatter(make_scatters('Weekday_buy', all_strategies), 12, fig)
+	ax13 = draw_scatter(make_scatters('Weekday_sell', all_strategies), 13, fig)
 	plt.show()
 
 
