@@ -77,6 +77,7 @@ def the_best_known_strategy(company):
 				the_best_strategy['Stoch_parameters'] = x[13]
 				the_best_strategy['Weekday_buy'] = x[14]
 				the_best_strategy['Weekday_sell'] = x[15]
+				the_best_strategy['Volume_profile_locator'] =  x[16]
 	for key, value in the_best_strategy.items():
 		if value != '' and key != 'bar_size' and 'Weekday' not in key:
 			the_best_strategy[key] = eval(value)
@@ -102,4 +103,13 @@ def max_drawdown_calculate(capital_by_date):
 		if new_max_drawdown > max_drawdown:
 			max_drawdown = new_max_drawdown
 	return max_drawdown
+
+
+def my_range(start, stop, step=0.5):
+	float_list = []
+	x = start
+	while x < stop:
+		float_list.append(round(x, 1))
+		x += step
+	return tuple(float_list)
 

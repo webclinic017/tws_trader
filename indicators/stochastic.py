@@ -148,7 +148,9 @@ def buy_signal(row, K_level=None, D_level=None, KD_difference=None):	# levels - 
 					if KD_difference == 1:	# needs to K>D
 						if (K - D) > 2.0:
 							return 'buy'
-
+	# Experimental:
+		if K_level == None and D_level == None and KD_difference == None:
+			return 'buy'
 		return 0
 
 
@@ -231,6 +233,9 @@ def sell_signal(row, K_level=None, D_level=None, KD_difference=None):
 					if KD_difference == 1:	# needs to K>D
 						if (K - D) > 2.0:
 							return 'sell'
+	# Experimental:
+		if K_level == None and D_level == None and KD_difference == None:
+			return 'sell'
 
 		return 0
 

@@ -76,7 +76,7 @@ def main(company):
 	if utils.SEs_should_work_now():
 		W3_price_data_updater.main(company, strategy['Stoch_parameters'], strategy['bar_size'])
 		time.sleep(6)
-		last_row_with_price_data = utils.get_price_data(company, strategy['bar_size'])[-1]
+		price_data = utils.get_price_data(company, strategy['bar_size'])
 
 
 		open_position_type = W4_checking_account.what_position_is_open_now_for(company)
@@ -86,12 +86,17 @@ def main(company):
 		buying_power = W4_checking_account.buying_power()
 		time.sleep(3)
 
-		buy_signal = trade_signals_watcher.buy(last_row_with_price_data, strategy)
-		sell_signal = trade_signals_watcher.sell(last_row_with_price_data, strategy)
+		first_date = list_with_price_data[1][0]
+		end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
+		historical_volume_profile, step = volume_profile.historical_volumes(end_date)
 
-		print_status((buy_signal, sell_signal, open_position_type, last_row_with_price_data, orderId))
+		buy_signal = trade_signals_watcher.buy(price_data, historical_volume_profile, step, strategy)
+		sell_signal = trade_signals_watcher.sell(price_data, historical_volume_profile, step, strategy)
+
+		print_status((buy_signal, sell_signal, open_position_type, price_data[-1], orderId))
 
 		quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+		last_row_with_price_data = price_data[-1]
 
 		if open_position_type == None:
 			if buy_signal[0] == 'buy':

@@ -3,11 +3,12 @@
 import make_candlestick_chart
 import settings
 from indicators import stochastic
+from indicators import volume_profile
 import trade_signals_watcher
 import utils
 
 
-def main(list_with_price_data, strategy):
+def main(list_with_price_data, strategy, historical_volume_profile, step):
 	buy_and_hold_profitability = 0
 	buy_and_hold_quantity = None
 	open_order_price = None
@@ -37,17 +38,17 @@ def main(list_with_price_data, strategy):
 		if i < len(list_with_price_data) - 1:
 			market_price = (abs(float(list_with_price_data[i+1][2]) + float(list_with_price_data[i+1][3])) / 2)
 		# it's not correct, but it must be the closest price to market_price
-
 		if i == 1:
 			buy_and_hold_quantity = int(capital / open_price)
 		if i == len(list_with_price_data) - 1:
 			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - (100000 * settings.POSITION_QUANTITY / 100)) / (100000 * settings.POSITION_QUANTITY / 100) * 100
+
 # OPEN POSITIONS functional
 		if open_position_type == None: # no open positions
 			capital_by_date.append((date, capital))
 	# BUY
-			buy_signal = trade_signals_watcher.buy(row, strategy)
-			if buy_signal == ('buy', 'buy'):
+			buy_signal = trade_signals_watcher.buy(list_with_price_data[:i+1], historical_volume_profile, strategy)
+			if buy_signal == ('buy', 'buy', 'buy'):
 				if i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'long'
@@ -55,8 +56,8 @@ def main(list_with_price_data, strategy):
 					history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, ''))
 	
 	# SELL
-			sell_signal = trade_signals_watcher.sell(row, strategy)
-			if sell_signal == ('sell', 'sell'):
+			sell_signal = trade_signals_watcher.sell(list_with_price_data[:i+1], historical_volume_profile, strategy)
+			if sell_signal == ('sell', 'sell', 'sell'):
 				if i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'short'
@@ -106,7 +107,7 @@ def main(list_with_price_data, strategy):
 						capital_by_date.append((date, capital))
 						open_position_type = None
 		# close long by SIGNAL
-				sell_signal = trade_signals_watcher.sell(row, strategy)
+				sell_signal = trade_signals_watcher.sell(list_with_price_data[:i+1], historical_volume_profile, strategy)
 				if sell_signal[0] == 'sell' and open_position_type != None and i < len(list_with_price_data) - 1:
 					close_order_price = market_price
 					comission = (0.0035 * 2) * quantity
@@ -120,7 +121,7 @@ def main(list_with_price_data, strategy):
 					open_position_type = None
 	
 		# + open opposite position
-					if sell_signal[1] == 'sell':
+					if sell_signal == ('sell', 'sell', 'sell'):
 						open_order_price = market_price
 						open_position_type = 'short'
 						quantity = -1 * int(capital / open_order_price)
@@ -166,7 +167,7 @@ def main(list_with_price_data, strategy):
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 		# close short by SIGNAL
-				buy_signal = trade_signals_watcher.buy(row, strategy)
+				buy_signal = trade_signals_watcher.buy(list_with_price_data[:i+1], historical_volume_profile, strategy)
 				if buy_signal[0] == 'buy' and open_position_type != None and i < len(list_with_price_data) - 1:	# signal to buy
 					close_order_price = market_price
 					comission = (0.0035 * 2) * quantity
@@ -179,7 +180,7 @@ def main(list_with_price_data, strategy):
 					capital_by_date.append((date, capital))
 					open_position_type = None
 		# + open opposite position
-					if buy_signal[1] == 'buy':
+					if buy_signal == ('buy', 'buy', 'buy'):
 						open_order_price = market_price
 						open_position_type = 'long'
 						quantity = int(capital / open_order_price)
@@ -219,7 +220,13 @@ if __name__ == '__main__':
 					}
 	list_with_price_data = utils.get_price_data(company, strategy['bar_size'])
 	list_with_price_data = stochastic.main(list_with_price_data, strategy['Stoch_parameters'])
-	profit, history, buy_and_hold_profitability, capital_by_date = main(list_with_price_data, strategy)
+
+	first_date = list_with_price_data[1][0]
+	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
+	historical_volume_profile, step = volume_profile.historical_volumes(end_date)
+
+
+	profit, history, buy_and_hold_profitability, capital_by_date = main(list_with_price_data, strategy, historical_volume_profile, step)
 	max_drawdown = utils.max_drawdown_calculate(capital_by_date)
 	for row in history:
 		print(row)
