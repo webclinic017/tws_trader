@@ -24,7 +24,7 @@ def get_all_strategies(company):
 					all_strategies.append(x)
 	for strategy in all_strategies:
 		for key, value in strategy.items():
-			if value != '' and key != 'bar_size' and key != 'company' and 'Weekday' not in key:
+			if value != '' and key != 'bar_size' and key != 'company' and 'Weekday' not in key and key != 'Indicators_combination':
 				strategy[key] = eval(value)
 			if value == '':
 				strategy[key] = -3
@@ -100,21 +100,22 @@ def make_points_for_plot(parameter, all_strategies):
 def main(company):
 	all_strategies = get_all_strategies(company)
 	fig = plt.figure()
-	
-	ax1 = draw_scatter(make_scatters('K_level_to_buy', all_strategies), 1, fig)
-	ax2 = draw_scatter(make_scatters('D_level_to_buy', all_strategies), 2, fig)
-	ax3 = draw_scatter(make_scatters('KD_difference_to_buy', all_strategies), 3, fig)
-	ax4 = draw_plot(make_points_for_plot('stop_loss', all_strategies), 4, fig)
-	ax5 = draw_plot(make_points_for_plot('take_profit', all_strategies), 5, fig)
-	ax6 = draw_scatter(make_scatters('K_level_to_sell', all_strategies), 6, fig)
-	ax7 = draw_scatter(make_scatters('D_level_to_sell', all_strategies), 7, fig)
-	ax8 = draw_scatter(make_scatters('KD_difference_to_sell', all_strategies), 8, fig)
-	ax9 = draw_scatter(make_scatters('Stoch_period', all_strategies), 9, fig)
-	ax10 = draw_scatter(make_scatters('Stoch_slow_D', all_strategies), 10, fig)
-	ax11 = draw_scatter(make_scatters('Stoch_fast_K', all_strategies), 11, fig)
-	ax12 = draw_scatter(make_scatters('Weekday_buy', all_strategies), 12, fig)
-	ax13 = draw_scatter(make_scatters('Weekday_sell', all_strategies), 13, fig)
-	ax14 = draw_scatter(make_scatters('Volume_profile_locator', all_strategies), 14, fig)
+
+	ax1 = draw_scatter(make_scatters('Indicators_combination', all_strategies), 1, fig)
+	ax2 = draw_scatter(make_scatters('K_level_to_buy', all_strategies), 2, fig)
+	ax3 = draw_scatter(make_scatters('D_level_to_buy', all_strategies), 3, fig)
+	ax4 = draw_scatter(make_scatters('KD_difference_to_buy', all_strategies), 4, fig)
+	ax5 = draw_plot(make_points_for_plot('stop_loss', all_strategies), 5, fig)
+	ax6 = draw_plot(make_points_for_plot('take_profit', all_strategies), 6, fig)
+	ax7 = draw_scatter(make_scatters('K_level_to_sell', all_strategies), 7, fig)
+	ax8 = draw_scatter(make_scatters('D_level_to_sell', all_strategies), 8, fig)
+	ax9 = draw_scatter(make_scatters('KD_difference_to_sell', all_strategies), 9, fig)
+	ax10 = draw_scatter(make_scatters('Stoch_period', all_strategies), 10, fig)
+	ax11 = draw_scatter(make_scatters('Stoch_slow_D', all_strategies), 11, fig)
+	ax12 = draw_scatter(make_scatters('Stoch_fast_K', all_strategies), 12, fig)
+	ax13 = draw_scatter(make_scatters('Weekday_buy', all_strategies), 13, fig)
+	ax14 = draw_scatter(make_scatters('Weekday_sell', all_strategies), 14, fig)
+	ax15 = draw_scatter(make_scatters('Volume_profile_locator', all_strategies), 15, fig)
 	plt.show()
 
 

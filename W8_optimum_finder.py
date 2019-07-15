@@ -72,27 +72,28 @@ class ranges:
 
 	# 3rd iteration:
 	bar_size = ('30 mins',) #	,'5 mins', 'hour', '1 day') 	# '10 mins', '20 mins', '1 hour', '1 day') 	# 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
+	Indicators_combination = ('S*W*V','S+W*V','S*W+V','S+W+V')
 	K_level_to_buy = (None,) 	#(1,20),(20,60), (40,80),(80,100))
-	D_level_to_buy = ((19,29),)	#(19,28),(20,28),(18,29),(20,29),(18,30))	#None, )
-	KD_difference_to_buy = (1, -1, 0, None)
+	D_level_to_buy = (None,)	#(19,28),(20,28),(18,29),(20,29),(18,30))	#None, )
+	KD_difference_to_buy = (1, None)
 	stop_loss = (4,)	#3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
 	take_profit = (8.5,)	#(None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
 	K_level_to_sell = (None,)	#(1,20),(20,60), (40,80),(80,100))
 	D_level_to_sell = (None,)	#(80,100),(60,80))	# (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
-	KD_difference_to_sell = (0,1, -1, None)	# -1, 1, None)
-	stoch_period = (5, 19,10,30)#range(7, 50, 7)	#range(3,101, 10)
-	slow_avg = (5, 12,20,30)#range(7,50,7)	#range(3,101, 10)
-	fast_avg = (5,10,20) # range(2,32,5)#range(3,13,3)	#range(3,51, 5)
-	Weekday_buy = (None,)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
-	Weekday_sell = (None,)	#1234,2345, 234)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
-	Volume_profile_locator = (None, 2,6,10,12,16,20,24,30,40,50,80,100)
+	KD_difference_to_sell = (0, None)	# -1, 1, None)
+	stoch_period = (19,)#range(7, 50, 7)	#range(3,101, 10)
+	slow_avg = (12,)#range(7,50,7)	#range(3,101, 10)
+	fast_avg = (5,) # range(2,32,5)#range(3,13,3)	#range(3,51, 5)
+	Weekday_buy = (None,5,1,1234,2345)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
+	Weekday_sell = (None,1,5,1234,2345)	#1234,2345, 234)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
+	Volume_profile_locator = (None, 2,10,20,30,50,80,100)
 
 
 def print_status(info):
 	a = len(ranges.K_level_to_buy)*len(ranges.D_level_to_buy)*len(ranges.KD_difference_to_buy)*len(ranges.stop_loss)
 	b = len(ranges.take_profit)*len(ranges.K_level_to_sell)*len(ranges.D_level_to_sell)*len(ranges.KD_difference_to_sell)
 	c = len(ranges.stoch_period)*len(ranges.slow_avg)*len(ranges.fast_avg)*len(ranges.bar_size)*len(ranges.Weekday_buy)
-	d = len(ranges.Volume_profile_locator)*len(ranges.Weekday_sell)
+	d = len(ranges.Volume_profile_locator)*len(ranges.Weekday_sell)*len(ranges.Indicators_combination)
 	total_number = a*b*c*d
 	done_number = info[12]
 	percentage = int((done_number/total_number)*30)
@@ -120,6 +121,7 @@ def print_status(info):
 ### + Estimation time
 	print(f"""  
 Bar size:			{''.join(choosen_parameter(info[13], ranges.bar_size))}           
+Indicators_combination:		{''.join(choosen_parameter(info[18], ranges.Indicators_combination))}
 K level to buy:			{''.join(choosen_parameter(info[3], ranges.K_level_to_buy))}                   
 D level to buy:			{''.join(choosen_parameter(info[4], ranges.D_level_to_buy))}                
 KD difference to buy:		{''.join(choosen_parameter(info[5], ranges.KD_difference_to_buy))}                
@@ -140,7 +142,7 @@ Buy and hold profitability:		{round(info[2],1)}%
 =========================================================================
 Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - percentage)}| {done_number}/{total_number} combinations                   
 """)
-	print('\033[F'*23)
+	print('\033[F'*24)
 
 def find_optimum_with_all_parameters(company):
 	existing_strategies = []
@@ -159,98 +161,102 @@ def find_optimum_with_all_parameters(company):
 			first_date = price_data[1][0]
 			end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 			historical_volume_profile, step = volume_profile.historical_volumes(end_date)
-			for stoch_period in ranges.stoch_period:
-				for slow_avg in ranges.slow_avg:
-					for fast_avg in ranges.fast_avg:
-						stoch_parameters = (stoch_period, slow_avg, fast_avg)
-						price_data = stochastic.main(price_data, stoch_parameters)
-						for stop_loss in ranges.stop_loss:
-							for take_profit in ranges.take_profit:
-								for K_level_to_sell in ranges.K_level_to_sell:
-									for D_level_to_sell in ranges.D_level_to_sell:
-										for KD_difference_to_sell in ranges.KD_difference_to_sell:
-											for K_level_to_buy in ranges.K_level_to_buy:
-												for D_level_to_buy in ranges.D_level_to_buy:
-													for KD_difference_to_buy in ranges.KD_difference_to_buy:
-														for Weekday_buy in ranges.Weekday_buy:
-															for Weekday_sell in ranges.Weekday_sell:
-																for Volume_profile_locator in ranges.Volume_profile_locator:
-																	strategy['company'] = company
-																	strategy['bar_size'] = bar_size
-																	strategy['K_level_to_buy'] = K_level_to_buy
-																	strategy['D_level_to_buy'] = D_level_to_buy
-																	strategy['KD_difference_to_buy'] = KD_difference_to_buy
-																	strategy['stop_loss'] = stop_loss
-																	strategy['take_profit'] = take_profit
-																	strategy['K_level_to_sell'] = K_level_to_sell
-																	strategy['D_level_to_sell'] = D_level_to_sell
-																	strategy['KD_difference_to_sell'] = KD_difference_to_sell
-																	strategy['Stoch_parameters'] = stoch_parameters
-																	strategy['Weekday_buy'] = Weekday_buy
-																	strategy['Weekday_sell'] = Weekday_sell
-																	strategy['Volume_profile_locator'] = Volume_profile_locator
-																	
-																	strting_strategy = ';'.join([str(bar_size), str(K_level_to_buy), str(D_level_to_buy), str(KD_difference_to_buy),
-																								str(stop_loss), str(take_profit), str(K_level_to_sell), str(D_level_to_sell), str(KD_difference_to_sell),
-																								str(stoch_parameters), str(Weekday_buy), str(Weekday_sell), str(Volume_profile_locator)
-																								])
-																	strting_strategy = strting_strategy.replace('None', '')
-																	profit, history, buy_and_hold_profitability, capital_by_date = (-100,0,0,0)
-																	if strting_strategy not in existing_strategies:
-																		profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, strategy, historical_volume_profile, step)
-															
-																		strategy['profit'] = round(profit,1)
-																		strategy['buy_and_hold_profitability'] = round(buy_and_hold_profitability,1)
-
-																		with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
-																			fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
-																							'bar_size',
-																							'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
-																							'stop_loss', 'take_profit',
-																							'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',
-																							'Stoch_parameters',
-																							'Weekday_buy', 'Weekday_sell', 'Volume_profile_locator']
-																			writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
-																			writer.writerow(strategy)
+			for Indicators_combination in ranges.Indicators_combination:
+				for stoch_period in ranges.stoch_period:
+					for slow_avg in ranges.slow_avg:
+						for fast_avg in ranges.fast_avg:
+							stoch_parameters = (stoch_period, slow_avg, fast_avg)
+							price_data = stochastic.main(price_data, stoch_parameters)
+							for stop_loss in ranges.stop_loss:
+								for take_profit in ranges.take_profit:
+									for K_level_to_sell in ranges.K_level_to_sell:
+										for D_level_to_sell in ranges.D_level_to_sell:
+											for KD_difference_to_sell in ranges.KD_difference_to_sell:
+												for K_level_to_buy in ranges.K_level_to_buy:
+													for D_level_to_buy in ranges.D_level_to_buy:
+														for KD_difference_to_buy in ranges.KD_difference_to_buy:
+															for Weekday_buy in ranges.Weekday_buy:
+																for Weekday_sell in ranges.Weekday_sell:
+																	for Volume_profile_locator in ranges.Volume_profile_locator:
+																		strategy['company'] = company
+																		strategy['bar_size'] = bar_size
+																		strategy['Indicators_combination'] = Indicators_combination
+																		strategy['K_level_to_buy'] = K_level_to_buy
+																		strategy['D_level_to_buy'] = D_level_to_buy
+																		strategy['KD_difference_to_buy'] = KD_difference_to_buy
+																		strategy['stop_loss'] = stop_loss
+																		strategy['take_profit'] = take_profit
+																		strategy['K_level_to_sell'] = K_level_to_sell
+																		strategy['D_level_to_sell'] = D_level_to_sell
+																		strategy['KD_difference_to_sell'] = KD_difference_to_sell
+																		strategy['Stoch_parameters'] = stoch_parameters
+																		strategy['Weekday_buy'] = Weekday_buy
+																		strategy['Weekday_sell'] = Weekday_sell
+																		strategy['Volume_profile_locator'] = Volume_profile_locator
 																		
-																	if profit > the_best_strategy['profit']:
-																		the_best_strategy['company'] = company
-																		the_best_strategy['profit'] = round(profit,1)
-																		the_best_strategy['buy_and_hold_profitability'] = round(buy_and_hold_profitability,1)
-																		the_best_strategy['bar_size'] = bar_size
-																		the_best_strategy['K_level_to_buy'] = K_level_to_buy
-																		the_best_strategy['D_level_to_buy'] = D_level_to_buy
-																		the_best_strategy['KD_difference_to_buy'] = KD_difference_to_buy
-																		the_best_strategy['stop_loss'] = stop_loss
-																		the_best_strategy['take_profit'] = take_profit
-																		the_best_strategy['K_level_to_sell'] = K_level_to_sell
-																		the_best_strategy['D_level_to_sell'] = D_level_to_sell
-																		the_best_strategy['KD_difference_to_sell'] = KD_difference_to_sell
-																		the_best_strategy['Stoch_parameters'] = stoch_parameters
-																		the_best_strategy['Weekday_buy'] = Weekday_buy
-																		the_best_strategy['Weekday_sell'] = Weekday_sell
-																		the_best_strategy['Volume_profile_locator'] = Volume_profile_locator
+																		strting_strategy = ';'.join([str(bar_size), str(Indicators_combination), str(K_level_to_buy), str(D_level_to_buy), str(KD_difference_to_buy),
+																									str(stop_loss), str(take_profit), str(K_level_to_sell), str(D_level_to_sell), str(KD_difference_to_sell),
+																									str(stoch_parameters), str(Weekday_buy), str(Weekday_sell), str(Volume_profile_locator)
+																									])
+																		strting_strategy = strting_strategy.replace('None', '')
+																		profit, history, buy_and_hold_profitability, capital_by_date = (-100,0,0,0)
+																		if strting_strategy not in existing_strategies:
+																			profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, strategy, historical_volume_profile, step)
+																
+																			strategy['profit'] = round(profit,1)
+																			strategy['buy_and_hold_profitability'] = round(buy_and_hold_profitability,1)
 
-																	print_status((the_best_strategy['profit'],
-																				the_best_strategy['max_drawdown'],
-																				buy_and_hold_profitability,
-																				K_level_to_buy,
-																				D_level_to_buy,
-																				KD_difference_to_buy,
-																				stop_loss,
-																				take_profit,
-																				K_level_to_sell,
-																				D_level_to_sell,
-																				KD_difference_to_sell,
-																				stoch_parameters,
-																				i,
-																				bar_size,
-																				profit,
-																				Weekday_buy,
-																				Weekday_sell,
-																				Volume_profile_locator
-																				))
-																	i += 1
+																			with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
+																				fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
+																								'bar_size', 'Indicators_combination',
+																								'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
+																								'stop_loss', 'take_profit',
+																								'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',
+																								'Stoch_parameters',
+																								'Weekday_buy', 'Weekday_sell', 'Volume_profile_locator']
+																				writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
+																				writer.writerow(strategy)
+																			
+																		if profit > the_best_strategy['profit']:
+																			the_best_strategy['company'] = company
+																			the_best_strategy['profit'] = round(profit,1)
+																			the_best_strategy['buy_and_hold_profitability'] = round(buy_and_hold_profitability,1)
+																			the_best_strategy['bar_size'] = bar_size
+																			the_best_strategy['Indicators_combination'] = Indicators_combination
+																			the_best_strategy['K_level_to_buy'] = K_level_to_buy
+																			the_best_strategy['D_level_to_buy'] = D_level_to_buy
+																			the_best_strategy['KD_difference_to_buy'] = KD_difference_to_buy
+																			the_best_strategy['stop_loss'] = stop_loss
+																			the_best_strategy['take_profit'] = take_profit
+																			the_best_strategy['K_level_to_sell'] = K_level_to_sell
+																			the_best_strategy['D_level_to_sell'] = D_level_to_sell
+																			the_best_strategy['KD_difference_to_sell'] = KD_difference_to_sell
+																			the_best_strategy['Stoch_parameters'] = stoch_parameters
+																			the_best_strategy['Weekday_buy'] = Weekday_buy
+																			the_best_strategy['Weekday_sell'] = Weekday_sell
+																			the_best_strategy['Volume_profile_locator'] = Volume_profile_locator
+
+																		print_status((the_best_strategy['profit'],
+																					the_best_strategy['max_drawdown'],
+																					buy_and_hold_profitability,
+																					K_level_to_buy,
+																					D_level_to_buy,
+																					KD_difference_to_buy,
+																					stop_loss,
+																					take_profit,
+																					K_level_to_sell,
+																					D_level_to_sell,
+																					KD_difference_to_sell,
+																					stoch_parameters,
+																					i,
+																					bar_size,
+																					profit,
+																					Weekday_buy,
+																					Weekday_sell,
+																					Volume_profile_locator,
+																					Indicators_combination
+																					))
+																		i += 1
 	except(KeyboardInterrupt):
 		print('\n'*22)
 						
@@ -269,7 +275,7 @@ def main(company):
 		the_best_strategy['max_drawdown'] = max_drawdown
 		with open('!BestStrategies.csv', 'a', encoding='utf-8') as file:
 			fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
-							'bar_size',
+							'bar_size', 'Indicators_combination',
 							'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
 							'stop_loss', 'take_profit',
 							'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',

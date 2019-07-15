@@ -50,7 +50,7 @@ def create_bracket_order(action, stop_loss, take_profit, quantity, order_id):
 	sl.transmit = True
 	return [parent_order, tp, sl]
 
-# Takes 15 - 45 secs
+# Takes 15 - 49 secs
 def place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id, try_count=1):
 	contract = utils.create_contract_from_ticker(company)
 	bracket_order = create_bracket_order(action, stop_loss, take_profit, quantity, order_id)
@@ -88,6 +88,7 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 		TWS_CONNECTION.placeOrder(tp.order_id+2, contract, tp)
 		time.sleep(3)
 		TWS_CONNECTION.disconnect()
+	time.sleep(2)
 	if 'STP' not in placed_orders:
 		sl = create_SL_order(action, stop_loss, quantity, order_id)
 		sl.transmit = True
@@ -95,7 +96,7 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 		TWS_CONNECTION.placeOrder(sl.order_id+2, contract, sl)
 		time.sleep(3)
 		TWS_CONNECTION.disconnect()		
-			
+	time.sleep(2)	
 
 #### NEEDS TO AWAIT TILL POSITION FULLY CLOSES!!! ####
 # it takes <6 secs

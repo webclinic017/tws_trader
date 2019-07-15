@@ -66,20 +66,21 @@ def the_best_known_strategy(company):
 		for x in csv.reader(file, delimiter=';'):
 			if x[0] == company:
 				the_best_strategy['bar_size'] = x[4]
-				the_best_strategy['K_level_to_buy'] = x[5]
-				the_best_strategy['D_level_to_buy'] = x[6]
-				the_best_strategy['KD_difference_to_buy'] = x[7]
-				the_best_strategy['stop_loss'] = x[8]
-				the_best_strategy['take_profit'] = x[9]
-				the_best_strategy['K_level_to_sell'] = x[10]
-				the_best_strategy['D_level_to_sell'] = x[11]
-				the_best_strategy['KD_difference_to_sell'] = x[12]
-				the_best_strategy['Stoch_parameters'] = x[13]
-				the_best_strategy['Weekday_buy'] = x[14]
-				the_best_strategy['Weekday_sell'] = x[15]
-				the_best_strategy['Volume_profile_locator'] =  x[16]
+				the_best_strategy['Indicators_combination'] = x[5]
+				the_best_strategy['K_level_to_buy'] = x[6]
+				the_best_strategy['D_level_to_buy'] = x[7]
+				the_best_strategy['KD_difference_to_buy'] = x[8]
+				the_best_strategy['stop_loss'] = x[9]
+				the_best_strategy['take_profit'] = x[10]
+				the_best_strategy['K_level_to_sell'] = x[11]
+				the_best_strategy['D_level_to_sell'] = x[12]
+				the_best_strategy['KD_difference_to_sell'] = x[13]
+				the_best_strategy['Stoch_parameters'] = x[14]
+				the_best_strategy['Weekday_buy'] = x[15]
+				the_best_strategy['Weekday_sell'] = x[16]
+				the_best_strategy['Volume_profile_locator'] =  x[17]
 	for key, value in the_best_strategy.items():
-		if value != '' and key != 'bar_size' and 'Weekday' not in key:
+		if value != '' and key != 'bar_size' and 'Weekday' not in key and key != 'Indicators_combination':
 			the_best_strategy[key] = eval(value)
 		if value == '':
 			the_best_strategy[key] = None

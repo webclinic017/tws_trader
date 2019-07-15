@@ -59,11 +59,10 @@ import utils
 def print_status(info):
 	print(f'''
 Time:		{time.strftime('%H:%M', time.gmtime())}
-Buy signal:	{info[0]}
-Sell signal:	{info[1]}
-Open position:	{info[2]}
-Price data row:	{info[3]}
-Order id:	{info[4]}
+Signal:		{info[0]}
+Open position:	{info[1]}
+Price data row:	{info[2]}
+Order id:	{info[3]}
 ''')
 	# print('\033[F'*8)
 
@@ -92,29 +91,28 @@ def main(company):
 		historical_volume_profile, step = volume_profile.historical_volumes(end_date)
 		new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
 		
-		buy_signal = trade_signals_watcher.buy(price_data, new_volume_profile, strategy)
-		sell_signal = trade_signals_watcher.sell(price_data, new_volume_profile, strategy)
+		signal = trade_signals_watcher.signal(price_data, new_volume_profile, strategy)
 
-		print_status((buy_signal, sell_signal, open_position_type, price_data[-1], orderId))
+		print_status((signal, open_position_type, price_data[-1], orderId))
 
 		last_row_with_price_data = price_data[-1]
 		quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
 		
 		if open_position_type == None:
-			if buy_signal[0] == 'buy':
+			if signal == 'buy':
 				print(f'Buying {company}')
 				action = 'BUY'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
 				W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
-			if sell_signal[0] == 'sell':
+			if signal == 'sell':
 				print(f'Selling {company}')
 				action = 'SELL'
 				stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
 				take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
 				W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 		if open_position_type == 'long':
-			if sell_signal[0] == 'sell':
+			if signal == 'sell':
 				print('Closing long by signal...')
 				W6_position_manager.close_position(company, orderId)
 				orderId += 1
@@ -125,7 +123,7 @@ def main(company):
 				print('...and open short')
 				W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 		if open_position_type == 'short':
-			if buy_signal[0] == 'buy':
+			if signal == 'buy':
 				print('Closing short by signal...')
 				W6_position_manager.close_position(company, orderId)
 				orderId += 1

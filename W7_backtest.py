@@ -43,13 +43,13 @@ def main(list_with_price_data, strategy, historical_volume_profile, step):
 		if i == len(list_with_price_data) - 1:
 			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - (100000 * settings.POSITION_QUANTITY / 100)) / (100000 * settings.POSITION_QUANTITY / 100) * 100
 
+		signal = trade_signals_watcher.signal(list_with_price_data[:i+1], historical_volume_profile, strategy)
+
 # OPEN POSITIONS functional
 		if open_position_type == None: # no open positions
 			capital_by_date.append((date, capital))
 	# BUY
-			buy_signal = trade_signals_watcher.buy(list_with_price_data[:i+1], historical_volume_profile, strategy)
-			if buy_signal == ('buy', 'buy', 'buy'):
-			# if buy_signal[0] == 'buy' or buy_signal[2] == 'buy':
+			if signal == 'buy':
 				if i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'long'
@@ -57,9 +57,7 @@ def main(list_with_price_data, strategy, historical_volume_profile, step):
 					history.append((list_with_price_data[i+1][0], 'long', quantity, open_order_price, ''))
 	
 	# SELL
-			sell_signal = trade_signals_watcher.sell(list_with_price_data[:i+1], historical_volume_profile, strategy)
-			if sell_signal == ('sell', 'sell', 'sell'):
-			# if sell_signal[0] == 'sell' or sell_signal[2] == 'sell':
+			if signal == 'sell':
 				if i < len(list_with_price_data) - 1:
 					open_order_price = market_price
 					open_position_type = 'short'
@@ -109,9 +107,7 @@ def main(list_with_price_data, strategy, historical_volume_profile, step):
 						capital_by_date.append((date, capital))
 						open_position_type = None
 		# close long by SIGNAL
-				sell_signal = trade_signals_watcher.sell(list_with_price_data[:i+1], historical_volume_profile, strategy)
-				if sell_signal == ('sell', 'sell', 'sell'):
-				# if sell_signal[0] == 'sell' or sell_signal[2] == 'sell':
+				if signal == 'sell':
 					if open_position_type != None and i < len(list_with_price_data) - 1:
 						close_order_price = market_price
 						comission = (0.0035 * 2) * quantity
@@ -170,9 +166,7 @@ def main(list_with_price_data, strategy, historical_volume_profile, step):
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 		# close short by SIGNAL
-				buy_signal = trade_signals_watcher.buy(list_with_price_data[:i+1], historical_volume_profile, strategy)
-				if buy_signal == ('buy', 'buy', 'buy'):
-				# if buy_signal[0] == 'buy' or buy_signal[2] == 'buy':
+				if signal == 'buy':
 					if open_position_type != None and i < len(list_with_price_data) - 1:
 						close_order_price = market_price
 						comission = (0.0035 * 2) * quantity
@@ -212,6 +206,7 @@ if __name__ == '__main__':
 	except:
 		#TSLA;203.89400549999928;12.0595401895667;-28.706049999999994;;(19, 29);1;4;8.5;;;0;(19, 12, 5)
 		strategy = {'bar_size': '30 mins',
+					'Indicators_combination': '+S+W+V',
 					'K_level_to_buy': None,
 					'D_level_to_buy': (20, 30),
 					'KD_difference_to_buy': 1,
