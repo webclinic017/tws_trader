@@ -50,6 +50,7 @@ import W2_sort_companies
 import W3_price_data_updater
 import W6_position_manager
 
+from indicators import volume_profile
 import settings
 import trade_signals_watcher
 import utils
@@ -86,18 +87,19 @@ def main(company):
 		buying_power = W4_checking_account.buying_power()
 		time.sleep(3)
 
-		first_date = list_with_price_data[1][0]
+		first_date = price_data[1][0]
 		end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 		historical_volume_profile, step = volume_profile.historical_volumes(end_date)
-
-		buy_signal = trade_signals_watcher.buy(price_data, historical_volume_profile, step, strategy)
-		sell_signal = trade_signals_watcher.sell(price_data, historical_volume_profile, step, strategy)
+		new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
+		
+		buy_signal = trade_signals_watcher.buy(price_data, new_volume_profile, strategy)
+		sell_signal = trade_signals_watcher.sell(price_data, new_volume_profile, strategy)
 
 		print_status((buy_signal, sell_signal, open_position_type, price_data[-1], orderId))
 
-		quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
 		last_row_with_price_data = price_data[-1]
-
+		quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+		
 		if open_position_type == None:
 			if buy_signal[0] == 'buy':
 				print(f'Buying {company}')

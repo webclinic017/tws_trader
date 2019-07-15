@@ -71,21 +71,21 @@ class ranges:
 # TSLA;212.72672575999977;;-28.84544;30 mins;;(19, 29);;4;8.1;;;0;(19, 12, 5);124;
 
 	# 3rd iteration:
-	bar_size = ('30 mins',) 	# '10 mins', '20 mins', '1 hour', '1 day') 	# 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
+	bar_size = ('30 mins',) #	,'5 mins', 'hour', '1 day') 	# '10 mins', '20 mins', '1 hour', '1 day') 	# 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
 	K_level_to_buy = (None,) 	#(1,20),(20,60), (40,80),(80,100))
 	D_level_to_buy = ((19,29),)	#(19,28),(20,28),(18,29),(20,29),(18,30))	#None, )
 	KD_difference_to_buy = (1, -1, 0, None)
-	stop_loss = (4,5,7,None)	#3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
-	take_profit = (8.5,10,None)	#(None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
+	stop_loss = (4,)	#3.5, 3.6, 3.7, 3.8, 3.9, 4, 4.1, 4.2, 4.3, 4.4, 4.5)	#my_range(4, 7)
+	take_profit = (8.5,)	#(None, 8.5, 8.6, 8.7, 8.8, 8.9, 9, 10.1, 10.2, 10.3, 10.4, 10.5)	#my_range(6.5, 8.5)
 	K_level_to_sell = (None,)	#(1,20),(20,60), (40,80),(80,100))
 	D_level_to_sell = (None,)	#(80,100),(60,80))	# (10,20),(20,30),(30,40),(40, 50), (50,60), (70, 80), (90,100))
 	KD_difference_to_sell = (0,1, -1, None)	# -1, 1, None)
-	stoch_period = (19,10,30)#range(7, 50, 7)	#range(3,101, 10)
-	slow_avg = (12,10,20,30)#range(7,50,7)	#range(3,101, 10)
-	fast_avg = (5,10,3,20) # range(2,32,5)#range(3,13,3)	#range(3,51, 5)
-	Weekday_buy = (None,1234,2345)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
-	Weekday_sell = (None,1234,2345)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
-	Volume_profile_locator = range(2,30,2)
+	stoch_period = (5, 19,10,30)#range(7, 50, 7)	#range(3,101, 10)
+	slow_avg = (5, 12,20,30)#range(7,50,7)	#range(3,101, 10)
+	fast_avg = (5,10,20) # range(2,32,5)#range(3,13,3)	#range(3,51, 5)
+	Weekday_buy = (None,)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
+	Weekday_sell = (None,)	#1234,2345, 234)	#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,145,234,235,245,345,1234,1235,1245,1345,2345,12345)
+	Volume_profile_locator = (None, 2,6,10,12,16,20,24,30,40,50,80,100)
 
 
 def print_status(info):
@@ -133,7 +133,7 @@ Stoch slow average:		{''.join(choosen_parameter(info[11][1], ranges.slow_avg))}
 Stoch fast average:		{''.join(choosen_parameter(info[11][2], ranges.fast_avg))}                 
 Weekdays to buy:		{''.join(choosen_parameter(info[15], ranges.Weekday_buy))}                 
 Weekdays to sell:		{''.join(choosen_parameter(info[16], ranges.Weekday_sell))}              
-Volume profile locator:	{''.join(choosen_parameter(info[17], ranges.Volume_profile_locator))}           
+Volume profile locator:		{''.join(choosen_parameter(info[17], ranges.Volume_profile_locator))}           
 =========================================================================
 Best founded strategy's profitability:	{round(info[0],1)}%,	profit now: {round(info[14],1)}%        
 Buy and hold profitability:		{round(info[2],1)}%       
@@ -143,6 +143,11 @@ Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - perce
 	print('\033[F'*23)
 
 def find_optimum_with_all_parameters(company):
+	existing_strategies = []
+	with open(f'!Strategies_for_{company}.csv', 'r', encoding='utf-8') as file:
+		reader = csv.reader(file, delimiter=';')
+		for row in reader:
+			existing_strategies.append(';'.join(row[4:]))
 	the_best_strategy = {}
 	strategy = {}
 	the_best_strategy['profit'] = 0
@@ -184,26 +189,34 @@ def find_optimum_with_all_parameters(company):
 																	strategy['Weekday_buy'] = Weekday_buy
 																	strategy['Weekday_sell'] = Weekday_sell
 																	strategy['Volume_profile_locator'] = Volume_profile_locator
-																	profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, strategy, historical_volume_profile, step)
-														
-																	strategy['profit'] = profit
-																	strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
-
-																	with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
-																		fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
-																						'bar_size',
-																						'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
-																						'stop_loss', 'take_profit',
-																						'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',
-																						'Stoch_parameters',
-																						'Weekday_buy', 'Weekday_sell', 'Volume_profile_locator']
-																		writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
-																		writer.writerow(strategy)
 																	
+																	strting_strategy = ';'.join([str(bar_size), str(K_level_to_buy), str(D_level_to_buy), str(KD_difference_to_buy),
+																								str(stop_loss), str(take_profit), str(K_level_to_sell), str(D_level_to_sell), str(KD_difference_to_sell),
+																								str(stoch_parameters), str(Weekday_buy), str(Weekday_sell), str(Volume_profile_locator)
+																								])
+																	strting_strategy = strting_strategy.replace('None', '')
+																	profit, history, buy_and_hold_profitability, capital_by_date = (-100,0,0,0)
+																	if strting_strategy not in existing_strategies:
+																		profit, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, strategy, historical_volume_profile, step)
+															
+																		strategy['profit'] = round(profit,1)
+																		strategy['buy_and_hold_profitability'] = round(buy_and_hold_profitability,1)
+
+																		with open(f'!Strategies_for_{company}.csv', 'a', encoding='utf-8') as file:
+																			fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
+																							'bar_size',
+																							'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',
+																							'stop_loss', 'take_profit',
+																							'K_level_to_sell', 'D_level_to_sell', 'KD_difference_to_sell',
+																							'Stoch_parameters',
+																							'Weekday_buy', 'Weekday_sell', 'Volume_profile_locator']
+																			writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=';')
+																			writer.writerow(strategy)
+																		
 																	if profit > the_best_strategy['profit']:
 																		the_best_strategy['company'] = company
-																		the_best_strategy['profit'] = profit
-																		the_best_strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
+																		the_best_strategy['profit'] = round(profit,1)
+																		the_best_strategy['buy_and_hold_profitability'] = round(buy_and_hold_profitability,1)
 																		the_best_strategy['bar_size'] = bar_size
 																		the_best_strategy['K_level_to_buy'] = K_level_to_buy
 																		the_best_strategy['D_level_to_buy'] = D_level_to_buy

@@ -1,8 +1,8 @@
 import time
 
-def buy_signal(row, weekday_buy=None):
+def signal(row, weekday_buy=None, weekday_sell=None):
 	if weekday_buy == None:
-		return 'buy'
+		return 0
 	else:
 		weekday_buy = tuple(str(weekday_buy))
 		day = time.strptime(row[0], '%Y%m%d  %H:%M:%S')
@@ -11,11 +11,8 @@ def buy_signal(row, weekday_buy=None):
 			return 'buy'
 		else:
 			return 0
-
-
-def sell_signal(row, weekday_sell=None):
 	if weekday_sell == None:
-		return 'sell'
+		return 0
 	else:
 		weekday_sell = tuple(str(weekday_sell))
 		day = time.strptime(row[0], '%Y%m%d  %H:%M:%S')
@@ -24,3 +21,4 @@ def sell_signal(row, weekday_sell=None):
 			return 'sell'
 		else:
 			return 0
+

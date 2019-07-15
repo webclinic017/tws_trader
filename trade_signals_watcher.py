@@ -10,10 +10,15 @@ def buy(list_with_price_data, historical_volume_profile, strategy):
 										strategy['K_level_to_buy'],
 										strategy['D_level_to_buy'],
 										strategy['KD_difference_to_buy'])
-	weekday_signal = weekday.buy_signal(last_row,
-										strategy['Weekday_buy'])
-	volume_profile_signal = volume_profile.buy_signal(last_row, historical_volume_profile,
+	weekday_signal = weekday.signal(last_row,
+										strategy['Weekday_buy'],
+										strategy['Weekday_sell'])
+	volume_profile_signal = volume_profile.signal(last_row, historical_volume_profile,
 										strategy['Volume_profile_locator'])
+	if weekday_signal == 0:
+		weekday_signal = 'buy'
+	if volume_profile_signal == 0:
+		volume_profile_signal = 'buy'
 	return (stoch_signal, weekday_signal, volume_profile_signal)
 
 
@@ -23,9 +28,14 @@ def sell(list_with_price_data, historical_volume_profile, strategy):
 										strategy['K_level_to_sell'],
 										strategy['D_level_to_sell'],
 										strategy['KD_difference_to_sell'])
-	weekday_signal = weekday.sell_signal(last_row,
+	weekday_signal = weekday.signal(last_row,
+										strategy['Weekday_buy'],
 										strategy['Weekday_sell'])
-	volume_profile_signal = volume_profile.sell_signal(last_row, historical_volume_profile,
+	volume_profile_signal = volume_profile.signal(last_row, historical_volume_profile,
 										strategy['Volume_profile_locator'])
+	if weekday_signal == 0:
+		weekday_signal = 'sell'
+	if volume_profile_signal == 0:
+		volume_profile_signal = 'sell'
 	return (stoch_signal, weekday_signal, volume_profile_signal)
 	

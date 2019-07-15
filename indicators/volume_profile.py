@@ -78,7 +78,6 @@ def historical_volumes(end_date):
 	step = (the_highest_price - the_lowest_price) / 100
 	x_list=[]	# volumes
 	y_list=[]	# prices
-
 	price = the_lowest_price
 	while price <= the_highest_price:
 		y_list.append(price)
@@ -91,61 +90,51 @@ def historical_volumes(end_date):
 	return (x_list, y_list), step
 
 
-def signal(price_now, historical_volume_profile, volume_profile_locator):
-	price_difference = 999999999
-	closest_price_index = None
-	for i, x in enumerate(historical_volume_profile[1]):
-		if abs(x-price_now) < price_difference:
-			price_difference = abs(x-price_now)
-			closest_price_index = i
-	volume_profile_radius = min([len(historical_volume_profile[1][:closest_price_index]), 
-										len(historical_volume_profile[1][closest_price_index:])
-										])
-	if volume_profile_locator / 2 < volume_profile_radius:
-		volume_profile_radius = int(volume_profile_locator / 2)
-	# print(volume_profile_radius)
-	# print(price_now)
-	# print(closest_price_index)
-	# print(historical_volume_profile[1][closest_price_index], historical_volume_profile[0][closest_price_index])
-	max_volume_below = 0
-	max_volume_above = 0
-	start = closest_price_index - volume_profile_radius
-	end = closest_price_index + volume_profile_radius + 1
-	for i, val in enumerate(historical_volume_profile[1][start:end]):
-		if price_now >= val and historical_volume_profile[0][i+start] > max_volume_below:
-			max_volume_below = historical_volume_profile[0][i+start]
-		if price_now <= val and historical_volume_profile[0][i+start] > max_volume_above:
-			max_volume_above = historical_volume_profile[0][i+start]
-	# 	print([i, val, historical_volume_profile[0][i+start], max_volume_above, max_volume_below])
-	# 	print(start, end)
-	# print(max_volume_above)
-	# print(price_now)
-	# print(max_volume_below)
-	if max_volume_below <= max_volume_above and volume_profile_radius > 0:
-		# print('buy')
-		return 'buy'
-	if max_volume_below > max_volume_above and volume_profile_radius > 0:
-		# print('sell')
-		return 'sell'
-	else:
+def signal(last_row, historical_volume_profile, volume_profile_locator):
+	if volume_profile_locator == None:
 		return 0
-
-
-def buy_signal(last_row, historical_volume_profile, volume_profile_locator=None):
-	price_now = float(last_row[4])
-	if volume_profile_locator == None:
-		return 'buy'
 	else:
-		return signal(price_now, historical_volume_profile, volume_profile_locator)
-
-
-def sell_signal(last_row, historical_volume_profile, volume_profile_locator=None):
-	price_now = float(last_row[4])
-	if volume_profile_locator == None:
-		return 'sell'
-	else:
-		return signal(price_now, historical_volume_profile, volume_profile_locator)
-
+		price_now = float(last_row[4])
+		price_difference = 999999999
+		closest_price_index = None
+		for i, x in enumerate(historical_volume_profile[1]):
+			if abs(x-price_now) < price_difference:
+				price_difference = abs(x-price_now)
+				closest_price_index = i
+		volume_profile_radius = min([len(historical_volume_profile[1][:closest_price_index]), 
+											len(historical_volume_profile[1][closest_price_index:])
+											])
+		if volume_profile_locator / 2 < volume_profile_radius:
+			volume_profile_radius = int(volume_profile_locator / 2)
+		volume_below = []
+		volume_above = []
+		if price_now < historical_volume_profile[1][closest_price_index]:
+			start = closest_price_index - volume_profile_radius
+			end = closest_price_index + volume_profile_radius
+		if price_now > historical_volume_profile[1][closest_price_index]:
+			start = closest_price_index - volume_profile_radius + 1
+			end = closest_price_index + volume_profile_radius + 1
+		for i, val in enumerate(historical_volume_profile[1][start:end]):
+			if price_now >= val:
+				volume_below.append(historical_volume_profile[0][i+start])
+			if price_now < val:
+				volume_above.append(historical_volume_profile[0][i+start])
+		max_volume_below = sum(volume_below)
+		max_volume_above = sum(volume_above)
+		if max_volume_below <= max_volume_above and volume_profile_radius > 0:
+			return 'buy'
+		if max_volume_below > max_volume_above and volume_profile_radius > 0:
+			return 'sell'
+		else:
+			return 0
+		# max_volume_difference_below = max(volume_below) - min(volume_below)
+		# max_volume_difference_above = max(volume_above) - min(volume_above)
+		# if max_volume_difference_below >= max_volume_difference_above and volume_profile_radius > 0:
+		# 	return 'buy'
+		# if max_volume_difference_below < max_volume_difference_above and volume_profile_radius > 0:
+		# 	return 'sell'
+		# else:
+		# 	return 0
 
 # In case of testing:
 def main(company, list_with_price_data):
@@ -163,10 +152,8 @@ def main(company, list_with_price_data):
 		for row in list_with_price_data[1:]:
 			quotes.append((count1, float(row[1]), float(row[2]), float(row[3]), float(row[4])))
 			count1 += 1
-		volume_profile_locator = 10
-		signal(price_now, historical_volume_profile, volume_profile_locator)
-
-
+		volume_profile_locator = 4
+		# signal(price_now, historical_volume_profile, volume_profile_locator)
 		make_plots(quotes, historical_volume_profile, new_volumes, now, count)
 
 if __name__ == '__main__':
@@ -184,7 +171,7 @@ if __name__ == '__main__':
 
 # 2) от локального минимума в сторону локального (абсолютного) максимума (нужно определить диапазон поиска локального минимума)
 
-# 3) от текущей цены выше и ниже на N цен проверяем максимумы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
+# 3) Realised: от текущей цены выше и ниже на N цен проверяем максимумы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
 
 
 # 4) если между двумя ценами разница суммарных объемов не превышает параметр N, то значит это "площадка справедливой цены".
