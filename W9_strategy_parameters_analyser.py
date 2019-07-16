@@ -20,7 +20,7 @@ def get_all_strategies(company):
 				x['Stoch_slow_D'] = str(eval(x['Stoch_parameters'])[1])
 				x['Stoch_fast_K'] = str(eval(x['Stoch_parameters'])[2])
 				x.pop('Stoch_parameters')
-				if x['bar_size'] == '30 mins':
+				if x['bar_size'] == '30 mins':# and x['Indicators_combination'] == 'S+W*V':
 					all_strategies.append(x)
 	for strategy in all_strategies:
 		for key, value in strategy.items():
@@ -28,8 +28,6 @@ def get_all_strategies(company):
 				strategy[key] = eval(value)
 			if value == '':
 				strategy[key] = -3
-			if 'Weekday' in key:
-				strategy[key] = str(value)
 	return all_strategies
 
 
@@ -56,8 +54,11 @@ def make_scatters(parameter, all_strategies):
 		x_vars = []
 		y_vars = []
 		for strategy in all_strategies:
-			x_vars.append(strategy[parameter])
-			y_vars.append(int(strategy['profit']))			
+			x_vars.append(strategy.get(parameter))
+			y_vars.append(int(strategy.get('profit')))
+		if parameter == 'Japanese_candelsticks':
+			print(x_vars) # WHY NONE?????
+			print(y_vars)
 		return (x_vars, y_vars, parameter)
 	if 'level' in parameter:
 		x_vars = []
@@ -116,6 +117,7 @@ def main(company):
 	ax13 = draw_scatter(make_scatters('Weekday_buy', all_strategies), 13, fig)
 	ax14 = draw_scatter(make_scatters('Weekday_sell', all_strategies), 14, fig)
 	ax15 = draw_scatter(make_scatters('Volume_profile_locator', all_strategies), 15, fig)
+	ax16 = draw_scatter(make_scatters('Japanese_candelsticks', all_strategies), 16, fig)
 	plt.show()
 
 

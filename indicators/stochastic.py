@@ -1,10 +1,10 @@
-def fast_K_list(list_with_price_data, period, slow_average_period, fast_average_period):	# list_with_price_data must include: [date, open, close, high, low, volume]
+def fast_K_list(price_data, period, slow_average_period, fast_average_period):
 	fast_K_list = []
-	data_length = len(list_with_price_data)																		# list_with_price_data must include: [date, open, high, low, close, volume]
-	for i in range(0, slow_average_period+fast_average_period-1):	
-		close_price = float(list_with_price_data[data_length-1-i][4])	
-		lows_prices = tuple(float(x[3]) for x in list_with_price_data[data_length-period-i:data_length-i])
-		highs_prices = tuple(float(x[2]) for x in list_with_price_data[data_length-period-i:data_length-i])		
+	data_length = len(price_data)
+	for i in range(slow_average_period+fast_average_period-1):	
+		close_price = price_data[data_length-1-i][4]
+		lows_prices = tuple(x[3] for x in price_data[data_length-period-i:data_length-i])
+		highs_prices = tuple(x[2] for x in price_data[data_length-period-i:data_length-i])		
 		lowest_price_for_period = min(lows_prices)
 		highest_price_for_period = max(highs_prices)		
 		if highest_price_for_period != lowest_price_for_period:
@@ -29,45 +29,33 @@ def slow_average(fast_average_list, slow_average_period):	# slow_average = SMA o
 	return slow_average
 
 
-def delete_columns_with_indicator(prices): 	# m.b. with pandas.DataFrame it would be easier ?!
-	i = 0	# column number
-	for title in range(0,len(prices[0])):
-		title = prices[0][i]
-		if '%' in title:
-			x = 0	# row number
-			for row in prices:
-				try:
-					row.remove(row[i])
-				except(IndexError):	# if new prices was added without indicator's values
-					continue
-			i -= 1
-		i += 1
-	return prices
+def delete_columns_with_indicator(price_data): 	# m.b. with pandas.DataFrame it would be easier ?!
+	for row in price_data:
+		try:
+			row.remove(row[6])
+			row.remove(row[6])
+		except(IndexError):	# if new price_data was added without indicator's values
+			continue
+	return price_data
 
 
-def main(prices, parameters=(26, 26, 9)):
-	
+def update(price_data, parameters):
 	period = parameters[0]
 	slow_average_period = parameters[1]
 	fast_average_period = parameters[2]
-
-	prices = delete_columns_with_indicator(prices)
-
-	prices[0].append(f'%K({period},{slow_average_period},{fast_average_period})')
-	prices[0].append(f'%D({period},{slow_average_period},{fast_average_period})')
-
-	for i in range(1,len(prices)):
-		reviewing_prices = prices[:-i]
+	price_data = delete_columns_with_indicator(price_data)
+	for i in range(len(price_data)):
+		reviewing_prices = price_data[:-i]
 		if len(reviewing_prices) > period + slow_average_period + fast_average_period - 2:
 			fast_Ks = fast_K_list(reviewing_prices, period, slow_average_period, fast_average_period)
 			fastaverage = fast_average(fast_Ks, slow_average_period, fast_average_period)[-1]
 			slowaverage = slow_average(fast_average(fast_Ks, slow_average_period, fast_average_period), slow_average_period)
-			prices[-i].append(fastaverage)
-			prices[-i].append(slowaverage)
+			price_data[-i].append(fastaverage)
+			price_data[-i].append(slowaverage)
 		else:
-			prices[-i].append('')
-			prices[-i].append('')
-	return prices
+			price_data[-i].append('')
+			price_data[-i].append('')
+	return price_data
 
 
 def signal(row, 
@@ -75,18 +63,13 @@ def signal(row,
 				K_level_to_sell=None, D_level_to_sell=None, KD_difference_to_sell=None
 				):
 	date = row[0]
-	open_price = float(row[1])
-	high_price = float(row[2])
-	low_price = float(row[3])
-	close_price = float(row[4])
-	volume = int(row[5])
-	if row[6] != '' and row[7] != '':
-		K = float(row[6])
-		D = float(row[7])
-	else:
-		K = ''
-		D = ''
-
+	open_price = row[1]
+	high_price = row[2]
+	low_price = row[3]
+	close_price = row[4]
+	volume = row[5]
+	K = row[6]
+	D = row[7]
 	if K == '' or D == '':
 		return 0
 	else:

@@ -50,7 +50,7 @@ import W2_sort_companies
 import W3_price_data_updater
 import W6_position_manager
 
-from indicators import volume_profile
+from indicators import volume_profile, stochastic
 import settings
 import trade_signals_watcher
 import utils
@@ -77,7 +77,7 @@ def main(company):
 		W3_price_data_updater.main(company, strategy['Stoch_parameters'], strategy['bar_size'])
 		time.sleep(6)
 		price_data = utils.get_price_data(company, strategy['bar_size'])
-
+		price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
 
 		open_position_type = W4_checking_account.what_position_is_open_now_for(company)
 		time.sleep(7)

@@ -52,12 +52,27 @@ def set_with_my_companies():
 	return companies_with_data
 
 
-def get_price_data(stock_ticker, bar_size):
-	list_with_price_data=[]
-	with open(f'historical_data/{stock_ticker} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
+def get_price_data(company, bar_size):
+	price_data=[]
+	with open(f'historical_data/{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
 		for row in csv.reader(data_file, delimiter=';'):
-			list_with_price_data.append(row)
-	return list_with_price_data
+			if row[0] != 'date':
+				formated_row = []
+				formated_row.append(row[0])
+				formated_row.append(float(row[1]))
+				formated_row.append(float(row[2]))
+				formated_row.append(float(row[3]))
+				formated_row.append(float(row[4]))
+				formated_row.append(int(row[5]))
+				try:
+					if row[6] != '' and row[7] != '':
+						formated_row.append(round(float(row[6]), 1))
+						formated_row.append(round(float(row[7]), 1))
+				except:
+					formated_row.append('')
+					formated_row.append('')
+				price_data.append(formated_row)
+	return price_data
 
 
 def the_best_known_strategy(company):
@@ -79,6 +94,7 @@ def the_best_known_strategy(company):
 				the_best_strategy['Weekday_buy'] = x[15]
 				the_best_strategy['Weekday_sell'] = x[16]
 				the_best_strategy['Volume_profile_locator'] =  x[17]
+				the_best_strategy['Japanese_candlesticks'] = x[18]
 	for key, value in the_best_strategy.items():
 		if value != '' and key != 'bar_size' and 'Weekday' not in key and key != 'Indicators_combination':
 			the_best_strategy[key] = eval(value)
@@ -103,7 +119,7 @@ def max_drawdown_calculate(capital_by_date):
 		new_max_drawdown = (max_capital - min_capital_since_max_capital) / max_capital * 100
 		if new_max_drawdown > max_drawdown:
 			max_drawdown = new_max_drawdown
-	return max_drawdown
+	return -max_drawdown
 
 
 def my_range(start, stop, step=0.5):

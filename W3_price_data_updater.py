@@ -85,7 +85,7 @@ def main(company, stoch_parameters, bar_size):
 	requesting(company, duration, bar_size)
 	global new_price_data
 	data_adding(new_price_data, company, bar_size)
-	update_stochastic_in_price_data.main(company, stoch_parameters, bar_size)	# updates whole data! Needs to modify to work faster.
+	# update_stochastic_in_price_data.update(company, stoch_parameters, bar_size)	# updates whole data! Needs to modify to work faster.
 	new_price_data = []
 
 

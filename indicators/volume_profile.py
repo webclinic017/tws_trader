@@ -31,8 +31,8 @@ def update_volume_profile(list_with_price_data, step, historical_volume_profile)
 	the_lowest_price = min(historical_volume_profile[1])
 	the_highest_price = 0
 	for row in list_with_price_data[1:]:
-		if float(row[2]) > the_highest_price:
-			the_highest_price = float(row[2])
+		if row[2] > the_highest_price:
+			the_highest_price = row[2]
 	x_list=[]	# volumes
 	y_list=[]	# prices
 	price = the_lowest_price
@@ -40,8 +40,8 @@ def update_volume_profile(list_with_price_data, step, historical_volume_profile)
 		y_list.append(price)
 		volume_sum = 0
 		for row in list_with_price_data:
-			if row[2] != 'high' and float(row[2]) >= price >= float(row[3]):
-				volume_sum += int(round(float(row[5]), 0))
+			if row[2] != 'high' and row[2] >= price >= row[3]:
+				volume_sum += int(round(row[5], 0))
 		x_list.append(volume_sum/1000)
 		price += step
 	new_x_list=[]
@@ -94,7 +94,7 @@ def signal(last_row, historical_volume_profile, volume_profile_locator):
 	if volume_profile_locator == None:
 		return 0
 	else:
-		price_now = float(last_row[4])
+		price_now = last_row[4]
 		price_difference = 999999999
 		closest_price_index = None
 		for i, x in enumerate(historical_volume_profile[1]):
@@ -150,7 +150,7 @@ def main(company, list_with_price_data):
 		quotes = []
 		count1 = 1
 		for row in list_with_price_data[1:]:
-			quotes.append((count1, float(row[1]), float(row[2]), float(row[3]), float(row[4])))
+			quotes.append((count1, row[1], row[2], row[3], row[4]))
 			count1 += 1
 		volume_profile_locator = 4
 		# signal(price_now, historical_volume_profile, volume_profile_locator)

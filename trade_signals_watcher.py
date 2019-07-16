@@ -1,48 +1,95 @@
-from indicators import stochastic, weekday, volume_profile
+from indicators import stochastic, weekday, volume_profile, japanese_candlesticks
 
 
-def signal(list_with_price_data, historical_volume_profile, strategy):
-	last_row = list_with_price_data[-1]
-	stoch_signal = stochastic.signal(last_row,
+def signal(price_data, historical_volume_profile, strategy):
+	last_row = price_data[-1]
+	signal_1 = stochastic.signal(last_row,
 									strategy['K_level_to_buy'], strategy['D_level_to_buy'], strategy['KD_difference_to_buy'],
 									strategy['K_level_to_sell'], strategy['D_level_to_sell'], strategy['KD_difference_to_sell']
 									)
-	weekday_signal = weekday.signal(last_row,
+	signal_2 = weekday.signal(last_row,
 										strategy['Weekday_buy'],
 										strategy['Weekday_sell'])
-	volume_profile_signal = volume_profile.signal(last_row,
+	signal_3 = volume_profile.signal(last_row,
 													historical_volume_profile,
 													strategy['Volume_profile_locator'])
-	# if weekday_signal == 0:
-	# 	weekday_signal = 'buy'
-	# if volume_profile_signal == 0:
-	# 	volume_profile_signal = 'buy'
-
-# And-and
-	if strategy['Indicators_combination'] == 'S*W*V':
-		if set((stoch_signal, weekday_signal, volume_profile_signal)) == {'buy',}:
+	signal_4 = japanese_candlesticks.signal(price_data,
+											strategy['Japanese_candlesticks'])
+	if strategy['Indicators_combination'] == '1*2*3*4':
+		if set((signal_1, signal_2, signal_3, signal_4)) == {'buy',}:
 			return 'buy'
-		if set((stoch_signal, weekday_signal, volume_profile_signal)) == {'sell',}:
+		if set((signal_1, signal_2, signal_3, signal_4)) == {'sell',}:
 			return 'sell'
-# Or-and
-	if strategy['Indicators_combination'] == 'S+W*V':
-		if stoch_signal == 'buy' or set((weekday_signal, volume_profile_signal)) == {'buy',}:
+	if strategy['Indicators_combination'] == '1*2*3+4':
+		if set((signal_1, signal_2, signal_3)) == {'buy',} or signal_4 == 'buy':
 			return 'buy'
-		if stoch_signal == 'sell' or set((weekday_signal, volume_profile_signal)) == {'sell',}:
+		if set((signal_1, signal_2, signal_3)) == {'sell',} or signal_4 == 'sell':
 			return 'sell'
-# And-or
-	if strategy['Indicators_combination'] == 'S*W+V':
-		if set((stoch_signal, weekday_signal)) == {'buy',} or volume_profile_signal == 'buy':
+	if strategy['Indicators_combination'] == '1*3*4+2':
+		if set((signal_1, signal_3, signal_4)) == {'buy',} or signal_2 == 'buy':
 			return 'buy'
-		if set((stoch_signal, weekday_signal)) == {'sell',} or volume_profile_signal == 'sell':
+		if set((signal_1, signal_3, signal_4)) == {'sell',} or signal_2 == 'sell':
 			return 'sell'
-# Or-or
-	if strategy['Indicators_combination'] == 'S+W+V':
-		if 'buy' in (stoch_signal, weekday_signal, volume_profile_signal):
+	if strategy['Indicators_combination'] == '1*2*4+3':
+		if set((signal_1, signal_2, signal_4)) == {'buy',} or signal_3 == 'buy':
 			return 'buy'
-		if 'sell' in (stoch_signal, weekday_signal, volume_profile_signal):
+		if set((signal_1, signal_2, signal_4)) == {'sell',} or signal_3 == 'sell':
 			return 'sell'
-
+	if strategy['Indicators_combination'] == '2*3*4+1':
+		if set((signal_2, signal_3, signal_4)) == {'buy',} or signal_1 == 'buy':
+			return 'buy'
+		if set((signal_2, signal_3, signal_4)) == {'sell',} or signal_1 == 'sell':
+			return 'sell'
+	if strategy['Indicators_combination'] == '1*2+3*4':
+		if set((signal_1, signal_2)) == {'buy',} or set((signal_3, signal_4)) == {'buy',}:
+			return 'buy'
+		if set((signal_1, signal_2)) == {'sell',} or set((signal_3, signal_4)) == {'sell',}:
+			return 'sell'
+	if strategy['Indicators_combination'] == '1*2+3+4':
+		if set((signal_1, signal_2)) == {'buy',} or 'buy' in (signal_3, signal_4):
+			return 'buy'
+		if set((signal_1, signal_2)) == {'sell',} or 'sell' in (signal_3, signal_4):
+			return 'sell'
+	if strategy['Indicators_combination'] == '1*3+2*4':
+		if set((signal_1, signal_3)) == {'buy',} or set((signal_2, signal_4)) == {'buy',}:
+			return 'buy'
+		if set((signal_1, signal_3)) == {'sell',} or set((signal_2, signal_4)) == {'sell',}:
+			return 'sell'
+	if strategy['Indicators_combination'] == '1*3+2+4':
+		if set((signal_1, signal_3)) == {'buy',} or 'buy' in (signal_2, signal_4):
+			return 'buy'
+		if set((signal_1, signal_3)) == {'sell',} or 'sell' in (signal_2, signal_4):
+			return 'sell'
+	if strategy['Indicators_combination'] == '1*4+2*3':
+		if set((signal_1, signal_4)) == {'buy',} or set((signal_2, signal_3)) == {'buy',}:
+			return 'buy'
+		if set((signal_1, signal_4)) == {'sell',} or set((signal_2, signal_3)) == {'sell',}:
+			return 'sell'
+	if strategy['Indicators_combination'] == '1*4+2+3':
+		if set((signal_1, signal_4)) == {'buy',} or 'buy' in (signal_2, signal_3):
+			return 'buy'
+		if set((signal_1, signal_4)) == {'sell',} or 'sell' in (signal_2, signal_3):
+			return 'sell'
+	if strategy['Indicators_combination'] == '2*3+1+4':
+		if set((signal_2, signal_3)) == {'buy',} or 'buy' in (signal_1, signal_4):
+			return 'buy'
+		if set((signal_2, signal_3)) == {'sell',} or 'sell' in (signal_1, signal_4):
+			return 'sell'
+	if strategy['Indicators_combination'] == '2*4+1+3':
+		if set((signal_2, signal_4)) == {'buy',} or 'buy' in (signal_1, signal_3):
+			return 'buy'
+		if set((signal_2, signal_4)) == {'sell',} or 'sell' in (signal_1, signal_3):
+			return 'sell'
+	if strategy['Indicators_combination'] == '3*4+1+2':
+		if set((signal_3, signal_4)) == {'buy',} or 'buy' in (signal_1, signal_2):
+			return 'buy'
+		if set((signal_3, signal_4)) == {'sell',} or 'sell' in (signal_1, signal_2):
+			return 'sell'
+	if strategy['Indicators_combination'] == '1+2+3+4':
+		if 'buy' in (signal_1, signal_2, signal_3, signal_4):
+			return 'buy'
+		if 'sell' in (signal_1, signal_2, signal_3, signal_4):
+			return 'sell'
 	return 0
 
 

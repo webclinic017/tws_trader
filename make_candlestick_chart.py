@@ -10,7 +10,7 @@ mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
 
-def main(list_with_price_data, history, capital_by_date, company):
+def main(price_data, history, capital_by_date, company):
 	#fig, ax = plt.subplots()
 	fig = plt.figure()
 	ax_main = fig.add_subplot(2, 1, 1)
@@ -19,7 +19,7 @@ def main(list_with_price_data, history, capital_by_date, company):
 	ax_stoch.set_position([0.05, 0.05, 0.9, 0.1])
 
 # Capital	
-	koef = capital_by_date[0][1] / float(list_with_price_data[1][1])	# history[1][3]
+	koef = capital_by_date[0][1] / float(price_data[0][1])	# history[1][3]
 	capital_x = []
 	capital_y = []
 	dates_dict = {}
@@ -29,7 +29,7 @@ def main(list_with_price_data, history, capital_by_date, company):
 		dates_dict[row[0]] = x
 		x += 1
 		capital_y.append(row[1] / koef)
-	buy_and_hold_profitability = round((float(list_with_price_data[-1][4]) - float(list_with_price_data[1][1])) / float(list_with_price_data[1][1]) * 100, 1)
+	buy_and_hold_profitability = round((float(price_data[-1][4]) - float(price_data[0][1])) / float(price_data[1][1]) * 100, 1)
 	profitability = round((capital_y[-1] - capital_y[0]) / capital_y[0] * 100, 1)
 	ax_main.plot(capital_x, capital_y, label='capital', linewidth = 0.7)
 
@@ -38,7 +38,7 @@ def main(list_with_price_data, history, capital_by_date, company):
 	stoch_K = []
 	stoch_D = []
 	quotes = []
-	for row in list_with_price_data[1:]:
+	for row in price_data:
 		quotes.append((dates_dict[row[0]], float(row[1]), float(row[2]), float(row[3]), float(row[4])))
 		if row[6] != '' and row[7] != '':
 			stoch_K.append(float(row[6]))
