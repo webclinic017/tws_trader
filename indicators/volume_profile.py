@@ -1,4 +1,3 @@
-# ВОПРОС: Как лучше определить локальный минимум?
 import matplotlib.pyplot as plt
 from mpl_finance import candlestick_ohlc
 from yahoo_historical import Fetcher
@@ -42,7 +41,7 @@ def update_volume_profile(list_with_price_data, step, historical_volume_profile)
 		for row in list_with_price_data:
 			if row[2] != 'high' and row[2] >= price >= row[3]:
 				volume_sum += int(round(row[5], 0))
-		x_list.append(volume_sum/1000)
+		x_list.append(volume_sum/100000)
 		price += step
 	new_x_list=[]
 	for i, val in enumerate(historical_volume_profile[1]):
@@ -85,7 +84,7 @@ def historical_volumes(end_date):
 		for i in range(data.shape[0]):
 			if data.loc[i,'High'] >= price >= data.loc[i,'Low']:
 				volume_sum += data.loc[i,'Volume']
-		x_list.append(volume_sum/127000)
+		x_list.append(volume_sum/100000)
 		price += step
 	return (x_list, y_list), step
 
@@ -168,12 +167,9 @@ if __name__ == '__main__':
 
 
 # Варианты стратегий:
+# NOW: от текущей цены выше и ниже на N цен проверяем суммы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
 
 # 2) от локального минимума в сторону локального (абсолютного) максимума (нужно определить диапазон поиска локального минимума)
-
-# 3) Realised: от текущей цены выше и ниже на N цен проверяем максимумы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
-
-
 # 4) если между двумя ценами разница суммарных объемов не превышает параметр N, то значит это "площадка справедливой цены".
 # цена задерживается на этом уровне
 

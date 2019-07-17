@@ -43,20 +43,20 @@ class ranges:
 								'3*4+1+2', # 1
 								'1+2+3+4'	# 2
 								)
-	K_level_to_buy = (None,(0,20),(20,40),(40,60),(60,80))#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
-	D_level_to_buy = (None,(0,20),(20,40),(40,60),(60,80))#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
-	KD_difference_to_buy = (-1,0,1,None)
+	K_level_to_buy = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
+	D_level_to_buy = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
+	KD_difference_to_buy = (1,None)
 	stop_loss = (4,)
 	take_profit = (9,)
-	K_level_to_sell = (None,(0,20),(20,40),(40,60),(60,80))#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
-	D_level_to_sell = (None,(0,20),(20,40),(40,60),(60,80))#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
-	KD_difference_to_sell = (-1,0,1,None)
-	stoch_period = (19,)	#(5,10,20,30)
-	slow_avg = (12,)	#(5,10,20,30)
-	fast_avg = (5,)	#(3, 5,10,20,30)
+	K_level_to_sell = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
+	D_level_to_sell = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
+	KD_difference_to_sell = (0,None)
+	stoch_period = (19,5,10,15,25)	#(5,10,20,30)
+	slow_avg = (12,10,13,14,15,20)	#(5,10,20,30)
+	fast_avg = (5,7,8,9,10)	#(3, 5,10,20,30)
 	Weekday_buy = (None,1)
 	Weekday_sell = (None,)
-	Volume_profile_locator = (10,4,30,70,16)
+	Volume_profile_locator = (10,40,50,60,90,80)
 	Japanese_candlesticks = (1,)
 
 
@@ -152,6 +152,7 @@ def find_optimum_with_all_parameters(company):
 				for row in reader:
 					existing_strategies.append(';'.join(row[4:]))
 			price_data = utils.get_price_data(company, bar_size)
+			price_data_df = utils.get_price_data_df(company, bar_size)
 			first_date = price_data[0][0]
 			end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 			historical_volume_profile, step = volume_profile.historical_volumes(end_date)
@@ -198,7 +199,7 @@ def find_optimum_with_all_parameters(company):
 																			profitability = None
 																			buy_and_hold_profitability = None
 																			if strting_strategy not in existing_strategies:
-																				profitability, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, strategy, historical_volume_profile, step)
+																				profitability, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, price_data_df, strategy, historical_volume_profile, step)
 																				profitability = round(profitability,1)
 																				buy_and_hold_profitability = round(buy_and_hold_profitability, 1)
 																				strategy['profit'] = profitability

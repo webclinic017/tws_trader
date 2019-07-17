@@ -1,11 +1,10 @@
 import time
 
-def signal(row, weekday_buy=None, weekday_sell=None):
+def signal(date, weekday_buy=None, weekday_sell=None):
 	if weekday_buy == None:
 		return 0
 	else:
 		weekday_buy = tuple(str(weekday_buy))
-		date = row[0][:10]
 		day = None
 		if '-' in date:
 			day = time.strptime(date, '%Y-%m-%d')
@@ -20,7 +19,6 @@ def signal(row, weekday_buy=None, weekday_sell=None):
 		return 0
 	else:
 		weekday_sell = tuple(str(weekday_sell))
-		date = row[0][:10]
 		day = None
 		if '-' in date:
 			day = time.strptime(date, '%Y-%m-%d')
@@ -31,4 +29,5 @@ def signal(row, weekday_buy=None, weekday_sell=None):
 			return 'sell'
 		else:
 			return 0
+	return 0
 

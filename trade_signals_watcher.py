@@ -1,13 +1,19 @@
 from indicators import stochastic, weekday, volume_profile, japanese_candlesticks
 
 
-def signal(price_data, historical_volume_profile, strategy):
+def signal(price_data, price_data_df, historical_volume_profile, strategy):
 	last_row = price_data[-1]
-	signal_1 = stochastic.signal(last_row,
+	last_row_df = price_data_df.iloc[-1]
+	last_datetime = price_data_df.index[-1][:10]
+	# signal_1 = stochastic.signal(last_row,
+	# 								strategy['K_level_to_buy'], strategy['D_level_to_buy'], strategy['KD_difference_to_buy'],
+	# 								strategy['K_level_to_sell'], strategy['D_level_to_sell'], strategy['KD_difference_to_sell']
+	# 								)
+	signal_1 = stochastic.signal_df(last_row_df,
 									strategy['K_level_to_buy'], strategy['D_level_to_buy'], strategy['KD_difference_to_buy'],
 									strategy['K_level_to_sell'], strategy['D_level_to_sell'], strategy['KD_difference_to_sell']
 									)
-	signal_2 = weekday.signal(last_row,
+	signal_2 = weekday.signal(last_datetime,
 										strategy['Weekday_buy'],
 										strategy['Weekday_sell'])
 	signal_3 = volume_profile.signal(last_row,

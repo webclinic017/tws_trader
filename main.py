@@ -55,12 +55,13 @@ import W6_position_manager
 
 
 def print_status(info):
+	# print('\033[F'*7)
 	print(f'''
-Time:		{time.strftime('%H:%M', time.gmtime())}
-Signal:		{info[0]}
-Open position:	{info[1]}
-Price data row:	{info[2]}
-Order id:	{info[3]}
+Time:		{time.strftime('%H:%M', time.gmtime())}                                    
+Signal:		{info[0]}                                                      
+Open position:	{info[1]}                                          
+Price data row:	{info[2]}                                          
+Order id:	{info[3]}                                               
 ''')
 	# print('\033[F'*8)
 
@@ -92,81 +93,79 @@ def main(company):
 	# W1_filter_all_companies_and_get_price_data.main(c)
 	strategy = utils.the_best_known_strategy(company)
 	working_shedule = utils.get_working_shedule(strategy['bar_size'])
+
+	utils.update_price_data(company, strategy['bar_size'])
+	price_data = utils.get_price_data(company, strategy['bar_size'])
+	price_data_df = utils.get_price_data_df(company, strategy['bar_size'])
+	price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
+
+	open_position_type = W4_checking_account.what_position_is_open_now_for(company)
+	time.sleep(7)
+	orderId = W4_checking_account.next_valid_order_Id()
+	time.sleep(3)
+	buying_power = W4_checking_account.buying_power()
+	time.sleep(3)
+
+	first_date = price_data[1][0]
+	
+	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
+	historical_volume_profile, step = volume_profile.historical_volumes(end_date)
+	new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
+	
+	signal = trade_signals_watcher.signal(price_data, price_data_df, new_volume_profile, strategy)
+
+	print_status((signal, open_position_type, price_data[-1], orderId))
+
+	last_row_with_price_data = price_data[-1]
+	quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+	
+	if open_position_type == None:
+		if signal == 'buy':
+			print(f'Buying {company}')
+			action = 'BUY'
+			stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
+			take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
+		if signal == 'sell':
+			print(f'Selling {company}')
+			action = 'SELL'
+			stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
+			take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
+	if open_position_type == 'long':
+		if signal == 'sell':
+			print('Closing long by signal...')
+			W6_position_manager.close_position(company, orderId)
+			orderId += 1
+			time.sleep(20)
+			action = 'SELL'
+			stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
+			take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+			print('...and open short')
+			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
+	if open_position_type == 'short':
+		if signal == 'buy':
+			print('Closing short by signal...')
+			W6_position_manager.close_position(company, orderId)
+			orderId += 1
+			time.sleep(20)
+			action = 'BUY'
+			stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
+			take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+			print('...and open long')
+			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	while True:
 		print_waiting()
 		time_now_str = datetime.strftime(datetime.now(), '%H:%M')
 		if time_now_str in working_shedule:
-			utils.update_price_data(company, strategy['bar_size'])
-			# W3_price_data_updater.main(company, strategy['Stoch_parameters'], strategy['bar_size'])
-			time.sleep(1)
-			price_data = utils.get_price_data(company, strategy['bar_size'])
-			price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
-
-			open_position_type = W4_checking_account.what_position_is_open_now_for(company)
-			time.sleep(7)
-			orderId = W4_checking_account.next_valid_order_Id()
-			time.sleep(3)
-			buying_power = W4_checking_account.buying_power()
-			time.sleep(3)
-
-			first_date = price_data[1][0]
-			end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-			historical_volume_profile, step = volume_profile.historical_volumes(end_date)
-			new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
-			
-			signal = trade_signals_watcher.signal(price_data, new_volume_profile, strategy)
-
-			print_status((signal, open_position_type, price_data[-1], orderId))
-
-			last_row_with_price_data = price_data[-1]
-			quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
-			
-			if open_position_type == None:
-				if signal == 'buy':
-					print(f'Buying {company}')
-					action = 'BUY'
-					stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
-					take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
-					W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
-				if signal == 'sell':
-					print(f'Selling {company}')
-					action = 'SELL'
-					stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
-					take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
-					W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
-			if open_position_type == 'long':
-				if signal == 'sell':
-					print('Closing long by signal...')
-					W6_position_manager.close_position(company, orderId)
-					orderId += 1
-					time.sleep(20)
-					action = 'SELL'
-					stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
-					take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
-					print('...and open short')
-					W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
-			if open_position_type == 'short':
-				if signal == 'buy':
-					print('Closing short by signal...')
-					W6_position_manager.close_position(company, orderId)
-					orderId += 1
-					time.sleep(20)
-					action = 'BUY'
-					stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
-					take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
-					print('...and open long')
-					W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
+			main(company)
+	time.sleep(60)
 
 
 if __name__ == "__main__":
 	company = settings.company
 	try:
-		while True:
-			start = time.clock()
-			main(company)
-			end = time.clock()
-			cycle_executed_in_seconds = (end - start) / (24 * 60 * 60)
-			time.sleep((60 * 30) - cycle_executed_in_seconds)	# new cycle runs every 30 mins
+		main(company)
 	except(KeyboardInterrupt):
 		print('\nBye!')
 	except():

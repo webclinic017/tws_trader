@@ -26,8 +26,8 @@ def get_working_shedule(bar_size):
 		interval = int(bar_size.split()[0])*60
 	if bar_size.split()[1] == 'day':
 		interval = 24*60
-	open_time = datetime.strptime('16:31', '%H:%M')
-	close_time = datetime.strptime('23:01', '%H:%M')
+	open_time = datetime.strptime('16:30', '%H:%M')
+	close_time = datetime.strptime('23:00', '%H:%M')
 	time = open_time
 	while open_time <= time <= close_time:
 		working_shedule.append(datetime.strftime(time, '%H:%M'))
@@ -63,7 +63,7 @@ def get_price_data(company, bar_size):
 	price_data=[]
 	with open(f'historical_data/{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
 		for row in csv.reader(data_file, delimiter=';'):
-			if row[0] != 'date':
+			if row[0] != 'Datetime':
 				formated_row = []
 				formated_row.append(row[0])
 				formated_row.append(float(row[1]))
@@ -80,6 +80,11 @@ def get_price_data(company, bar_size):
 					formated_row.append('')
 				price_data.append(formated_row)
 	return price_data
+
+
+def get_price_data_df(company, bar_size):
+	price_data_df = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';')
+	return price_data_df
 
 
 def the_best_known_strategy(company):
