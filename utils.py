@@ -1,8 +1,11 @@
-from ib.ext.Contract import Contract
-
 import csv
+from datetime import datetime, timedelta
 import time
 
+from ib.ext.Contract import Contract
+import pandas as pd
+import pytz
+import yfinance as yf
 
 def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch='SMART', curr='USD'):
 	contract = Contract()
@@ -14,18 +17,22 @@ def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch=
 	return contract
 
 
-def SEs_should_work_now():
-	hours_now = int(time.strftime("%H", time.gmtime()))
-	work_day = int(time.strftime("%w", time.gmtime()))
-	if work_day == 6 or work_day == 7: # if it is weekend
-		work_day = False
-		return False
-	else:
-		if hours_now < 13 or hours_now > 19: # if it is not 16-22 hours MSK
-			return False
-		else:
-			return True
-
+def get_working_shedule(bar_size):
+	working_shedule = []
+	interval = None
+	if bar_size.split()[1] == 'mins':
+		interval = int(bar_size.split()[0])
+	if bar_size.split()[1][:4] == 'hour':
+		interval = int(bar_size.split()[0])*60
+	if bar_size.split()[1] == 'day':
+		interval = 24*60
+	open_time = datetime.strptime('16:31', '%H:%M')
+	close_time = datetime.strptime('23:01', '%H:%M')
+	time = open_time
+	while open_time <= time <= close_time:
+		working_shedule.append(datetime.strftime(time, '%H:%M'))
+		time += timedelta(minutes=interval)
+	return working_shedule
 
 def print_loading(done_number, total_number, company):
 	percentage = int((done_number/total_number)*30)
@@ -129,4 +136,24 @@ def my_range(start, stop, step=0.5):
 		float_list.append(round(x, 1))
 		x += step
 	return tuple(float_list)
+
+
+def update_price_data(company, bar_size):
+	data = yf.Ticker(company).history(interval='30m').iloc[:,:-2] # excluding Dividends and Stock Splits
+	last_date = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';').index[-1]
+	new_price_data = data.loc[last_date:,:].iloc[1:]
+	interval = None
+	if bar_size.split()[1] == 'mins':
+		interval = int(bar_size.split()[0])
+	if bar_size.split()[1][:4] == 'hour':
+		interval = int(bar_size.split()[0])*60
+	if bar_size.split()[1] == 'day':
+		interval = 24*60
+	new_last_date = data.index[-1].to_pydatetime()
+	time_now_in_EST = datetime.now(pytz.timezone('US/Eastern'))
+	difference = (time_now_in_EST - new_last_date)
+	difference = difference.seconds//3600
+	if difference < interval:
+		new_price_data = new_price_data.iloc[:-1]
+	new_price_data.to_csv(rf'historical_data/{company} {bar_size}.csv', mode='a', header=False, sep=';')
 
