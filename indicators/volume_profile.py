@@ -121,9 +121,9 @@ def signal(last_row, historical_volume_profile, volume_profile_locator):
 		max_volume_below = sum(volume_below)
 		max_volume_above = sum(volume_above)
 		if max_volume_below <= max_volume_above and volume_profile_radius > 0:
-			return 'buy'
+			return 1.
 		if max_volume_below > max_volume_above and volume_profile_radius > 0:
-			return 'sell'
+			return -1.
 		else:
 			return 0
 		# max_volume_difference_below = max(volume_below) - min(volume_below)

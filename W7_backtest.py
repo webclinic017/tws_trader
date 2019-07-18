@@ -8,7 +8,7 @@ import trade_signals_watcher
 import utils
 
 
-def main(price_data, price_data_df, strategy, historical_volume_profile, step):
+def main(price_data, strategy, historical_volume_profile, step):
 	buy_and_hold_profitability = 0
 	buy_and_hold_quantity = None
 	open_order_price = None
@@ -37,7 +37,7 @@ def main(price_data, price_data_df, strategy, historical_volume_profile, step):
 		if i == len(price_data) - 1:
 			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - (100000 * settings.POSITION_QUANTITY / 100)) / (100000 * settings.POSITION_QUANTITY / 100) * 100
 
-		signal = trade_signals_watcher.signal(price_data[:i+1], price_data_df.iloc[:i+1], historical_volume_profile, strategy)
+		signal = trade_signals_watcher.signal(price_data[:i+1], historical_volume_profile, strategy)
 
 # OPEN POSITIONS functional
 		if open_position_type == None: # no open positions
@@ -220,13 +220,13 @@ if __name__ == '__main__':
 	price_data = utils.get_price_data(company, strategy['bar_size'])
 	price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
 	
-	price_data_df = utils.get_price_data_df(company, strategy['bar_size'])
-	price_data_df = stochastic.update_df(price_data_df, strategy['Stoch_parameters'])
+	# price_data_df = utils.get_price_data_df(company, strategy['bar_size'])
+	# price_data_df = stochastic.update_df(price_data_df, strategy['Stoch_parameters'])
 	
 	first_date = price_data[0][0]
 	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 	historical_volume_profile, step = volume_profile.historical_volumes(end_date)
-	profit, history, buy_and_hold_profitability, capital_by_date = main(price_data, price_data_df, strategy, historical_volume_profile, step)
+	profit, history, buy_and_hold_profitability, capital_by_date = main(price_data, strategy, historical_volume_profile, step)
 	max_drawdown = utils.max_drawdown_calculate(capital_by_date)
 	for row in history:
 		print(row)

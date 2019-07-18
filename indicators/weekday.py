@@ -12,7 +12,7 @@ def signal(date, weekday_buy=None, weekday_sell=None):
 			day = time.strptime(date, '%Y%m%d  ')
 		weekday = time.strftime("%w", day)
 		if weekday in weekday_buy:
-			return 'buy'
+			return 1.
 		else:
 			return 0
 	if weekday_sell == None:
@@ -26,7 +26,7 @@ def signal(date, weekday_buy=None, weekday_sell=None):
 			day = time.strptime(date, '%Y%m%d  ')
 		weekday = time.strftime("%w", day)
 		if weekday in weekday_sell:
-			return 'sell'
+			return -1.
 		else:
 			return 0
 	return 0

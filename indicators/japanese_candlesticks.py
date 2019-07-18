@@ -108,9 +108,9 @@ def signal(price_data, strategy_parameter):
 		return 0
 	else:
 		if hammer_candlestick(price_data):
-			return 'buy'
+			return 1.
 		if hanging_man_candlestick(price_data):
-			return 'sell'
+			return -1.
 	return 0
 
 # In case of testing to create new patterns:

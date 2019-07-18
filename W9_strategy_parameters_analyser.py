@@ -50,19 +50,19 @@ def draw_plot(x_y_param_tuple, index, fig):
 
 
 def make_scatters(parameter, all_strategies):
-	if 'level' not in parameter:
+	if 'level' not in parameter and 'combination' not in parameter:
 		x_vars = []
 		y_vars = []
 		for strategy in all_strategies:
 			x_vars.append(strategy.get(parameter))
-			y_vars.append(int(strategy.get('profit')))
+			y_vars.append(float(strategy.get('profit')))
 		return (x_vars, y_vars, parameter)
 	if 'level' in parameter:
 		x_vars = []
 		y_vars = []
 		for strategy in all_strategies:
 			x_vars.append(strategy[parameter])
-			y_vars.append(int(strategy['profit']))
+			y_vars.append(float(strategy['profit']))
 		new_x_vars = []
 		new_y_vars = []
 		for i, val in enumerate(x_vars):
@@ -76,6 +76,16 @@ def make_scatters(parameter, all_strategies):
 					new_y_vars.append(y_vars[i])
 					j += 1
 		return (new_x_vars, new_y_vars, parameter)
+	if 'combination' in parameter:
+		x_vars = []
+		y_vars = []
+		for strategy in all_strategies:
+			x = strategy.get(parameter).split('-')[1]
+			# print(len(all_strategies), strategy.get(parameter), x)
+			x_vars.append(float(x))
+			y_vars.append(float(strategy.get('profit')))
+			# weight = [int(x) for x in strategy['Indicators_combination'].split('-')]
+		return (x_vars, y_vars, parameter)
 
 
 def make_points_for_plot(parameter, all_strategies):
