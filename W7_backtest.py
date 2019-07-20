@@ -199,7 +199,6 @@ if __name__ == '__main__':
 	try:
 		strategy = utils.the_best_known_strategy(company)
 	except:
-		#TSLA;203.89400549999928;12.0595401895667;-28.706049999999994;;(19, 29);1;4;8.5;;;0;(19, 12, 5)
 		strategy = {'bar_size': '30 mins',
 					'Indicators_combination': '1+2+3+4',
 					'K_level_to_buy': None,
@@ -225,7 +224,7 @@ if __name__ == '__main__':
 	
 	first_date = price_data[0][0]
 	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-	historical_volume_profile, step = volume_profile.historical_volumes(end_date)
+	historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
 	profit, history, buy_and_hold_profitability, capital_by_date = main(price_data, strategy, historical_volume_profile, step)
 	max_drawdown = utils.max_drawdown_calculate(capital_by_date)
 	for row in history:

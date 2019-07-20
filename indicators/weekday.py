@@ -2,7 +2,7 @@ import time
 
 def signal(date, weekday_buy=None, weekday_sell=None):
 	if weekday_buy == None:
-		return 0
+		return 0.
 	else:
 		weekday_buy = tuple(str(weekday_buy))
 		day = None
@@ -14,9 +14,9 @@ def signal(date, weekday_buy=None, weekday_sell=None):
 		if weekday in weekday_buy:
 			return 1.
 		else:
-			return 0
+			return 0.
 	if weekday_sell == None:
-		return 0
+		return 0.
 	else:
 		weekday_sell = tuple(str(weekday_sell))
 		day = None
@@ -28,6 +28,6 @@ def signal(date, weekday_buy=None, weekday_sell=None):
 		if weekday in weekday_sell:
 			return -1.
 		else:
-			return 0
-	return 0
+			return 0.
+	return 0.
 

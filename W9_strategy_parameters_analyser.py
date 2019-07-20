@@ -24,7 +24,7 @@ def get_all_strategies(company, bar_size):
 					all_strategies.append(x)
 	for strategy in all_strategies:
 		for key, value in strategy.items():
-			if value != '' and key != 'bar_size' and key != 'company' and 'Weekday' not in key and key != 'Indicators_combination':
+			if value != '' and key != 'bar_size' and key != 'company' and key != 'Indicators_combination': #and 'Weekday' not in key
 				strategy[key] = eval(value)
 			if value == '':
 				strategy[key] = -3
@@ -80,7 +80,7 @@ def make_scatters(parameter, all_strategies):
 		x_vars = []
 		y_vars = []
 		for strategy in all_strategies:
-			x = strategy.get(parameter).split('-')[1]
+			x = strategy.get(parameter).split('-')[0]
 			# print(len(all_strategies), strategy.get(parameter), x)
 			x_vars.append(float(x))
 			y_vars.append(float(strategy.get('profit')))

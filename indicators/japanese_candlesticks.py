@@ -86,14 +86,14 @@ def hanging_man_candlestick(price_data):
 		now_low = now_row[3]
 		now_close = now_row[4]
 		if prev_close > prev_open:	# and prev_close > now_close:
-			# green hammer
+			# green hanging man
 			if now_close > now_open:
 				now_body = now_close - now_open
 				now_shadow_below = now_open - now_low
 				now_shadow_above = now_high - now_close
 				if (now_shadow_below / now_body) > 2.5 and (now_shadow_above == 0 or (now_body / now_shadow_above) > 2):
 					return True
-			# red hammer
+			# red hanging man
 			if now_close < now_open:
 				now_body = now_open - now_close
 				now_shadow_below = now_close - now_low
@@ -105,13 +105,13 @@ def hanging_man_candlestick(price_data):
 
 def signal(price_data, strategy_parameter):
 	if strategy_parameter == None:
-		return 0
+		return 0.
 	else:
 		if hammer_candlestick(price_data):
 			return 1.
 		if hanging_man_candlestick(price_data):
 			return -1.
-	return 0
+	return 0.
 
 # In case of testing to create new patterns:
 def main(price_data):

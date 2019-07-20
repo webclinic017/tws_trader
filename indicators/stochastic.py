@@ -66,7 +66,7 @@ def signal(row,
 	D = row[7]
 	cross_level = 2.
 	if K == '' or D == '':
-		return 0
+		return 0.
 	else:
 	# K_level_to_buy only matters
 		if K_level_to_buy != None and D_level_to_buy == None and KD_difference_to_buy == None:
@@ -131,7 +131,7 @@ def signal(row,
 							return 1.
 	# no one matters:
 		if K_level_to_buy == None and D_level_to_buy == None and KD_difference_to_buy == None:
-			return 0
+			return 0.
 
 	# K_level_to_sell only matters
 		if K_level_to_sell != None and D_level_to_sell == None and KD_difference_to_sell == None:
@@ -196,7 +196,7 @@ def signal(row,
 							return -1.
 	# no one matters:
 		if K_level_to_sell == None and D_level_to_sell == None and KD_difference_to_sell == None:
-			return 0
+			return 0.
 
-	return 0
+	return 0.
 

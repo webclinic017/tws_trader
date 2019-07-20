@@ -30,8 +30,9 @@ def update_volume_profile(list_with_price_data, step, historical_volume_profile)
 	the_lowest_price = min(historical_volume_profile[1])
 	the_highest_price = 0
 	for row in list_with_price_data[1:]:
-		if row[2] > the_highest_price:
-			the_highest_price = row[2]
+		# print((row[2], the_highest_price))
+		if float(row[2]) > the_highest_price:
+			the_highest_price = float(row[2])
 	x_list=[]	# volumes
 	y_list=[]	# prices
 	price = the_lowest_price
@@ -91,7 +92,7 @@ def historical_volumes(company, end_date):
 
 def signal(last_row, historical_volume_profile, volume_profile_locator):
 	if volume_profile_locator == None:
-		return 0
+		return 0.
 	else:
 		price_now = last_row[4]
 		price_difference = 999999999
@@ -125,22 +126,22 @@ def signal(last_row, historical_volume_profile, volume_profile_locator):
 		if max_volume_below > max_volume_above and volume_profile_radius > 0:
 			return -1.
 		else:
-			return 0
+			return 0.
 		# max_volume_difference_below = max(volume_below) - min(volume_below)
 		# max_volume_difference_above = max(volume_above) - min(volume_above)
 		# if max_volume_difference_below >= max_volume_difference_above and volume_profile_radius > 0:
-		# 	return 'buy'
+		# 	return 1.
 		# if max_volume_difference_below < max_volume_difference_above and volume_profile_radius > 0:
-		# 	return 'sell'
+		# 	return -1.
 		# else:
-		# 	return 0
+		# 	return 0.
 
 # In case of testing:
 def main(company, list_with_price_data):
 	
 	first_date = list_with_price_data[1][0]
 	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-	historical_volume_profile, step = historical_volumes(end_date)
+	historical_volume_profile, step = historical_volumes(company, end_date)
 
 	for count in range(1310,1311):		#	1,len(list_with_price_data),10):
 		new_volumes = update_volume_profile(list_with_price_data[1:count+1], step, historical_volume_profile)
@@ -158,12 +159,27 @@ def main(company, list_with_price_data):
 if __name__ == '__main__':
 	company = 'TSLA'
 	bar_size = '30 mins'
-	list_with_price_data=[]
+	price_data=[]
 	import csv
-	with open(f'./historical_data/{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
+	with open(f'{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
 		for row in csv.reader(data_file, delimiter=';'):
-			list_with_price_data.append(row)
-	main(company, list_with_price_data)
+			if row[0] != 'Datetime':
+				formated_row = []
+				formated_row.append(row[0])
+				formated_row.append(float(row[1]))
+				formated_row.append(float(row[2]))
+				formated_row.append(float(row[3]))
+				formated_row.append(float(row[4]))
+				formated_row.append(int(row[5]))
+				try:
+					if row[6] != '' and row[7] != '':
+						formated_row.append(round(float(row[6]), 1))
+						formated_row.append(round(float(row[7]), 1))
+				except:
+					formated_row.append('')
+					formated_row.append('')
+				price_data.append(formated_row)
+	main(company, price_data)
 
 
 # Варианты стратегий:

@@ -1,3 +1,4 @@
+from datetime import datetime
 import csv
 import time
 
@@ -62,7 +63,8 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 # Check opened position
 	position = W4_checking_account.what_position_is_open_now_for(company)
 	time.sleep(7)
-	if position == None and utils.SEs_should_work_now():
+	weekday = datetime.strftime(datetime.now(), '%w')
+	if position == None and weekday not in ('6', '7'):
 		if try_count <= 3:
 			try_count += 1
 			place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id, try_count)

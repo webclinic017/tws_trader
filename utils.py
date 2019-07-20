@@ -144,7 +144,9 @@ def my_range(start, stop, step=0.5):
 
 
 def update_price_data(company, bar_size):
-	data = yf.Ticker(company).history(interval='30m').iloc[:,:-2] # excluding Dividends and Stock Splits
+	y_interval = {'1 min': '1m', '2 mins': '2m', '5 mins': '5m', '15 mins': '15m', '30 mins': '30m',
+					'1 hour': '1h', '1 day': '1d', '1 week': '1wk', '1 month': '1mo'}
+	data = yf.Ticker(company).history(interval=y_interval[bar_size]).iloc[:,:-2] # excluding Dividends and Stock Splits
 	last_date = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';').index[-1]
 	new_price_data = data.loc[last_date:,:].iloc[1:]
 	interval = None

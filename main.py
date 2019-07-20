@@ -108,9 +108,8 @@ def main(company):
 	time.sleep(3)
 
 	first_date = price_data[1][0]
-	
 	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-	historical_volume_profile, step = volume_profile.historical_volumes(end_date)
+	historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
 	new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
 	
 	signal = trade_signals_watcher.signal(price_data, new_volume_profile, strategy)
@@ -160,8 +159,13 @@ def main(company):
 	while True:
 		print_waiting()
 		time_now_str = datetime.strftime(datetime.now(), '%H:%M')
-		if time_now_str in working_shedule:
-			main(company)
+		weekday = datetime.strftime(datetime.now(), '%w')
+		if weekday not in ('6', '7'):
+			if time_now_str in working_shedule:
+				main(company)
+		else:
+			print('Wait till stock exchange will be open.')
+
 
 if __name__ == "__main__":
 	company = settings.company

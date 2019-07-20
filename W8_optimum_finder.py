@@ -23,32 +23,30 @@ def make_3D_plot(x, y, z):
 	ax.scatter(x, y, z)
 	pyplot.show()
 
-
 class ranges:
-	bar_size = ( '30 mins',) 	# '10 mins', '20 mins', '1 hour', '1 day') 	# 1,5,10,15,30secs, 1,2,3,5,10,15,20,30min[s], 1,2,3,4,8hour[s], 1day,week,month
+	bar_size = ( '30 mins',)
 	combinations = []
-	for a0 in range(1,11):
+	for a0 in range(2,8):
 		for a1 in range(11):
 			for a2 in range(11):
 				for a3 in range(11):
 					for a4 in range(11):
-						# if 10 in (a1, a2, a3, a4):
 						combinations.append(f'{a0}-{a1}-{a2}-{a3}-{a4}')
 	Indicators_combination = combinations
-	K_level_to_buy = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
-	D_level_to_buy = ((19,29),)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
+	K_level_to_buy = (None,)
+	D_level_to_buy = ((19,29),)
 	KD_difference_to_buy = (1,)
 	stop_loss = (4,)
 	take_profit = (10,)
-	K_level_to_sell = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
-	D_level_to_sell = (None,)#,(0,40),(20,60))#,(30,70),(40,80),(50,90),(60,100),(0,30),(20,50),(40,70),(60,90))
+	K_level_to_sell = (None,)
+	D_level_to_sell = (None,)
 	KD_difference_to_sell = (0,)
-	stoch_period = (19,)	#(5,10,20,30)
-	slow_avg = (12,)	#(5,10,20,30)
-	fast_avg = (5,)	#(3, 5,10,20,30)
-	Weekday_buy = (1,2345,1234)
+	stoch_period = (19,)
+	slow_avg = (12,)
+	fast_avg = (5,)
+	Weekday_buy = (1,12,13,14,15)
 	Weekday_sell = (None,)
-	Volume_profile_locator = (10,4,8,12,54,80,100)
+	Volume_profile_locator = (10,12,14,54)
 	Japanese_candlesticks = (1,)
 
 
@@ -103,6 +101,8 @@ def print_status(info):
 
 			# Indicators_combination:		{''.join(choosen_parameter(info[18], ranges.Indicators_combination))}
 ### Estimation time does not work!
+	choosen_start = '\033[1m'+'\033[4m'+'\033[91m'
+	choosen_end = '\033[0m'
 	print(f"""  
 Bar size:			{''.join(choosen_parameter(info[13], ranges.bar_size))}           
 Indicators_combination:		{info[18]}            
@@ -133,7 +133,7 @@ Time left:	{info[19]*(total_number-done_number)} seconds
 
 def find_optimum_with_all_parameters(company):
 	existing_strategies = []
-
+	capital_by_date_of_the_best_strategy = None
 	cycle_executed_in_seconds = 0
 	the_best_strategy = {}
 	strategy = {}
@@ -149,7 +149,7 @@ def find_optimum_with_all_parameters(company):
 			price_data = utils.get_price_data(company, bar_size)
 			first_date = price_data[0][0]
 			end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-			historical_volume_profile, step = volume_profile.historical_volumes(end_date)
+			historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
 			for Indicators_combination in set(ranges.Indicators_combination):
 				for stoch_period in set(ranges.stoch_period):
 					for slow_avg in set(ranges.slow_avg):
@@ -198,6 +198,7 @@ def find_optimum_with_all_parameters(company):
 																				strategy['profit'] = profitability
 																				strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
 
+																				# if strategy['profit'] > 100.:
 																				with open(f'!Strategies_for_{company} {bar_size}.csv', 'a', encoding='utf-8') as file:
 																					fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
 																									'bar_size', 'Indicators_combination',
@@ -228,7 +229,8 @@ def find_optimum_with_all_parameters(company):
 																				the_best_strategy['Weekday_buy'] = Weekday_buy
 																				the_best_strategy['Weekday_sell'] = Weekday_sell
 																				the_best_strategy['Volume_profile_locator'] = Volume_profile_locator
-																				the_best_strategy['Japanese_candlesticks'] = Japanese_candlesticks													
+																				the_best_strategy['Japanese_candlesticks'] = Japanese_candlesticks	
+																				capital_by_date_of_the_best_strategy = 	capital_by_date										
 
 																			print_status((the_best_strategy['profit'],
 																						Japanese_candlesticks,
@@ -256,8 +258,8 @@ def find_optimum_with_all_parameters(company):
 																			
 	except(KeyboardInterrupt):
 		print('\n'*5)
-	save_the_best_strategy(the_best_strategy, capital_by_date)				
-	return the_best_strategy, capital_by_date
+	save_the_best_strategy(the_best_strategy, capital_by_date_of_the_best_strategy)				
+	return the_best_strategy, capital_by_date_of_the_best_strategy
 
 
 def main(company):
