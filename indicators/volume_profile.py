@@ -69,8 +69,8 @@ def update_volume_profile(list_with_price_data, step, historical_volume_profile)
 	return (new_x_list, historical_volume_profile[1])
 
 
-def historical_volumes(end_date):
-	req = Fetcher("TSLA", [2000,1,1], end_date)
+def historical_volumes(company, end_date):
+	req = Fetcher(f'{company}', [2000,1,1], end_date)
 	data = req.getHistorical()
 	the_highest_price = data['High'].max()
 	the_lowest_price = data['Low'].min()
