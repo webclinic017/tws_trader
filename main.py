@@ -88,10 +88,11 @@ def print_waiting():
 		time.sleep(1)
 
 
-def main(company):
+def main():
 	##### needs very seldom
 	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
 	# W1_filter_all_companies_and_get_price_data.main(c)
+	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
 	working_shedule = utils.get_working_shedule(strategy['bar_size'])
 
@@ -168,9 +169,8 @@ def main(company):
 
 
 if __name__ == "__main__":
-	company = settings.company
 	try:
-		main(company)
+		main()
 	except(KeyboardInterrupt):
 		print('\nBye!')
 	except():

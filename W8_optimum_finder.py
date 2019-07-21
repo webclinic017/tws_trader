@@ -25,28 +25,30 @@ def make_3D_plot(x, y, z):
 
 class ranges:
 	bar_size = ( '30 mins',)
+	# combinations = ('1-0-1-0-0',)
 	combinations = []
-	for a0 in range(2,8):
+	for a0 in range(2,11):
 		for a1 in range(11):
 			for a2 in range(11):
 				for a3 in range(11):
 					for a4 in range(11):
-						combinations.append(f'{a0}-{a1}-{a2}-{a3}-{a4}')
+						if a1 == 10:
+							combinations.append(f'{a0}-{a1}-{a2}-{a3}-{a4}')
 	Indicators_combination = combinations
 	K_level_to_buy = (None,)
-	D_level_to_buy = ((19,29),)
-	KD_difference_to_buy = (1,)
-	stop_loss = (4,)
+	D_level_to_buy = (None,)
+	KD_difference_to_buy = (1,-1)
+	stop_loss = (10,)
 	take_profit = (10,)
 	K_level_to_sell = (None,)
 	D_level_to_sell = (None,)
-	KD_difference_to_sell = (0,)
-	stoch_period = (19,)
-	slow_avg = (12,)
-	fast_avg = (5,)
-	Weekday_buy = (1,12,13,14,15)
-	Weekday_sell = (None,)
-	Volume_profile_locator = (10,12,14,54)
+	KD_difference_to_sell = (1,-1,None)
+	stoch_period = (5, 10,15)
+	slow_avg = (15,20)
+	fast_avg = (10,15)
+	Weekday_buy = (None,)#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345)
+	Weekday_sell = (None,)#(None,1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345)
+	Volume_profile_locator = (10,)
 	Japanese_candlesticks = (1,)
 
 
@@ -137,7 +139,7 @@ def find_optimum_with_all_parameters(company):
 	cycle_executed_in_seconds = 0
 	the_best_strategy = {}
 	strategy = {}
-	the_best_strategy['profit'] = 0
+	the_best_strategy['profit'] = -1000
 	the_best_strategy['max_drawdown'] = 0
 	try:
 		i = 1
