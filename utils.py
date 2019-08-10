@@ -1,11 +1,20 @@
 import csv
 from datetime import datetime, timedelta
+import os
 import time
 
 from ib.ext.Contract import Contract
 import pandas as pd
 import pytz
 import yfinance as yf
+
+
+def first_run():
+	if not os.path.exists('tmp_data'):
+		os.makedirs('tmp_data')
+	if not os.path.exists('historical_data'):
+		os.makedirs('historical_data')
+
 
 def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch='SMART', curr='USD'):
 	contract = Contract()
@@ -79,6 +88,7 @@ def get_price_data(company, bar_size):
 					formated_row.append('')
 					formated_row.append('')
 				price_data.append(formated_row)
+	print(price_data[-1])
 	return price_data
 
 
@@ -89,7 +99,7 @@ def get_price_data_df(company, bar_size):
 
 def the_best_known_strategy(company):
 	the_best_strategy = {}
-	with open(f'!BestStrategies.csv', 'r', encoding='utf-8') as file:
+	with open(f'tmp_data/!BestStrategies.csv', 'r', encoding='utf-8') as file:
 		for x in csv.reader(file, delimiter=';'):
 			if x[0] == company:
 				the_best_strategy['bar_size'] = x[4]
@@ -147,20 +157,24 @@ def update_price_data(company, bar_size):
 	y_interval = {'1 min': '1m', '2 mins': '2m', '5 mins': '5m', '15 mins': '15m', '30 mins': '30m',
 					'1 hour': '1h', '1 day': '1d', '1 week': '1wk', '1 month': '1mo'}
 	data = yf.Ticker(company).history(interval=y_interval[bar_size]).iloc[:,:-2] # excluding Dividends and Stock Splits
-	last_date = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';').index[-1]
-	new_price_data = data.loc[last_date:,:].iloc[1:]
-	interval = None
-	if bar_size.split()[1] == 'mins':
-		interval = int(bar_size.split()[0])
-	if bar_size.split()[1][:4] == 'hour':
-		interval = int(bar_size.split()[0])*60
-	if bar_size.split()[1] == 'day':
-		interval = 24*60
-	new_last_date = data.index[-1].to_pydatetime()
-	time_now_in_EST = datetime.now(pytz.timezone('US/Eastern'))
-	difference = (time_now_in_EST - new_last_date)
-	difference = difference.seconds//3600
-	if difference < interval:
-		new_price_data = new_price_data.iloc[:-1]
-	new_price_data.to_csv(rf'historical_data/{company} {bar_size}.csv', mode='a', header=False, sep=';')
+	filename = f'historical_data/{company} {bar_size}.csv'
+	if not os.path.isfile(filename): # create new file
+		data.to_csv(filename, mode='a', header=False, sep=';')
+	else: # update
+		last_date = pd.read_csv(filename, index_col=0, sep=';').index[-1]
+		new_price_data = data.loc[last_date:,:].iloc[1:]
+		interval = None
+		if bar_size.split()[1] == 'mins':
+			interval = int(bar_size.split()[0])
+		if bar_size.split()[1][:4] == 'hour':
+			interval = int(bar_size.split()[0])*60
+		if bar_size.split()[1] == 'day':
+			interval = 24*60
+		new_last_date = data.index[-1].to_pydatetime()
+		time_now_in_EST = datetime.now(pytz.timezone('US/Eastern'))
+		difference = (time_now_in_EST - new_last_date)
+		difference = difference.seconds//3600
+		if difference < interval:
+			new_price_data = new_price_data.iloc[:-1]
+		new_price_data.to_csv(filename, mode='a', header=False, sep=';')
 

@@ -30,7 +30,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 		low_price = row[3]
 		close_price = row[4]
 		if i < len(price_data) - 1: # if not the last row
-			market_price = (abs(price_data[i+1][2] + price_data[i+1][3])) / 2
+			market_price = price_data[i+1][1]	#(abs(price_data[i+1][2] + price_data[i+1][3])) / 2
 		# it's not correct, but it must be the closest price to market_price
 		if i == 1:
 			buy_and_hold_quantity = int(capital / open_price)

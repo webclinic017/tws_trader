@@ -49,8 +49,6 @@ import settings
 import trade_signals_watcher
 import utils
 import W4_checking_account
-import W1_filter_all_companies_and_get_price_data
-import W2_sort_companies
 import W6_position_manager
 
 
@@ -89,9 +87,6 @@ def print_waiting():
 
 
 def main():
-	##### needs very seldom
-	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
-	# W1_filter_all_companies_and_get_price_data.main(c)
 	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
 	working_shedule = utils.get_working_shedule(strategy['bar_size'])
@@ -105,7 +100,7 @@ def main():
 	time.sleep(7)
 	orderId = W4_checking_account.next_valid_order_Id()
 	time.sleep(3)
-	buying_power = W4_checking_account.buying_power()
+	available_funds = W4_checking_account.available_funds()
 	time.sleep(3)
 
 	first_date = price_data[1][0]
@@ -118,7 +113,7 @@ def main():
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 
 	last_row_with_price_data = price_data[-1]
-	quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+	quantity = int((available_funds * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
 	
 	if open_position_type == None:
 		if signal == 'buy':
@@ -138,7 +133,7 @@ def main():
 			print('Closing long by signal...')
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
-			time.sleep(20)
+			time.sleep(30)
 			action = 'SELL'
 			stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
 			take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
@@ -149,7 +144,7 @@ def main():
 			print('Closing short by signal...')
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
-			time.sleep(20)
+			time.sleep(30)
 			action = 'BUY'
 			stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
 			take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
@@ -158,18 +153,22 @@ def main():
 	time.sleep(60)
 	print_waiting()
 	while True:
-		print_waiting()
 		time_now_str = datetime.strftime(datetime.now(), '%H:%M')
 		weekday = datetime.strftime(datetime.now(), '%w')
-		if weekday not in ('6', '7'):
+		if weekday not in ('6', '0'):
+			print_waiting()
 			if time_now_str in working_shedule:
-				main(company)
+				time.sleep(15)
+				main()
 		else:
-			print('Wait till stock exchange will be open.')
+			print('  Wait till stock exchange will be open.                  ')
+			print('\033[F'*2)
+			time.sleep(60)
 
 
 if __name__ == "__main__":
 	try:
+		utils.first_run()
 		main()
 	except(KeyboardInterrupt):
 		print('\nBye!')

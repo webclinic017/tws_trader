@@ -14,7 +14,7 @@ def what_position_is_open_now_for(company, try_count=1):
 		open_positions.append({'Company': msg.contract.m_symbol, 'Quantity': msg.pos})
 # Write positionses info in scv
 	def create_csv_with_open_positions(open_positions):
-		with open('!MyPositions.csv', 'w', encoding='utf-8') as csvfile:
+		with open('tmp_data/!MyPositions.csv', 'w', encoding='utf-8') as csvfile:
 			fieldnames = ('Company', 'Quantity')
 			a = csv.DictWriter(csvfile, fieldnames, delimiter=';')
 			a.writeheader()
@@ -31,7 +31,7 @@ def what_position_is_open_now_for(company, try_count=1):
 # Get positions ids from csv
 	def read_positions_from_csv():
 		open_positions = []
-		with open('!MyPositions.csv', 'r', encoding='utf-8') as csvfile:
+		with open('tmp_data/!MyPositions.csv', 'r', encoding='utf-8') as csvfile:
 			fieldnames = ('Company', 'Quantity')
 			a = csv.DictReader(csvfile, fieldnames, delimiter=';')
 			for row in a:
@@ -80,7 +80,7 @@ def orders_ids_are_open_now_for(company):
 							})
 # Write order's info in scv
 	def create_csv_with_open_orders(open_orders):
-		with open('!MyOrders.csv', 'w', encoding='utf-8') as csvfile:
+		with open('tmp_data/!MyOrders.csv', 'w', encoding='utf-8') as csvfile:
 			fieldnames = ('OrderId', 'Company', 'Quantity', 'OrderType')
 			a = csv.DictWriter(csvfile, fieldnames, delimiter=';')
 			a.writeheader()
@@ -95,7 +95,7 @@ def orders_ids_are_open_now_for(company):
 	TWS_CONNECTION.disconnect()
 # Get orders ids from csv
 	orders_ids = []
-	with open('!MyOrders.csv', 'r', encoding='utf-8') as csvfile:
+	with open('tmp_data/!MyOrders.csv', 'r', encoding='utf-8') as csvfile:
 			fieldnames = ('OrderId', 'Company', 'Quantity', 'OrderType')
 			a = csv.DictReader(csvfile, fieldnames, delimiter=';')
 			for row in a:
@@ -105,7 +105,7 @@ def orders_ids_are_open_now_for(company):
 
 
 def get_next_order_id(msg):
-	with open('!NextValidId.csv', 'w', encoding='utf-8') as csvfile:
+	with open('tmp_data/!NextValidId.csv', 'w', encoding='utf-8') as csvfile:
 		csvfile.write(str(msg.orderId))
 
 
@@ -117,7 +117,7 @@ def next_valid_order_Id():
 	TWS_CONNECTION.cancelPositions()
 	TWS_CONNECTION.disconnect()
 	orderid = None
-	with open('!NextValidId.csv', 'r', encoding='utf-8') as file:
+	with open('tmp_data/!NextValidId.csv', 'r', encoding='utf-8') as file:
 		for next_id in csv.reader(file):
 			orderid = next_id[0]
 	return int(orderid) + 1
@@ -137,6 +137,22 @@ def buying_power():
 	time.sleep(2)
 	TWS_CONNECTION.disconnect()
 	return float(buying_power_total[0])
+
+
+availablefunds = []
+def caching(msg):
+	if msg.key == 'AvailableFunds':
+		availablefunds.append(float(msg.value))
+
+
+def available_funds():
+	global availablefunds
+	TWS_CONNECTION.connect()
+	TWS_CONNECTION.register(caching, message.updateAccountValue)
+	TWS_CONNECTION.reqAccountUpdates(True, ACCOUNT_NUMBER)
+	time.sleep(1)
+	TWS_CONNECTION.disconnect()
+	return float(next(iter(availablefunds), 0))
 
 
 # In case of testing:

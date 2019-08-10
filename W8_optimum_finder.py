@@ -54,7 +54,7 @@ class ranges:
 
 def save_the_best_strategy(the_best_strategy, capital_by_date):
 	previous_max_profit = None
-	with open(f'!BestStrategies.csv', 'r', encoding='utf-8') as file:
+	with open(f'tmp_data/!BestStrategies.csv', 'r', encoding='utf-8') as file:
 		for x in csv.reader(file, delimiter=';'):
 			if x[0] == company:
 				previous_max_profit = float(x[1])
@@ -144,7 +144,7 @@ def find_optimum_with_all_parameters(company):
 	try:
 		i = 1
 		for bar_size in set(ranges.bar_size):
-			with open(f'!Strategies_for_{company} {bar_size}.csv', 'r', encoding='utf-8') as file:
+			with open(f'tmp_data!Strategies_for_{company} {bar_size}.csv', 'r', encoding='utf-8') as file:
 				reader = csv.reader(file, delimiter=';')
 				for row in reader:
 					existing_strategies.append(';'.join(row[4:]))
@@ -201,7 +201,7 @@ def find_optimum_with_all_parameters(company):
 																				strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
 
 																				# if strategy['profit'] > 100.:
-																				with open(f'!Strategies_for_{company} {bar_size}.csv', 'a', encoding='utf-8') as file:
+																				with open(f'tmp_data!Strategies_for_{company} {bar_size}.csv', 'a', encoding='utf-8') as file:
 																					fieldnames = ['company', 'profit', 'max_drawdown', 'buy_and_hold_profitability',
 																									'bar_size', 'Indicators_combination',
 																									'K_level_to_buy', 'D_level_to_buy', 'KD_difference_to_buy',

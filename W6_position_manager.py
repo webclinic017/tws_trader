@@ -26,6 +26,7 @@ def create_TP_order(action, take_profit, quantity, parent_order_id):
 	tp.m_action = "SELL" if action == "BUY" else "BUY"
 	tp.m_lmtPrice = take_profit
 	tp.order_id = parent_order_id + 1
+	tp.m_tif = 'GTC'
 	return tp
 
 
@@ -36,6 +37,7 @@ def create_SL_order(action, stop_loss, quantity, parent_order_id):
 	sl.m_action = "SELL" if action == "BUY" else "BUY"
 	sl.m_auxPrice = stop_loss
 	sl.order_id = parent_order_id + 2
+	sl.m_tif = 'GTC'
 	return sl
 
 
@@ -64,7 +66,7 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 	position = W4_checking_account.what_position_is_open_now_for(company)
 	time.sleep(7)
 	weekday = datetime.strftime(datetime.now(), '%w')
-	if position == None and weekday not in ('6', '7'):
+	if position == None and weekday not in ('6', '0'):
 		if try_count <= 3:
 			try_count += 1
 			place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id, try_count)
@@ -100,8 +102,27 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 		TWS_CONNECTION.disconnect()		
 	time.sleep(2)	
 
+
+def close_all_open_orders_for(company):
+# it takes >16 secs
+	open_orders_ids = W4_checking_account.orders_ids_are_open_now_for(company)
+	time.sleep(4)
+	print('Open orders befor closing are:', open_orders_ids)
+	if open_orders_ids != ():
+		TWS_CONNECTION.connect()
+		for order_id in open_orders_ids:
+			TWS_CONNECTION.cancelOrder(order_id)
+			time.sleep(1)
+		time.sleep(1)
+		TWS_CONNECTION.disconnect()
+		open_orders_ids = W4_checking_account.orders_ids_are_open_now_for(company)
+		time.sleep(4)
+		print('Open orders after closing are:', open_orders_ids)
+		if open_orders_ids != ():
+			close_all_open_orders_for(company)
+
 #### NEEDS TO AWAIT TILL POSITION FULLY CLOSES!!! ####
-# it takes <6 secs
+# it takes >22 secs
 def close_position(company, order_id):
 # Getting position quantity
 	open_positions = []
@@ -131,14 +152,9 @@ def close_position(company, order_id):
 	TWS_CONNECTION.placeOrder(order_id, contract, order)
 	time.sleep(3)
 	TWS_CONNECTION.disconnect()
+	time.sleep(2)
 # Close all open orders for the company
-	open_orders_ids = W4_checking_account.orders_ids_are_open_now_for(company)
-	time.sleep(2.5)
-	if open_orders_ids != ():
-		TWS_CONNECTION.connect()
-		for order_id in open_orders_ids:
-			TWS_CONNECTION.cancelOrder(order_id)
-		TWS_CONNECTION.disconnect()
+	close_all_open_orders_for(company)
 
 
 if __name__ == "__main__":
