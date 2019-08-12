@@ -140,7 +140,7 @@ def buying_power():
 
 
 availablefunds = []
-def caching(msg):
+def caching2(msg):
 	if msg.key == 'AvailableFunds':
 		availablefunds.append(float(msg.value))
 
@@ -148,7 +148,7 @@ def caching(msg):
 def available_funds():
 	global availablefunds
 	TWS_CONNECTION.connect()
-	TWS_CONNECTION.register(caching, message.updateAccountValue)
+	TWS_CONNECTION.register(caching2, message.updateAccountValue)
 	TWS_CONNECTION.reqAccountUpdates(True, ACCOUNT_NUMBER)
 	time.sleep(1)
 	TWS_CONNECTION.disconnect()

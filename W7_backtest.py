@@ -194,26 +194,26 @@ def main(price_data, strategy, historical_volume_profile, step):
 
 if __name__ == '__main__':
 	company = settings.company
-	# try:
-	# 	strategy = utils.the_best_known_strategy(company)
-	# except:
-	strategy = {'bar_size': '30 mins',
-				'Indicators_combination': '5-5-0-0-0-0',
-				# 'K_level_to_buy': None,
-				# 'D_level_to_buy': (19, 29),
-				# 'KD_difference_to_buy': 1,
-				'stop_loss': 5,
-				'take_profit': None,
-				# 'K_level_to_sell': None,
-				# 'D_level_to_sell': None,
-				# 'KD_difference_to_sell': 0,
-				'Stoch_parameters': (100, 40, 3),
-				'Weekday_buy': None,
-				'Weekday_sell': None,
-				'Volume_profile_locator': 10,
-				'SMA_period': 100
-				}
-	# TSLA;0.0;;-29.7;30 mins;5-5-0-0-0-0;;;;5;;;;;(100, 40, 3);;;10;100
+	try:
+		strategy = utils.the_best_known_strategy(company)
+	except:
+		strategy = {'bar_size': '30 mins',
+					'Indicators_combination': '3-10-1-2-3-2', #'5-5-3-3-5-5', #
+					'K_level_to_buy': None,
+					'D_level_to_buy': (19, 29),
+					'KD_difference_to_buy': 1,
+					'stop_loss': 4,
+					'take_profit': 10,
+					'K_level_to_sell': None,
+					'D_level_to_sell': None,
+					'KD_difference_to_sell': 0,
+					'Stoch_parameters': (19, 12, 5),
+					'Weekday_buy': 1,
+					'Weekday_sell': None,
+					'Volume_profile_locator': 14,
+					'SMA_period': 50
+					}
+	# TSLA;180.4;-8.8;-26.0;30 mins;3-10-1-2-3-0;;(19, 29);1;4;10;;;0;(19, 12, 5);1;;14;100
 	price_data = utils.get_price_data(company, strategy['bar_size'])
 	price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
 	price_data = SMA.update(price_data, strategy['SMA_period'])
@@ -230,6 +230,5 @@ if __name__ == '__main__':
 		print(row)
 	print(f'\nProfitability: {round(profit, 1)}%, max drawdown: {round(max_drawdown, 1)}%')
 	print(f'\nBuy and hold profitability: {round(buy_and_hold_profitability, 1)}%')
-	print(strategy)
 	# make_candlestick_chart.main(price_data, history, capital_by_date, company)
 

@@ -110,6 +110,7 @@ def signal(price_data):
 		return -1.
 	return 0.
 
+
 # In case of testing to create new patterns:
 def main(price_data):
 	points = [[],[]]
@@ -126,6 +127,7 @@ def main(price_data):
 		quotes.append((count1, row[1], row[2], row[3], row[4]))
 		count1 += 1
 	make_plots(quotes, points)
+
 
 if __name__ == '__main__':
 	company = 'TSLA'

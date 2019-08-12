@@ -29,31 +29,36 @@ class ranges:
 	bar_size = ( '30 mins',)
 	Indicators_combination = []
 	a0 = 5 # a0 = quantity of indicators
-	for a1 in range(a0+1): # Stoch
+# Чтобы один индикатор мог быть самым важным (больше суммы остальных), то масимальное значение индикатора должно
+# определяться по измененной последовательности фибоначчи. Т.е.: 1-2-4-16-65. 2 индикатора - (2-2-4), три индикатора -
+# (другие 3-3-3-9), 4 индикатора - (4-4-4-4-16), 5 индикаторов - (5-5-5-5-5-25)
+# макс = a0 * кол-во индикаторов + a0
+	max_a = a0 * 5 + a0
+	for a1 in range(max_a+1): # Stoch
 		for a2 in range(1): # Weekdays OFF
-			for a3 in range(1+a0): # Japanese candlesticks
-				for a4 in range(1+a0): # Volume profile
-					for a5 in range(1+a0): # SMA
+			for a3 in range(max_a+1): # Japanese candlesticks
+				for a4 in range(max_a+1): # Volume profile
+					for a5 in range(max_a+1): # SMA
 						if sum((a1, a2, a3, a4, a5)) >= a0:
 							Indicators_combination.append(f'{a0}-{a1}-{a2}-{a3}-{a4}-{a5}')
 	# Indicators_combination = ['5-3-0-0-0-3']
 	K_level_to_buy = (None,)
-	D_level_to_buy = (None,)
-	KD_difference_to_buy = (None,)
-	stop_loss = (2, 5, 15)
-	take_profit = (None,10)
+	D_level_to_buy = ((19, 29),)
+	KD_difference_to_buy = (1,)
+	stop_loss = (4,)
+	take_profit = (10,)
 	K_level_to_sell = (None,)
 	D_level_to_sell = (None,)
-	KD_difference_to_sell = (None,)
-	stoch_period = range(25, 50)
-	slow_avg = range(15, 65)
-	fast_avg = range(5, 11)
+	KD_difference_to_sell = (0,)
+	stoch_period = (19,)
+	slow_avg = (12,)
+	fast_avg = (5,)
 	Weekday_buy = (None,)#1,5,2345,1234)#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345)
 	Weekday_sell = (None,)#1,5,2345,1234)#(None,1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345)
-	Volume_profile_locator = (10,50)
-	SMA_period = range(70, 120)
+	Volume_profile_locator = (14,)
+	SMA_period = (150,)
 
-# TSLA;0.0;;-29.7;30 mins;5-5-0-0-0-0;;;;5;;;;;(100, 40, 3);;;10;100
+# TSLA;180.4;-8.8;-26.0;30 mins;3-10-1-2-3-0;;(19, 29);1;4;10;;;0;(19, 12, 5);1;;14;100
 def save_the_best_strategy(the_best_strategy, capital_by_date):
 	file_with_best_strategies = 'tmp_data/!BestStrategies.csv'
 	best_strategies = pd.read_csv(file_with_best_strategies, index_col=0, sep=';')
@@ -151,7 +156,7 @@ def find_optimum_with_all_parameters(company):
 			first_date = price_data[0][0]
 			end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 			historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
-			for Indicators_combination in set(ranges.Indicators_combination):
+			for SMA_period in set(ranges.SMA_period):
 				for stoch_period in set(ranges.stoch_period):
 					for slow_avg in set(ranges.slow_avg):
 						for fast_avg in set(ranges.fast_avg):
@@ -167,7 +172,9 @@ def find_optimum_with_all_parameters(company):
 															for Weekday_buy in set(ranges.Weekday_buy):
 																for Weekday_sell in set(ranges.Weekday_sell):
 																	for Volume_profile_locator in set(ranges.Volume_profile_locator):
-																		for SMA_period in set(ranges.SMA_period):
+																		price_data = stochastic.update(price_data, stoch_parameters)
+																		price_data = SMA.update(price_data, SMA_period)
+																		for Indicators_combination in set(ranges.Indicators_combination):
 																			strategy['company'] = company
 																			strategy['profit'] = None
 																			strategy['max_drawdown'] = None
@@ -196,8 +203,7 @@ def find_optimum_with_all_parameters(company):
 																			buy_and_hold_profitability = None
 																			if strting_strategy not in existing_strategies:
 
-																				price_data = stochastic.update(price_data, stoch_parameters)
-																				price_data = SMA.update(price_data,SMA_period)
+
 
 																				profitability, history, buy_and_hold_profitability, capital_by_date = W7_backtest.main(price_data, strategy, historical_volume_profile, step)
 																				profitability = round(profitability,1)
@@ -256,10 +262,11 @@ def find_optimum_with_all_parameters(company):
 																						))
 																			i += 1
 																			strategy = {}
-																			new_price_data = []
-																			for row in price_data:
-																				new_price_data.append(row[:7])
-																			price_data = new_price_data
+
+																		new_price_data = []
+																		for row in price_data:
+																			new_price_data.append(row[:7])
+																		price_data = new_price_data
 																			
 	except(KeyboardInterrupt):
 		print('\n'*5)			

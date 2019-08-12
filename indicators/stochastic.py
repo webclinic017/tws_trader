@@ -38,7 +38,7 @@ def delete_columns_with_indicator(price_data): 	# m.b. with pandas.DataFrame it 
 			continue
 	return price_data
 
-# РАЗОБРАТЬСЯ!!!!!
+
 def update(price_data, parameters):
 	period = parameters[0]
 	slow_average_period = parameters[1]
@@ -58,23 +58,145 @@ def update(price_data, parameters):
 	return price_data
 
 
-def signal(price_data):
-	period = 5
-	try:
-		previous_K = price_data[-period][6]
-		previous_D = price_data[-period][7]
-	except(IndexError):
+def signal(row, 
+				K_level_to_buy=None, D_level_to_buy=None, KD_difference_to_buy=None,
+				K_level_to_sell=None, D_level_to_sell=None, KD_difference_to_sell=None
+				):
+	K = row[6]
+	D = row[7]
+	cross_level = 2.
+	if K == '' or D == '':
 		return 0.
-	now_K = price_data[-1][6]
-	now_D = price_data[-1][7]
-	if previous_K and previous_D:
-		try:
-			if previous_K < previous_D:
-				if now_K > now_D:
+	else:
+	# K_level_to_buy only matters
+		if K_level_to_buy != None and D_level_to_buy == None and KD_difference_to_buy == None:
+			if K_level_to_buy[0] <= K <= K_level_to_buy[1]:
+				return 1.
+	# D_level_to_buy only matters
+		if K_level_to_buy == None and D_level_to_buy != None and KD_difference_to_buy == None:
+			if D_level_to_buy[0] <= D <= D_level_to_buy[1]:
+				return 1.
+	# KD_difference_to_buy only matters
+		if K_level_to_buy == None and D_level_to_buy == None and KD_difference_to_buy != None:
+			if KD_difference_to_buy == 0:	# needs to K=D
+				if -cross_level < (K - D) < cross_level:
 					return 1.
-			if previous_K > previous_D:
-				if now_K < now_D:
+			if KD_difference_to_buy == -1:	# needs to K<D
+				if (K - D) < -cross_level:
+					return 1.
+			if KD_difference_to_buy == 1:	# needs to K>D
+				if (K - D) > cross_level:
+					return 1.	
+	# K_level_to_buy and D_level_to_buy only matters
+		if K_level_to_buy != None and D_level_to_buy != None and KD_difference_to_buy == None:
+			if K_level_to_buy[0] <= K <= K_level_to_buy[1]:
+				if D_level_to_buy[0] <= D <= D_level_to_buy[1]:
+					return 1.
+	# K_level_to_buy and KD_difference_to_buy only matters
+		if K_level_to_buy != None and D_level_to_buy == None and KD_difference_to_buy != None:
+			if K_level_to_buy[0] <= K <= K_level_to_buy[1]:
+				if KD_difference_to_buy == 0:	# needs to K=D
+					if -cross_level < (K - D) < cross_level:
+						return 1.
+				if KD_difference_to_buy == -1:	# needs to K<D
+					if (K - D) < -cross_level:
+						return 1.
+				if KD_difference_to_buy == 1:	# needs to K>D
+					if (K - D) > cross_level:
+						return 1.
+	# D_level_to_buy and KD_difference_to_buy only matters
+		if K_level_to_buy == None and D_level_to_buy != None and KD_difference_to_buy != None:
+			if D_level_to_buy[0] <= D <= D_level_to_buy[1]:
+				if KD_difference_to_buy == 0:	# needs to K=D
+					if -cross_level < (K - D) < cross_level:
+						return 1.
+				if KD_difference_to_buy == -1:	# needs to K<D
+					if (K - D) < -cross_level:
+						return 1.
+				if KD_difference_to_buy == 1:	# needs to K>D
+					if (K - D) > cross_level:
+						return 1.
+	# all parameters to buy matters
+		if K_level_to_buy != None and D_level_to_buy != None and KD_difference_to_buy != None:
+			if K_level_to_buy[0] <= K <= K_level_to_buy[1]:
+				if D_level_to_buy[0] <= D <= D_level_to_buy[1]:
+					if KD_difference_to_buy == 0:	# needs to K=D
+						if -cross_level < (K - D) < cross_level:
+							return 1.
+					if KD_difference_to_buy == -1:	# needs to K<D
+						if (K - D) < -cross_level:
+							return 1.
+					if KD_difference_to_buy == 1:	# needs to K>D
+						if (K - D) > cross_level:
+							return 1.
+	# no one matters:
+		if K_level_to_buy == None and D_level_to_buy == None and KD_difference_to_buy == None:
+			return 0.
+
+	# K_level_to_sell only matters
+		if K_level_to_sell != None and D_level_to_sell == None and KD_difference_to_sell == None:
+			if K_level_to_sell[0] <= K <= K_level_to_sell[1]:
+				return -1.
+	# D_level_to_sell only matters
+		if K_level_to_sell == None and D_level_to_sell != None and KD_difference_to_sell == None:
+			if D_level_to_sell[0] <= D <= D_level_to_sell[1]:
+				return -1.
+	# KD_difference_to_sell only matters
+		if K_level_to_sell == None and D_level_to_sell == None and KD_difference_to_sell != None:
+			if KD_difference_to_sell == 0:	# needs to K=D
+				if -cross_level < (K - D) < cross_level:
 					return -1.
-		except(TypeError):
-			print('ERRROR!!!')
+			if KD_difference_to_sell == -1:	# needs to K<D
+				if (K - D) < -cross_level:
+					return -1.
+			if KD_difference_to_sell == 1:	# needs to K>D
+				if (K - D) > cross_level:
+					return -1.
+	# K_level_to_sell and D_level_to_sell only matters
+		if K_level_to_sell != None and D_level_to_sell != None and KD_difference_to_sell == None:
+			if K_level_to_sell[0] <= K <= K_level_to_sell[1]:
+				if D_level_to_sell[0] <= D <= D_level_to_sell[1]:
+					return -1.
+	# K_level_to_sell and KD_difference_to_sell only matters
+		if K_level_to_sell != None and D_level_to_sell == None and KD_difference_to_sell != None:
+			if K_level_to_sell[0] <= K <= K_level_to_sell[1]:
+				if KD_difference_to_sell == 0:	# needs to K=D
+					if -cross_level < (K - D) < cross_level:
+						return -1.
+				if KD_difference_to_sell == -1:	# needs to K<D
+					if (K - D) < -cross_level:
+						return -1.
+				if KD_difference_to_sell == 1:	# needs to K>D
+					if (K - D) > cross_level:
+						return -1.
+	# D_level_to_sell and KD_difference_to_sell only matters
+		if K_level_to_sell == None and D_level_to_sell != None and KD_difference_to_sell != None:
+			if D_level_to_sell[0] <= D <= D_level_to_sell[1]:
+				if KD_difference_to_sell == 0:	# needs to K=D
+					if -cross_level < (K - D) < cross_level:
+						return -1.
+				if KD_difference_to_sell == -1:	# needs to K<D
+					if (K - D) < -cross_level:
+						return -1.
+				if KD_difference_to_sell == 1:	# needs to K>D
+					if (K - D) > cross_level:
+						return -1.
+	# all parameters matters
+		if K_level_to_sell != None and D_level_to_sell != None and KD_difference_to_sell != None:
+			if K_level_to_sell[0] <= K <= K_level_to_sell[1]:
+				if D_level_to_sell[0] <= D <= D_level_to_sell[1]:
+					if KD_difference_to_sell == 0:	# needs to K=D
+						if -cross_level < (K - D) < cross_level:
+							return -1.
+					if KD_difference_to_sell == -1:	# needs to K<D
+						if (K - D) < -cross_level:
+							return -1.
+					if KD_difference_to_sell == 1:	# needs to K>D
+						if (K - D) > cross_level:
+							return -1.
+	# no one matters:
+		if K_level_to_sell == None and D_level_to_sell == None and KD_difference_to_sell == None:
+			return 0.
+
 	return 0.
+

@@ -44,13 +44,11 @@ import time
 
 from ib.opt import Connection, sender
 
-from indicators import volume_profile, stochastic
+from indicators import volume_profile, stochastic, SMA
 import settings
 import trade_signals_watcher
 import utils
 import W4_checking_account
-import W1_filter_all_companies_and_get_price_data
-import W2_sort_companies
 import W6_position_manager
 
 
@@ -103,12 +101,13 @@ def main():
 	price_data = utils.get_price_data(company, strategy['bar_size'])
 	# price_data_df = utils.get_price_data_df(company, strategy['bar_size'])
 	price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
+	price_data = SMA.update(price_data, strategy['SMA_period'])
 
 	open_position_type = W4_checking_account.what_position_is_open_now_for(company)
 	time.sleep(7)
 	orderId = W4_checking_account.next_valid_order_Id()
 	time.sleep(3)
-	buying_power = W4_checking_account.buying_power()
+	available_funds = W4_checking_account.available_funds()
 	time.sleep(3)
 
 	first_date = price_data[1][0]
@@ -121,7 +120,7 @@ def main():
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 
 	last_row_with_price_data = price_data[-1]
-	quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+	quantity = int((available_funds * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
 	
 	if open_position_type == None:
 		if signal == 'buy':
