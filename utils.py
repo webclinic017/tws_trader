@@ -8,12 +8,45 @@ import pandas as pd
 import pytz
 import yfinance as yf
 
+# def clear_all_about_collected_price_data():
+# 	open('worker1/Errors.csv', "w+").close()
+# 	open('!MyCompanies.csv', "w+").close()
+# 	open('!RejectedCompanies.csv', "w+").close()
+# 
+# 
+# def set_with_my_companies():
+# 	companies_with_data = set()
+# 	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
+# 		for x in csv.reader(file):
+# 			for y in x:
+# 				companies_with_data = set(y.split(';'))
+# 				companies_with_data -= {''}
+# 	return companies_with_data
+# 
+# 
+# def my_range(start, stop, step=0.5):
+# 	float_list = []
+# 	x = start
+# 	while x < stop:
+# 		float_list.append(round(x, 1))
+# 		x += step
+# 	return tuple(float_list)
+# 
+# 
+# def get_price_data_df(company, bar_size):
+# 	price_data_df = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';')
+# 	return price_data_df
+
 
 def first_run():
 	if not os.path.exists('tmp_data'):
 		os.makedirs('tmp_data')
+		if not os.path.isfile('tmp_data/!BestStrategies.csv'):
+			open('tmp_data/!BestStrategies.csv', 'w+', encoding='utf-8').close()
 	if not os.path.exists('historical_data'):
 		os.makedirs('historical_data')
+
+		
 
 
 def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch='SMART', curr='USD'):
@@ -52,22 +85,6 @@ def print_loading(done_number, total_number, company):
 		print(f' {int(round(percentage*3.33, 0))}% |'+'█'*percentage+' '*(30 - percentage)+'|', f'{done_number}/{total_number} Updating complete!', time_now)
 
 
-def clear_all_about_collected_price_data():
-	open('worker1/Errors.csv', "w+").close()
-	open('!MyCompanies.csv', "w+").close()
-	open('!RejectedCompanies.csv', "w+").close()
-
-
-def set_with_my_companies():
-	companies_with_data = set()
-	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
-		for x in csv.reader(file):
-			for y in x:
-				companies_with_data = set(y.split(';'))
-				companies_with_data -= {''}
-	return companies_with_data
-
-
 def get_price_data(company, bar_size):
 	price_data=[]
 	with open(f'historical_data/{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
@@ -88,13 +105,7 @@ def get_price_data(company, bar_size):
 					formated_row.append('')
 					formated_row.append('')
 				price_data.append(formated_row)
-	print(price_data[-1])
 	return price_data
-
-
-def get_price_data_df(company, bar_size):
-	price_data_df = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';')
-	return price_data_df
 
 
 def the_best_known_strategy(company):
@@ -116,7 +127,7 @@ def the_best_known_strategy(company):
 				the_best_strategy['Weekday_buy'] = x[15]
 				the_best_strategy['Weekday_sell'] = x[16]
 				the_best_strategy['Volume_profile_locator'] =  x[17]
-				the_best_strategy['Japanese_candlesticks'] = x[18]
+				the_best_strategy['SMA_period'] = x[18]
 	for key, value in the_best_strategy.items():
 		if value != '' and key != 'bar_size' and 'Weekday' not in key and key != 'Indicators_combination':
 			the_best_strategy[key] = eval(value)
@@ -144,15 +155,6 @@ def max_drawdown_calculate(capital_by_date):
 	return -max_drawdown
 
 
-def my_range(start, stop, step=0.5):
-	float_list = []
-	x = start
-	while x < stop:
-		float_list.append(round(x, 1))
-		x += step
-	return tuple(float_list)
-
-
 def update_price_data(company, bar_size):
 	y_interval = {'1 min': '1m', '2 mins': '2m', '5 mins': '5m', '15 mins': '15m', '30 mins': '30m',
 					'1 hour': '1h', '1 day': '1d', '1 week': '1wk', '1 month': '1mo'}
@@ -177,4 +179,3 @@ def update_price_data(company, bar_size):
 		if difference < interval:
 			new_price_data = new_price_data.iloc[:-1]
 		new_price_data.to_csv(filename, mode='a', header=False, sep=';')
-

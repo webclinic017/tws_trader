@@ -103,14 +103,11 @@ def hanging_man_candlestick(price_data):
 	return False
 
 
-def signal(price_data, strategy_parameter):
-	if strategy_parameter == None:
-		return 0.
-	else:
-		if hammer_candlestick(price_data):
-			return 1.
-		if hanging_man_candlestick(price_data):
-			return -1.
+def signal(price_data):
+	if hammer_candlestick(price_data):
+		return 1.
+	if hanging_man_candlestick(price_data):
+		return -1.
 	return 0.
 
 # In case of testing to create new patterns:

@@ -49,6 +49,8 @@ import settings
 import trade_signals_watcher
 import utils
 import W4_checking_account
+import W1_filter_all_companies_and_get_price_data
+import W2_sort_companies
 import W6_position_manager
 
 
@@ -87,6 +89,12 @@ def print_waiting():
 
 
 def main():
+	##### needs very seldom
+	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
+	# W1_filter_all_companies_and_get_price_data.main(c)
+	
+
+
 	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
 	working_shedule = utils.get_working_shedule(strategy['bar_size'])
@@ -100,20 +108,20 @@ def main():
 	time.sleep(7)
 	orderId = W4_checking_account.next_valid_order_Id()
 	time.sleep(3)
-	available_funds = W4_checking_account.available_funds()
+	buying_power = W4_checking_account.buying_power()
 	time.sleep(3)
 
 	first_date = price_data[1][0]
 	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 	historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
-	new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
+	# new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
 	
-	signal = trade_signals_watcher.signal(price_data, new_volume_profile, strategy)
+	signal = trade_signals_watcher.signal(price_data, historical_volume_profile, strategy)
 
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 
 	last_row_with_price_data = price_data[-1]
-	quantity = int((available_funds * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+	quantity = int((buying_power * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
 	
 	if open_position_type == None:
 		if signal == 'buy':
@@ -168,7 +176,6 @@ def main():
 
 if __name__ == "__main__":
 	try:
-		utils.first_run()
 		main()
 	except(KeyboardInterrupt):
 		print('\nBye!')

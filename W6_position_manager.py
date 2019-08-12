@@ -53,6 +53,7 @@ def create_bracket_order(action, stop_loss, take_profit, quantity, order_id):
 	sl.transmit = True
 	return [parent_order, tp, sl]
 
+
 # Takes 15 - 49 secs
 def place_bracket_order(company, action, stop_loss, take_profit, quantity, order_id, try_count=1):
 	contract = utils.create_contract_from_ticker(company)
