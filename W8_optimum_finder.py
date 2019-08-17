@@ -33,15 +33,15 @@ class ranges:
 # определяться по измененной последовательности фибоначчи. Т.е.: 1-2-4-16-65. 2 индикатора - (2-2-4), три индикатора -
 # (другие 3-3-3-9), 4 индикатора - (4-4-4-4-16), 5 индикаторов - (5-5-5-5-5-25)
 # макс = a0 * кол-во индикаторов + a0
-	max_a = a0 * 5 + a0
+	max_a = a0 * 5
 	for a1 in range(max_a+1): # Stoch
 		for a2 in range(1): # Weekdays OFF
-			for a3 in range(max_a+1): # Japanese candlesticks
-				for a4 in range(max_a+1): # Volume profile
+			for a3 in range(max_a+1): # Volume profile
+				for a4 in range(max_a+1):    # Japanese candlesticks
 					for a5 in range(max_a+1): # SMA
 						if sum((a1, a2, a3, a4, a5)) >= a0:
 							Indicators_combination.append(f'{a0}-{a1}-{a2}-{a3}-{a4}-{a5}')
-	# Indicators_combination = ['5-3-0-0-0-3']
+	Indicators_combination = ['5-10-3-4-5-4']	# Сделать словарем!!!
 	K_level_to_buy = (None,)
 	D_level_to_buy = ((19, 29),)
 	KD_difference_to_buy = (1,)
@@ -53,10 +53,10 @@ class ranges:
 	stoch_period = (19,)
 	slow_avg = (12,)
 	fast_avg = (5,)
-	Weekday_buy = (None,)#1,5,2345,1234)#(1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345)
-	Weekday_sell = (None,)#1,5,2345,1234)#(None,1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345)
+	Weekday_buy = (None,)	# None,)#1,5,2345,1234)#(
+	Weekday_sell = (None,)	# None,)#1,5,2345,1234)#(
 	Volume_profile_locator = (14,)
-	SMA_period = (150,)
+	SMA_period = (100,)
 
 # TSLA;180.4;-8.8;-26.0;30 mins;3-10-1-2-3-0;;(19, 29);1;4;10;;;0;(19, 12, 5);1;;14;100
 def save_the_best_strategy(the_best_strategy, capital_by_date):

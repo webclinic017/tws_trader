@@ -9,11 +9,13 @@ def signal(price_data, historical_volume_profile, strategy):
 									strategy['K_level_to_sell'], strategy['D_level_to_sell'], strategy['KD_difference_to_sell']
 									)
 	signal_2 = weekday.signal(last_datetime,
-										strategy['Weekday_buy'],
-										strategy['Weekday_sell'])
+								strategy['Weekday_buy'],
+								strategy['Weekday_sell']
+							  )
 	signal_3 = volume_profile.signal(last_row,
-													historical_volume_profile,
-													strategy['Volume_profile_locator'])
+									historical_volume_profile,
+									strategy['Volume_profile_locator']
+									 )
 	signal_4 = japanese_candlesticks.signal(price_data)
 
 	signal_5 = SMA.signal(price_data)

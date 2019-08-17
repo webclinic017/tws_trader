@@ -77,7 +77,7 @@ def place_bracket_order(company, action, stop_loss, take_profit, quantity, order
 	W4_checking_account.orders_ids_are_open_now_for(company)
 	time.sleep(3)
 	placed_orders = []
-	with open('!MyOrders.csv', 'r', encoding='utf-8') as csvfile:
+	with open('tmp_data/!MyOrders.csv', 'r', encoding='utf-8') as csvfile:
 		fieldnames = ('OrderId', 'Company', 'Quantity', 'OrderType')
 		a = csv.DictReader(csvfile, fieldnames, delimiter=';')
 		for row in a:
@@ -127,7 +127,7 @@ def close_all_open_orders_for(company):
 def close_position(company, order_id):
 # Getting position quantity
 	open_positions = []
-	with open('!MyPositions.csv', 'r', encoding='utf-8') as csvfile:
+	with open('tmp_data/!MyPositions.csv', 'r', encoding='utf-8') as csvfile:
 		fieldnames = ('Company', 'Quantity')
 		a = csv.DictReader(csvfile, fieldnames, delimiter=';')
 		for row in a:

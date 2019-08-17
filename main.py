@@ -120,7 +120,7 @@ def main():
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 
 	last_row_with_price_data = price_data[-1]
-	quantity = int((available_funds * settings.POSITION_QUANTITY / 100) / float(last_row_with_price_data[1]))
+	quantity = int((available_funds * settings.POSITION_QUANTITY) / float(last_row_with_price_data[1]))
 	
 	if open_position_type == None:
 		if signal == 'buy':

@@ -143,7 +143,7 @@ def main(company, list_with_price_data):
 	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
 	historical_volume_profile, step = historical_volumes(company, end_date)
 
-	for count in range(1310,1311):		#	1,len(list_with_price_data),10):
+	for count in range(len(list_with_price_data)-1,len(list_with_price_data)):		#	1,len(list_with_price_data),10):
 		new_volumes = update_volume_profile(list_with_price_data[1:count+1], step, historical_volume_profile)
 		price_now = float(list_with_price_data[count][4])
 		now = ([count+20],[price_now])
