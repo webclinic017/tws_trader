@@ -104,7 +104,10 @@ def hanging_man_candlestick(price_data):
 
 
 def signal(price_data, *args):
-	if hammer_candlestick(price_data) or hanging_man_candlestick(price_data):
+	action = args[1]
+	if action == 'buy' and hammer_candlestick(price_data):
+		return 1.
+	if action == 'sell' and hanging_man_candlestick(price_data):
 		return 1.
 	return 0.
 

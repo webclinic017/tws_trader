@@ -22,8 +22,8 @@ def check(price_data, strategy_indicators, action):
 		ind_signal = getattr(globals()[f'{indicator}'], 'signal')(price_data, strategy_indicators[f'{indicator}'], action)
 		ind_weight = strategy_indicators[f'{indicator}']['weight']
 		signal += ind_signal * ind_weight
-		if action == 'sell' and indicator == 'stochastic':
-			print(price_data[-1]['Datetime'], signal)
+		if action == 'sell':
+			print(price_data[-1]['Datetime'], indicator, signal)
 	quantity_of_indicators = len(all_indicators)
 	if signal >= quantity_of_indicators:
 		return True

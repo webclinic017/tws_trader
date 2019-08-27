@@ -88,10 +88,12 @@ def update(price_data, locator, historical_data, action):
 			sum_volume_below = sum(volume_below)
 			sum_volume_above = sum(volume_above)
 			if volume_profile_radius > 0:
-				if sum_volume_below <= sum_volume_above:
+				if action == 'buy' and sum_volume_below <= sum_volume_above:
 					row[f'VP signal {action}'] = 1.
-				if sum_volume_below > sum_volume_above:
-					row[f'VP signal {action}'] = -1.
+				if action == 'sell' and sum_volume_below > sum_volume_above:
+					row[f'VP signal {action}'] = 1.
+				else:
+					row[f'VP signal {action}'] = 0.
 			else:
 				row[f'VP signal {action}'] = 0.
 	return price_data
