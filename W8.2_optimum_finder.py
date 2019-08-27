@@ -1,6 +1,7 @@
-import csv
 import os
 import pickle
+import glob
+import json
 
 from indicators import stochastic, volume_profile, SMA, RS
 from indicators import RS as RS_ind
@@ -26,6 +27,24 @@ import W7_backtest
 # 3) Застолбить сигнальные индикаторы и их комбинации и при них найти лучшие варианты scores и фильтрующих индикаторов
 # 4) Подобрать лучшие SL и TP
 #
+
+S_STRINGS_COUNT = 43
+
+
+def print_status(info):
+	percentage = int((info['i'] / info['total'])*30)
+	total = str(info['total'])
+	strategy = json.dumps(info['strategy'], sort_keys=False, indent=4).replace('            ],', '') \
+		.replace('        },', '').replace('        }', '').replace('    }', '').replace('}', '').replace('{', '') \
+		.replace('"', '').replace('\n\n', '\n')
+	if len(total) > 7:
+		total = total[:7]+'...'
+	print(f"""
+{strategy}
+Best founded strategy's profitability:  {info['better_profit']}%              
+Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - percentage)}| {info['i']}/{total} combinations
+""")
+	print('\033[F' * S_STRINGS_COUNT)
 
 
 class Ranges:
@@ -169,19 +188,6 @@ def save_the_best_strategy(the_best_strategy):
 		pickle.dump(strategy, open(file_with_the_best_strategies, 'ab'))
 
 
-def print_status(info):
-	percentage = int((info['i'] / info['total'])*30)
-	total = str(info['total'])
-	if len(total) > 7:
-		total = total[:7]+'...'
-	print(f"""  
-Best founded strategy's profitability:  {info['better_profit']}%            
-Profit now:                             {info['now_profit']}%       
-Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - percentage)}| {info['i']}/{total} combinations                         
-""")
-	print('\033[F' * 6)
-
-
 def main(company):
 	existing_strategies = []
 	better_strategy = {}
@@ -240,6 +246,13 @@ def main(company):
 										new_RS_params = (RS['ZZ_movement'], RS['close_index'])
 										if new_RS_params != RS_params:
 											price_data = RS_ind.update(price_data, RS, historical_data)
+
+
+										modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
+										all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+										for indicator in all_indicators:
+											print(indicator)
+
 										weight_sum = _stochastic['weight'] + weekday['weight'] + japanese_candlesticks['weight'] + _volume_profile['weight'] + _SMA['weight'] + RS['weight']
 										if weight_sum >= 5: # quantity of indicators
 
@@ -282,7 +295,7 @@ def main(company):
 											print_status({
 												'i': i,
 												'total': total,
-												'now_profit': strategy['profit'],
+												'strategy': strategy,
 												'better_profit': better_strategy['profit']
 											})
 											i += 1
@@ -297,13 +310,13 @@ def main(company):
 
 if __name__ == '__main__':
 	company = settings.company
-	print(company)
 	try:
 		utils.first_run()
 		main(company)
-		print('\n\n\n\n\n')
+		print('\n' * S_STRINGS_COUNT)
 	except(KeyboardInterrupt):
-		print('\n\n\n\n\nBye!')
+		print('\n' * S_STRINGS_COUNT)
+		print('\nBye!')
 
 
 

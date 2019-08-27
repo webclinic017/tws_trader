@@ -1,12 +1,15 @@
+import ast
 import csv
 from datetime import datetime, timedelta
 import os
+import pickle
 import time
 
 from ib.ext.Contract import Contract
 import pandas as pd
 import pytz
 import yfinance as yf
+from yahoo_historical import Fetcher
 
 # def clear_all_about_collected_price_data():
 # 	open('worker1/Errors.csv', "w+").close()
@@ -41,12 +44,10 @@ import yfinance as yf
 def first_run():
 	if not os.path.exists('tmp_data'):
 		os.makedirs('tmp_data')
-		if not os.path.isfile('tmp_data/!BestStrategies.csv'):
-			open('tmp_data/!BestStrategies.csv', 'w+', encoding='utf-8').close()
+	if not os.path.isfile('tmp_data/!BestStrategies.pkl'):
+		open('tmp_data/!BestStrategies.pkl', 'w+', encoding='utf-8').close()
 	if not os.path.exists('historical_data'):
 		os.makedirs('historical_data')
-
-		
 
 
 def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch='SMART', curr='USD'):
@@ -76,6 +77,7 @@ def get_working_shedule(bar_size):
 		time += timedelta(minutes=interval)
 	return working_shedule
 
+
 def print_loading(done_number, total_number, company):
 	percentage = int((done_number/total_number)*30)
 	if done_number < total_number:
@@ -86,53 +88,40 @@ def print_loading(done_number, total_number, company):
 
 
 def get_price_data(company, bar_size):
-	price_data=[]
+	price_data = []
 	with open(f'historical_data/{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
-		for row in csv.reader(data_file, delimiter=';'):
-			if row[0] != 'Datetime':
-				formated_row = []
-				formated_row.append(row[0])
-				formated_row.append(float(row[1]))
-				formated_row.append(float(row[2]))
-				formated_row.append(float(row[3]))
-				formated_row.append(float(row[4]))
-				formated_row.append(int(row[5]))
-				try:
-					if row[6] != '' and row[7] != '':
-						formated_row.append(round(float(row[6]), 1))
-						formated_row.append(round(float(row[7]), 1))
-				except:
-					formated_row.append('')
-					formated_row.append('')
-				price_data.append(formated_row)
+		for row in csv.DictReader(data_file, delimiter=';'):
+			for key, value in row.items():
+				if key != 'Datetime':
+					row[key] = ast.literal_eval(value)
+			price_data.append(row)
 	return price_data
+
+def request_historical_data(company):
+# Get now date in [int(year), int(month), int(day)] format
+	now = time.strftime('%Y,%m%,%d', time.gmtime())
+	now = now.split(',')
+	now_date = []
+	for item in now:
+		now_date.append(int(item))
+
+# This is NOT correct! But it shows the best profitability
+	now_date = [2019,1,14]
+
+	req = Fetcher(company, [2000,1,1], now_date)
+	return req.getHistorical()
 
 
 def the_best_known_strategy(company):
-	the_best_strategy = {}
-	with open(f'tmp_data/!BestStrategies.csv', 'r', encoding='utf-8') as file:
-		for x in csv.reader(file, delimiter=';'):
-			if x[0] == company:
-				the_best_strategy['bar_size'] = x[4]
-				the_best_strategy['Indicators_combination'] = x[5]
-				the_best_strategy['K_level_to_buy'] = x[6]
-				the_best_strategy['D_level_to_buy'] = x[7]
-				the_best_strategy['KD_difference_to_buy'] = x[8]
-				the_best_strategy['stop_loss'] = x[9]
-				the_best_strategy['take_profit'] = x[10]
-				the_best_strategy['K_level_to_sell'] = x[11]
-				the_best_strategy['D_level_to_sell'] = x[12]
-				the_best_strategy['KD_difference_to_sell'] = x[13]
-				the_best_strategy['Stoch_parameters'] = x[14]
-				the_best_strategy['Weekday_buy'] = x[15]
-				the_best_strategy['Weekday_sell'] = x[16]
-				the_best_strategy['Volume_profile_locator'] =  x[17]
-				the_best_strategy['SMA_period'] = x[18]
-	for key, value in the_best_strategy.items():
-		if value != '' and key != 'bar_size' and 'Weekday' not in key and key != 'Indicators_combination':
-			the_best_strategy[key] = eval(value)
-		if value == '':
-			the_best_strategy[key] = None
+	the_best_strategy = None
+	with open(f'tmp_data/!BestStrategies.pkl', 'rb') as file:
+		while True:
+			try:
+				strategy = pickle.load(file)
+				if strategy['company'] == company:
+					the_best_strategy = strategy
+			except EOFError:
+				break
 	return the_best_strategy
 
 
@@ -161,7 +150,7 @@ def update_price_data(company, bar_size):
 	data = yf.Ticker(company).history(interval=y_interval[bar_size]).iloc[:,:-2] # excluding Dividends and Stock Splits
 	filename = f'historical_data/{company} {bar_size}.csv'
 	if not os.path.isfile(filename): # create new file
-		data.to_csv(filename, mode='a', header=False, sep=';')
+		data.to_csv(filename, mode='a', sep=';')
 	else: # update
 		last_date = pd.read_csv(filename, index_col=0, sep=';').index[-1]
 		new_price_data = data.loc[last_date:,:].iloc[1:]

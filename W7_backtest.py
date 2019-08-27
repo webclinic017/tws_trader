@@ -2,14 +2,12 @@
 
 import make_candlestick_chart
 import settings
-from indicators import stochastic, volume_profile, SMA
+from indicators import stochastic, volume_profile, SMA, RS
 import trade_signals_watcher
 import utils
 
 
-def main(price_data, strategy, historical_volume_profile, step):
-	buy_and_hold_profitability = 0
-	buy_and_hold_quantity = None
+def main(price_data, strategy):
 	open_order_price = None
 	close_order_price = None
 	profit = 0
@@ -23,20 +21,16 @@ def main(price_data, strategy, historical_volume_profile, step):
 
 	for i in range(len(price_data)):
 		row = price_data[i]
-		date = row[0]
-		open_price = row[1]
-		high_price = row[2]
-		low_price = row[3]
-		close_price = row[4]
+		date = row['Datetime']
+		open_price = row['Open']
+		high_price = row['High']
+		low_price = row['Low']
+		close_price = row['Close']
 		if i < len(price_data) - 1: # if not the last row
-			market_price = price_data[i+1][1]	#(abs(price_data[i+1][2] + price_data[i+1][3])) / 2
+			market_price = price_data[i+1]['Open']	#(abs(price_data[i+1][2] + price_data[i+1][3])) / 2
 		# it's not correct, but it must be the closest price to market_price
-		if i == 1:
-			buy_and_hold_quantity = int(capital / open_price)
-		if i == len(price_data) - 1:
-			buy_and_hold_profitability = (close_price * buy_and_hold_quantity - (100000 * settings.POSITION_QUANTITY)) / (100000 * settings.POSITION_QUANTITY) * 100
 
-		signal = trade_signals_watcher.signal(price_data[:i+1], historical_volume_profile, strategy)
+		signal = trade_signals_watcher.signal(price_data[:i+1], strategy['indicators'])
 
 # OPEN POSITIONS functional
 		if open_position_type == None: # no open positions
@@ -47,7 +41,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 					open_order_price = market_price*1.002
 					open_position_type = 'long'
 					quantity = int(capital / open_order_price)
-					history.append((price_data[i+1][0], 'long', quantity, open_order_price, ''))
+					history.append((price_data[i+1]['Datetime'], 'long', quantity, open_order_price, ''))
 	
 	# SELL
 			if signal == 'sell':
@@ -55,7 +49,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 					open_order_price = market_price*0.998
 					open_position_type = 'short'
 					quantity = -1 * int(capital / open_order_price)
-					history.append((price_data[i+1][0], 'short', quantity, open_order_price, ''))
+					history.append((price_data[i+1]['Datetime'], 'short', quantity, open_order_price, ''))
 # CLOSE POSITIONS functional
 		else:	# checking open position if it is signal to close
 	# close LONG
@@ -66,8 +60,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 					capital_by_date.append((date, close_price * quantity))
 
 		# close long by SL/TP
-				if strategy['stop_loss'] != None and strategy['take_profit'] != None:
-					
+				if strategy['stop_loss']:
 					sl = open_order_price - ((strategy['stop_loss'] / 100) * open_order_price)
 					if low_price <= sl:
 						if open_price <= sl:	 # if opens with gap
@@ -83,7 +76,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 						open_position_type = None
-					
+				if strategy['take_profit'] and open_position_type:
 					tp = (strategy['take_profit'] / 100 + 1) * open_order_price				
 					if high_price >= tp and open_position_type != None:
 						if open_price >= tp:	 # if opens with gap
@@ -108,7 +101,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 							comission = 0.35
 						profit = (close_order_price - open_order_price) * quantity - comission
 						capital += profit
-						history.append((price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))			
+						history.append((price_data[i+1]['Datetime'], 'closed by strategy', quantity, close_order_price, profit))
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 						open_position_type = None
@@ -117,7 +110,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 						open_order_price = market_price*0.998
 						open_position_type = 'short'
 						quantity = -1 * int(capital / open_order_price)
-						history.append((price_data[i+1][0], 'short', quantity, open_order_price, '', ''))
+						history.append((price_data[i+1]['Datetime'], 'short', quantity, open_order_price, '', ''))
 
 	# close SHORT
 			if open_position_type == 'short':
@@ -127,7 +120,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 					capital_by_date.append((date, capital * 2 + (close_price * quantity)))
 		
 		# close short by SL/TP				
-				if strategy['stop_loss'] != None and strategy['take_profit'] != None:
+				if strategy['stop_loss']:
 					sl = open_order_price + ((strategy['stop_loss'] / 100) * open_order_price)
 					if high_price >= sl:
 						if open_price >= sl:	# if opens with gap
@@ -143,6 +136,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 						open_position_type = None
+				if strategy['take_profit'] and open_position_type:
 					tp = (1 - strategy['take_profit'] / 100) * open_order_price
 					if low_price <= tp and open_position_type != None:
 						if open_price <= tp: # if opens with gap
@@ -167,7 +161,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 							comission = 0.35
 						profit = (open_order_price - close_order_price) * abs(quantity) - comission
 						capital += profit
-						history.append((price_data[i+1][0], 'closed by strategy', quantity, close_order_price, profit))
+						history.append((price_data[i+1]['Datetime'], 'closed by strategy', quantity, close_order_price, profit))
 						capital_by_date.pop(-1)
 						capital_by_date.append((date, capital))
 						open_position_type = None
@@ -175,7 +169,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 						open_order_price = market_price*1.002
 						open_position_type = 'long'
 						quantity = int(capital / open_order_price)
-						history.append((price_data[i+1][0], 'long', quantity, open_order_price, '', ''))
+						history.append((price_data[i+1]['Datetime'], 'long', quantity, open_order_price, '', ''))
 
 		if i == len(price_data) - 1 and open_position_type != None:
 			comission = (0.0035 * 2) * quantity
@@ -189,7 +183,7 @@ def main(price_data, strategy, historical_volume_profile, step):
 			history.append((date, 'now', quantity, close_price, '', profit))
 	
 	profitability = (capital_by_date[-1][1] - capital_by_date[0][1]) / capital_by_date[0][1] * 100
-	return (profitability, history, buy_and_hold_profitability, capital_by_date)
+	return (profitability, history, capital_by_date)
 
 
 if __name__ == '__main__':
@@ -197,37 +191,66 @@ if __name__ == '__main__':
 	# try:
 	# 	strategy = utils.the_best_known_strategy(company)
 	# except:
-	strategy = {'bar_size': '30 mins',
-				'Indicators_combination': '5-10-3-4-5-4',
-				'K_level_to_buy': None,
-				'D_level_to_buy': (19, 29),
-				'KD_difference_to_buy': 1,
-				'stop_loss': 4,
-				'take_profit': 10,
-				'K_level_to_sell': None,
-				'D_level_to_sell': None,
-				'KD_difference_to_sell': 0,
-				'Stoch_parameters': (19, 12, 5),
-				'Weekday_buy': 1,
-				'Weekday_sell': None,
-				'Volume_profile_locator': 14,
-				'SMA_period': 100
-				}
-	# TSLA;180.4;-8.8;-26.0;30 mins;5-10-3-4-5-4;;(19, 29);1;4;10;;;0;(19, 12, 5);1;;14;100
+	strategy = {'company': 'TSLA',
+			'profit': 180,
+			'max_drawdown': 12,
+			'buy_and_hold_profitability': -35,
+			'bar_size': '30 mins',
+			'stop_loss': 3,
+			'take_profit': 10,
+            'indicators': {
+				'stochastic': {
+					'weight': 10,   # 10
+					'K_level_to_buy': None,
+					'D_level_to_buy': (19, 29),
+					'KD_difference_to_buy': 1,
+					'K_level_to_sell': None,
+					'D_level_to_sell': None,
+					'KD_difference_to_sell': 0,
+					'stoch_period': 19,
+					'stoch_slow_avg': 12,
+					'stoch_fast_avg': 5
+				},
+                'weekday': {
+                    'weight': 3,    # 3
+                    'Weekday_buy': 1,
+                    'Weekday_sell': 345
+                },
+	            'volume_profile': {
+					'weight': 4,    # 4
+		            'locator': 14
+	            },
+	            'japanese_candlesticks': {
+		            'weight': 5     # 5
+	            },
+				'SMA': {
+					'weight': 4,    # 4
+					'period': 32
+				},
+	            'RS': {
+		            'weight': 0,
+		            'ZZ_movement': 10,
+		            'close_index': 3
+	            }
+            }
+	}
+	strategy = utils.the_best_known_strategy(company)
+	# strategy = {'company': 'TSLA', 'profit': 74.5, 'max_drawdown': None, 'buy_and_hold_profitability': -37.8, 'bar_size': '30 mins', 'stop_loss': 4, 'take_profit': 15, 'indicators': {'stochastic': {'K_level_to_buy': None, 'D_level_to_buy': (19, 29), 'KD_difference_to_buy': 1, 'K_level_to_sell': None, 'D_level_to_sell': None, 'KD_difference_to_sell': 0, 'stoch_period': 19, 'stoch_slow_avg': 12, 'stoch_fast_avg': 5, 'weight': 0}, 'weekday': {'Weekday_buy': 1, 'Weekday_sell': 345, 'weight': 0}, 'japanese_candlesticks': {'weight': 0}, 'volume_profile': {'locator': 14, 'weight': 0}, 'SMA': {'period': 32, 'weight': 0}, 'RS': {'ZZ_movement': 10, 'close_index': 4, 'weight': 6}}}
+	historical_data = utils.request_historical_data(company)
 	price_data = utils.get_price_data(company, strategy['bar_size'])
-	price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
-	price_data = SMA.update(price_data, strategy['SMA_period'])
-	
-	# price_data_df = utils.get_price_data_df(company, strategy['bar_size'])
-	# price_data_df = stochastic.update_df(price_data_df, strategy['Stoch_parameters'])
-	
-	first_date = price_data[0][0]
-	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-	historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
-	profit, history, buy_and_hold_profitability, capital_by_date = main(price_data, strategy, historical_volume_profile, step)
+	price_data = stochastic.update(price_data,
+	                               strategy['indicators']['stochastic']['stoch_period'],
+				                   strategy['indicators']['stochastic']['stoch_slow_avg'],
+				                   strategy['indicators']['stochastic']['stoch_fast_avg'])
+	price_data = SMA.update(price_data, strategy['indicators']['SMA']['period'])
+	price_data = volume_profile.update(price_data, strategy['indicators']['volume_profile']['locator'], historical_data)
+	price_data = RS.update(price_data, strategy['indicators']['RS'], historical_data)
+
+	profit, history, capital_by_date = main(price_data, strategy)
 	max_drawdown = utils.max_drawdown_calculate(capital_by_date)
 	for row in history:
 		print(row)
 	print(f'\nProfitability: {round(profit, 1)}%, max drawdown: {round(max_drawdown, 1)}%')
+	buy_and_hold_profitability = ((price_data[-1]['Close'] - price_data[0]['Open']) / price_data[0]['Open']) * 100
 	print(f'\nBuy and hold profitability: {round(buy_and_hold_profitability, 1)}%')
 	# make_candlestick_chart.main(price_data, history, capital_by_date, company)

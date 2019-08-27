@@ -1,33 +1,16 @@
 import time
 
-def signal(date, weekday_buy=None, weekday_sell=None):
-	if weekday_buy == None:
+def signal(price_data, strategy_indicator):
+	weekdays_to_buy = tuple(str(strategy_indicator['Weekday_buy']))
+	weekdays_to_sell = tuple(str(strategy_indicator['Weekday_sell']))
+	date = price_data[-1]['Datetime'].replace('-', '')[:8]
+	date = time.strptime(date, '%Y%m%d')
+	day = time.strftime("%w", date)
+	if day in weekdays_to_buy and day in weekdays_to_sell:
 		return 0.
+	elif day in weekdays_to_buy and day not in weekdays_to_sell:
+		return 1.
+	elif day not in weekdays_to_buy and day in weekdays_to_sell:
+		return -1.
 	else:
-		weekday_buy = tuple(str(weekday_buy))
-		day = None
-		if '-' in date:
-			day = time.strptime(date, '%Y-%m-%d')
-		if '-' not in date:
-			day = time.strptime(date, '%Y%m%d  ')
-		weekday = time.strftime("%w", day)
-		if weekday in weekday_buy:
-			return 1.
-		else:
-			return 0.
-	if weekday_sell == None:
 		return 0.
-	else:
-		weekday_sell = tuple(str(weekday_sell))
-		day = None
-		if '-' in date:
-			day = time.strptime(date, '%Y-%m-%d')
-		if '-' not in date:
-			day = time.strptime(date, '%Y%m%d  ')
-		weekday = time.strftime("%w", day)
-		if weekday in weekday_sell:
-			return -1.
-		else:
-			return 0.
-	return 0.
-

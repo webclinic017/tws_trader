@@ -1,31 +1,32 @@
-from indicators import stochastic, weekday, volume_profile, japanese_candlesticks, SMA
+# HOW TO IMPORT ALL MODULES FROM INDICATORS AND THEN REFERENCE TO EACH OF IT ???!!!
+from os.path import dirname, basename, join
+import glob
+modules = glob.glob(join(dirname(__file__), 'indicators', '*.py'))
+all_indicators = [basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+# for module in all:
+# 	__import__(f'indicators.{module}', globals())
+#
+#  ... ind_signal = getattr(globals()[f'{indicator}'], 'signal')(price_data, strategy_indicators[f'{indicator}'])
+
+from indicators import japanese_candlesticks
+from indicators import RS
+from indicators import SMA
+from indicators import stochastic
+from indicators import volume_profile
+from indicators import weekday
 
 
-def signal(price_data, historical_volume_profile, strategy):
-	last_row = price_data[-1]
-	last_datetime = price_data[-1][0][:10]
-	signal_1 = stochastic.signal(last_row,
-									strategy['K_level_to_buy'], strategy['D_level_to_buy'], strategy['KD_difference_to_buy'],
-									strategy['K_level_to_sell'], strategy['D_level_to_sell'], strategy['KD_difference_to_sell']
-									)
-	signal_2 = weekday.signal(last_datetime,
-								strategy['Weekday_buy'],
-								strategy['Weekday_sell']
-							  )
-	signal_3 = volume_profile.signal(last_row,
-									historical_volume_profile,
-									strategy['Volume_profile_locator']
-									 )
-	signal_4 = japanese_candlesticks.signal(price_data)
+def signal(price_data, strategy_indicators):
+	signal = 0
+	for indicator in all_indicators:
+		ind_signal = getattr(globals()[f'{indicator}'], 'signal')(price_data, strategy_indicators[f'{indicator}'])
+		ind_weight = strategy_indicators[f'{indicator}']['weight']
+		signal += ind_signal * ind_weight
 
-	signal_5 = SMA.signal(price_data)
-
-	weight = [float(x) for x in strategy['Indicators_combination'].split('-')]
-	signal = weight[1]*signal_1 + weight[2]*signal_2 + weight[3]*signal_3 + weight[4]*signal_4 + weight[5]*signal_5
-
-	if signal >= weight[0]:
+	quantity_of_indicators = len(all_indicators)
+	if signal >= quantity_of_indicators:
 		return 'buy'
-	if signal <= -weight[0]:
+	if signal <= -quantity_of_indicators:
 		return 'sell'
 	else:
 		return 0.

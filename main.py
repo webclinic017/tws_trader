@@ -44,7 +44,7 @@ import time
 
 from ib.opt import Connection, sender
 
-from indicators import volume_profile, stochastic, SMA
+from indicators import volume_profile, stochastic, SMA, RS
 import settings
 import trade_signals_watcher
 import utils
@@ -87,21 +87,20 @@ def print_waiting():
 
 
 def main():
-	##### needs very seldom
-	# utils.clear_all_about_collected_price_data()	# this takes from W1 about 10 hours
-	# W1_filter_all_companies_and_get_price_data.main(c)
-	
-
-
 	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
 	working_shedule = utils.get_working_shedule(strategy['bar_size'])
 
 	utils.update_price_data(company, strategy['bar_size'])
+	historical_data = utils.request_historical_data(company)
 	price_data = utils.get_price_data(company, strategy['bar_size'])
-	# price_data_df = utils.get_price_data_df(company, strategy['bar_size'])
-	price_data = stochastic.update(price_data, strategy['Stoch_parameters'])
-	price_data = SMA.update(price_data, strategy['SMA_period'])
+	price_data = stochastic.update(price_data,
+	                               strategy['indicators']['stochastic']['stoch_period'],
+				                   strategy['indicators']['stochastic']['stoch_slow_avg'],
+				                   strategy['indicators']['stochastic']['stoch_fast_avg'])
+	price_data = SMA.update(price_data, strategy['indicators']['SMA']['period'])
+	price_data = volume_profile.update(price_data, strategy['indicators']['volume_profile']['locator'], historical_data)
+	price_data = RS.update(price_data, strategy['indicators']['RS'], historical_data)
 
 	open_position_type = W4_checking_account.what_position_is_open_now_for(company)
 	time.sleep(7)
@@ -110,30 +109,25 @@ def main():
 	available_funds = W4_checking_account.available_funds()
 	time.sleep(3)
 
-	first_date = price_data[1][0]
-	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-	historical_volume_profile, step = volume_profile.historical_volumes(company, end_date)
-	# new_volume_profile = volume_profile.update_volume_profile(price_data, step, historical_volume_profile)
-	
-	signal = trade_signals_watcher.signal(price_data, historical_volume_profile, strategy)
+	signal = trade_signals_watcher.signal(price_data, strategy['indicators'])
 
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 
-	last_row_with_price_data = price_data[-1]
-	quantity = int((available_funds * settings.POSITION_QUANTITY) / float(last_row_with_price_data[1]))
+	last_close_price = price_data[-1]['Close']
+	quantity = int((available_funds * settings.POSITION_QUANTITY) / last_close_price)
 	
 	if open_position_type == None:
 		if signal == 'buy':
 			print(f'Buying {company}')
 			action = 'BUY'
-			stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
-			take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+			stop_loss = round(last_close_price * (1 - strategy['stop_loss'] / 100), 2)
+			take_profit = round(last_close_price * (1 + strategy['take_profit'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 		if signal == 'sell':
 			print(f'Selling {company}')
 			action = 'SELL'
-			stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
-			take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+			stop_loss = round(last_close_price * (1 + strategy['stop_loss'] / 100), 2)
+			take_profit = round(last_close_price * (1 - strategy['take_profit'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'long':
 		if signal == 'sell':
@@ -142,8 +136,8 @@ def main():
 			orderId += 1
 			time.sleep(30)
 			action = 'SELL'
-			stop_loss = round(float(last_row_with_price_data[1]) * (1 + strategy['stop_loss'] / 100), 2)
-			take_profit = round(float(last_row_with_price_data[1]) * (1 - strategy['take_profit'] / 100), 2)
+			stop_loss = round(last_close_price * (1 + strategy['stop_loss'] / 100), 2)
+			take_profit = round(last_close_price * (1 - strategy['take_profit'] / 100), 2)
 			print('...and open short')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'short':
@@ -153,8 +147,8 @@ def main():
 			orderId += 1
 			time.sleep(30)
 			action = 'BUY'
-			stop_loss = round(float(last_row_with_price_data[1]) * (1 - strategy['stop_loss'] / 100), 2)
-			take_profit = round(float(last_row_with_price_data[1]) * (1 + strategy['take_profit'] / 100), 2)
+			stop_loss = round(last_close_price * (1 - strategy['stop_loss'] / 100), 2)
+			take_profit = round(last_close_price * (1 + strategy['take_profit'] / 100), 2)
 			print('...and open long')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	time.sleep(60)

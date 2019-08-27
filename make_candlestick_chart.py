@@ -19,7 +19,7 @@ def main(price_data, history, capital_by_date, company):
 	ax_stoch.set_position([0.05, 0.05, 0.9, 0.1])
 
 # Capital	
-	koef = capital_by_date[0][1] / float(price_data[0][1])	# history[1][3]
+	koef = capital_by_date[0][1] / float(price_data[0]['Open'])	# history[1][3]
 	capital_x = []
 	capital_y = []
 	dates_dict = {}
@@ -29,7 +29,7 @@ def main(price_data, history, capital_by_date, company):
 		dates_dict[row[0]] = x
 		x += 1
 		capital_y.append(row[1] / koef)
-	buy_and_hold_profitability = round((float(price_data[-1][4]) - float(price_data[0][1])) / float(price_data[1][1]) * 100, 1)
+	buy_and_hold_profitability = round((float(price_data[-1]['Close']) - float(price_data[0]['Open'])) / float(price_data[1]['Open']) * 100, 1)
 	profitability = round((capital_y[-1] - capital_y[0]) / capital_y[0] * 100, 1)
 	ax_main.plot(capital_x, capital_y, label='capital', linewidth = 0.7)
 
@@ -39,15 +39,15 @@ def main(price_data, history, capital_by_date, company):
 	stoch_D = []
 	quotes = []
 	for row in price_data:
-		quotes.append((dates_dict[row[0]], float(row[1]), float(row[2]), float(row[3]), float(row[4])))
-		if row[6] != '' and row[7] != '':
-			stoch_K.append(float(row[6]))
-			stoch_D.append(float(row[7]))
-			stoch_time.append(dates_dict[row[0]])
+		quotes.append((dates_dict[row['Datetime']], row['Open'], row['High'], row['Low'], row['Close']))
+		if row['%K'] and row['%D']:
+			stoch_K.append(row['%K'])
+			stoch_D.append(row['%D'])
+			stoch_time.append(dates_dict[row['Datetime']])
 		else:
-			stoch_K.append(0)
-			stoch_D.append(0)
-			stoch_time.append(dates_dict[row[0]])
+			stoch_K.append(50)
+			stoch_D.append(50)
+			stoch_time.append(dates_dict[row['Datetime']])
 
 	candlestick_ohlc(ax_main, quotes, width=0.3, colorup='g', colordown='r')
 	ax_stoch.plot(stoch_time, stoch_K, 'g', linewidth=0.4, label='%K')
