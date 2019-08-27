@@ -30,8 +30,7 @@ def main(price_data, strategy):
 			market_price = price_data[i + 1]['Open']  # (abs(price_data[i+1][2] + price_data[i+1][3])) / 2
 		# it's not correct, but it must be the closest price to market_price
 
-		buy_signal = signals.check(price_data[:i + 1], strategy['buy'], 'buy')
-		sell_signal = signals.check(price_data[:i + 1], strategy['sell'], 'sell')
+		buy_signal, sell_signal = signals.check(price_data[:i + 1], strategy)
 
 		# OPEN POSITIONS functional
 		if open_position_type == None:  # no open positions
@@ -285,15 +284,13 @@ if __name__ == '__main__':
 		price_data = SMA.update(price_data,
 		                        strategy[f'{action}']['SMA']['period'],
 		                        action)
-		price_data = volume_profile.update(price_data,
-		                                   strategy[f'{action}']['volume_profile']['locator'],
-		                                   historical_data,
-		                                   action)
 		price_data = RS.update(price_data,
 		                       strategy[f'{action}']['RS'],
 		                       historical_data,
 		                       action)
-
+	price_data = volume_profile.update(price_data,
+	                                   strategy[f'{action}']['volume_profile']['locator'],
+	                                   historical_data)
 	profit, history, capital_by_date = main(price_data, strategy)
 	max_drawdown = utils.max_drawdown_calculate(capital_by_date)
 	for row in history:
