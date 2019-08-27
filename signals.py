@@ -22,7 +22,7 @@ def check(price_data, strategy_indicators):
 		ind_signal = getattr(globals()[f'{indicator}'], 'signal')(price_data, strategy_indicators[f'{indicator}'])
 		ind_weight = strategy_indicators[f'{indicator}']['weight']
 		signal += ind_signal * ind_weight
-		print(price_data[-1]['Datetime'], indicator, signal)
+		print(price_data[-1]['Datetime'], indicator, ind_signal * ind_weight)
 	quantity_of_indicators = len(all_indicators)
 	if signal >= quantity_of_indicators:
 		# print(price_data[-1]['Datetime'], signal, 'buy')
