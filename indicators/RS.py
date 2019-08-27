@@ -158,7 +158,7 @@ def make_plot(historical_data, company, strategy_indicator):
 
 
 
-def update(price_data, strategy_indicator, historical_data):
+def update(price_data, strategy_indicator, historical_data, action):
 	ZZ_movement = strategy_indicator['ZZ_movement'] / 100
 	close_index = strategy_indicator['close_index'] / 100
 	historical_data_as_list = []
@@ -275,10 +275,10 @@ def update(price_data, strategy_indicator, historical_data):
 #   - coomon levels. Price above - limit buy, price below - limit sell
 #   - NOW: resistance + support (U - universal)
 
-	price_data[0]['RS signal'] = 0.
+	price_data[0][f'RS signal {action}'] = 0.
 	i = 1
 	for row in price_data[1:]:
-		row['RS signal'] = 0.
+		row[f'RS signal {action}'] = 0.
 	# 	support_signal = None
 	# 	resistance_signal = None
 	# 	price = price_data[i - 1]['Close']
@@ -324,7 +324,8 @@ def update(price_data, strategy_indicator, historical_data):
 
 
 def signal(price_data, *args):
-	return price_data[-1]['RS signal']
+	action = args[1]
+	return price_data[-1][f'RS signal {action}']
 
 
 if __name__ == '__main__':

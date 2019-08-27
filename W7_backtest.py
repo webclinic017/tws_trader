@@ -3,7 +3,7 @@
 import make_candlestick_chart
 import settings
 from indicators import stochastic, volume_profile, SMA, RS
-import signal
+import signals
 import utils
 
 
@@ -30,8 +30,8 @@ def main(price_data, strategy):
 			market_price = price_data[i + 1]['Open']  # (abs(price_data[i+1][2] + price_data[i+1][3])) / 2
 		# it's not correct, but it must be the closest price to market_price
 
-		buy_signal = signal.signal(price_data[:i + 1], strategy['buy'], 'buy')
-		sell_signal = signal.signal(price_data[:i + 1], strategy['sell'], 'sell')
+		buy_signal = signals.check(price_data[:i + 1], strategy['buy'], 'buy')
+		sell_signal = signals.check(price_data[:i + 1], strategy['sell'], 'sell')
 
 		# OPEN POSITIONS functional
 		if open_position_type == None:  # no open positions

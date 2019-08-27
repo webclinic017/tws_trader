@@ -15,7 +15,7 @@ def make_plot(volume_profile):
 	plt.show()
 
 
-def update(price_data, locator, historical_data):
+def update(price_data, locator, historical_data, action):
 	the_highest_price = historical_data['High'].max()
 	the_lowest_price = historical_data['Low'].min()
 	step = (the_highest_price - the_lowest_price) / 100
@@ -59,7 +59,7 @@ def update(price_data, locator, historical_data):
 			# # make_plot(volume_profile)
 
 		if locator == None:
-			row['VP signal'] = None
+			row[f'VP signal {action}'] = None
 		else:
 			price_difference = 999999999
 			closest_price_index = None
@@ -74,7 +74,7 @@ def update(price_data, locator, historical_data):
 				volume_profile_radius = int(locator / 2)
 			volume_below = []
 			volume_above = []
-			if price_now < volume_profile[1][closest_price_index]:
+			if price_now <= volume_profile[1][closest_price_index]:
 				start = closest_price_index - volume_profile_radius
 				end = closest_price_index + volume_profile_radius
 			if price_now > volume_profile[1][closest_price_index]:
@@ -89,16 +89,17 @@ def update(price_data, locator, historical_data):
 			sum_volume_above = sum(volume_above)
 			if volume_profile_radius > 0:
 				if sum_volume_below <= sum_volume_above:
-					row['VP signal'] = 1.
+					row[f'VP signal {action}'] = 1.
 				if sum_volume_below > sum_volume_above:
-					row['VP signal'] = -1.
+					row[f'VP signal {action}'] = -1.
 			else:
-				row['VP signal'] = 0.
+				row[f'VP signal {action}'] = 0.
 	return price_data
 
 
 def signal(price_data, *args):
-	return price_data[-1]['VP signal']
+	action = args[1]
+	return price_data[-1][f'VP signal {action}']
 
 
 if __name__ == '__main__':
@@ -125,7 +126,7 @@ if __name__ == '__main__':
 
 
 	price_data = get_price_data(company, bar_size)
-	price_data = update(price_data, strategy_indicator['locator'], company)
+	price_data = update(price_data, strategy_indicator['locator'], company, 'ååbuy')
 	for row in price_data[:5]:
 		print(row)
 

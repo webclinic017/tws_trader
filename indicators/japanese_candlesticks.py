@@ -104,10 +104,8 @@ def hanging_man_candlestick(price_data):
 
 
 def signal(price_data, *args):
-	if hammer_candlestick(price_data):
+	if hammer_candlestick(price_data) or hanging_man_candlestick(price_data):
 		return 1.
-	if hanging_man_candlestick(price_data):
-		return -1.
 	return 0.
 
 
@@ -134,6 +132,3 @@ if __name__ == '__main__':
 	bar_size = '30 mins'
 	price_data = get_price_data(company, bar_size)
 	main(price_data)
-
-
-
