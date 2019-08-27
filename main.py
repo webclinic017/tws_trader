@@ -46,7 +46,7 @@ from ib.opt import Connection, sender
 
 from indicators import volume_profile, stochastic, SMA, RS
 import settings
-import trade_signals_watcher
+import signals
 import utils
 import W4_checking_account
 import W6_position_manager
@@ -109,7 +109,7 @@ def main():
 	available_funds = W4_checking_account.available_funds()
 	time.sleep(3)
 
-	signal = trade_signals_watcher.signal(price_data, strategy['indicators'])
+	signal = signals.signal(price_data, strategy['indicators'])
 
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 

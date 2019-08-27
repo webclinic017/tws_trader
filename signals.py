@@ -16,7 +16,7 @@ from indicators import volume_profile
 from indicators import weekday
 
 
-def signal(price_data, strategy_indicators):
+def check(price_data, strategy_indicators):
 	signal = 0
 	for indicator in all_indicators:
 		ind_signal = getattr(globals()[f'{indicator}'], 'signal')(price_data, strategy_indicators[f'{indicator}'])
@@ -25,8 +25,10 @@ def signal(price_data, strategy_indicators):
 
 	quantity_of_indicators = len(all_indicators)
 	if signal >= quantity_of_indicators:
+		# print(price_data[-1]['Datetime'], signal, 'buy')
 		return 'buy'
 	if signal <= -quantity_of_indicators:
+		# print(price_data[-1]['Datetime'], signal, 'sell')
 		return 'sell'
 	else:
 		return 0.
