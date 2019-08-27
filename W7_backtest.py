@@ -290,7 +290,7 @@ if __name__ == '__main__':
 		                                   historical_data,
 		                                   action)
 		price_data = RS.update(price_data,
-		                       strategy['indicators']['RS'],
+		                       strategy[f'{action}']['RS'],
 		                       historical_data,
 		                       action)
 
