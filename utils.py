@@ -11,6 +11,11 @@ import pytz
 import yfinance as yf
 from yahoo_historical import Fetcher
 
+from indicators import RS
+from indicators import SMA
+from indicators import stochastic
+from indicators import volume_profile
+
 # def clear_all_about_collected_price_data():
 # 	open('worker1/Errors.csv', "w+").close()
 # 	open('!MyCompanies.csv', "w+").close()
@@ -44,8 +49,8 @@ from yahoo_historical import Fetcher
 def first_run():
 	if not os.path.exists('tmp_data'):
 		os.makedirs('tmp_data')
-	if not os.path.isfile('tmp_data/!BestStrategies.pkl'):
-		open('tmp_data/!BestStrategies.pkl', 'w+', encoding='utf-8').close()
+	if not os.path.isfile('tmp_data/!BestStrategies-2.pkl'):
+		open('tmp_data/!BestStrategies-2.pkl', 'w+', encoding='utf-8').close()
 	if not os.path.exists('historical_data'):
 		os.makedirs('historical_data')
 
@@ -114,7 +119,7 @@ def request_historical_data(company):
 
 def the_best_known_strategy(company):
 	the_best_strategy = None
-	with open(f'tmp_data/!BestStrategies.pkl', 'rb') as file:
+	with open(f'tmp_data/!BestStrategies-2.pkl', 'rb') as file:
 		while True:
 			try:
 				strategy = pickle.load(file)
@@ -168,3 +173,24 @@ def update_price_data(company, bar_size):
 		if difference < interval:
 			new_price_data = new_price_data.iloc[:-1]
 		new_price_data.to_csv(filename, mode='a', header=False, sep=';')
+
+
+def put_indicators_to_price_data(price_data, strategy, historical_data):
+	for action in ('buy', 'sell'):
+		price_data = stochastic.update(price_data,
+		                               strategy[f'{action}']['stochastic']['stoch_period'],
+		                               strategy[f'{action}']['stochastic']['stoch_slow_avg'],
+		                               strategy[f'{action}']['stochastic']['stoch_fast_avg'],
+		                               action
+		                               )
+		price_data = SMA.update(price_data,
+		                        strategy[f'{action}']['SMA']['period'],
+		                        action)
+		price_data = RS.update(price_data,
+		                       strategy[f'{action}']['RS'],
+		                       historical_data,
+		                       action)
+	price_data = volume_profile.update(price_data,
+	                                   strategy[f'{action}']['volume_profile']['locator'],
+	                                   historical_data)
+	return price_data
