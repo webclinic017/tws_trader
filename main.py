@@ -109,7 +109,7 @@ def main():
 	available_funds = W4_checking_account.available_funds()
 	time.sleep(3)
 
-	signal = signals.signal(price_data, strategy['indicators'])
+	signal = signals.check(price_data, strategy['indicators'])
 
 	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
 
