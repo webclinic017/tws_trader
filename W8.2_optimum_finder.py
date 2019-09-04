@@ -54,7 +54,7 @@ def save_the_best_strategy(the_best_strategy):
 				break
 	# Replace ex-the_best_strategy to the new one:
 	for i, strategy in enumerate(the_best_strategies):
-		if strategy['company'] == the_best_strategy['company']:
+		if strategy.get('company') == the_best_strategy['company']:
 			del the_best_strategies[i]
 			the_best_strategies.append(the_best_strategy)
 	# Or write new entry:
@@ -68,7 +68,7 @@ def save_the_best_strategy(the_best_strategy):
 
 def main(company):
 	i = 0
-	profitability = None
+	profitability = -101000
 	for bar_size in set(Ranges.bar_size):
 
 		historical_data = utils.request_historical_data(company)
@@ -98,6 +98,7 @@ def main(company):
 							strategy[action][indicator]['weight'] = sum(Ranges.score) * len(Ranges.score)
 							strategy[action]['TP'] = 0
 							strategy[action]['SL'] = 0
+							strategy['company'] = company
 							profitability = do_backtest(price_data, strategy)
 							i += 1
 
@@ -107,11 +108,11 @@ def main(company):
 								all_indicators = [os.path.basename(f)[:-3] for f in modules if
 								                  f.endswith('.py') and not f.endswith('__init__.py')]
 								# Find scores
-								for indicator in all_indicators:
-									strategy[action][indicator]['weight'] = 0
-								for indicator in all_indicators:
+								for indicator2 in all_indicators:
+									strategy[action][indicator2]['weight'] = 0
+								for indicator3 in all_indicators:
 									for score in Ranges.score:
-										strategy[action][indicator]['weight'] = score
+										strategy[action][indicator3]['weight'] = score
 										do_backtest(price_data, strategy)
 										i += 1
 								strategy = get_the_best_strategy()
@@ -172,9 +173,6 @@ def do_backtest(price_data, strategy):
 	except(TypeError):
 		max_profit = 0
 	if strategy['profit'] > max_profit:
-		modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
-		all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
-
 		the_best_strategy = strategy.copy()
 		the_best_strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
 		save_the_best_strategy(the_best_strategy)

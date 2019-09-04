@@ -119,14 +119,19 @@ def request_historical_data(company):
 
 def the_best_known_strategy(company):
 	the_best_strategy = None
+	strategies = []
 	with open(f'tmp_data/!BestStrategies-2.pkl', 'rb') as file:
 		while True:
 			try:
-				strategy = pickle.load(file)
-				if strategy['company'] == company:
-					the_best_strategy = strategy
+				strategies.append(pickle.load(file))
 			except EOFError:
 				break
+	for strategy in strategies:
+		try:
+			if strategy['company'] == company:
+				the_best_strategy = strategy
+		except(KeyError):
+			return None
 	return the_best_strategy
 
 

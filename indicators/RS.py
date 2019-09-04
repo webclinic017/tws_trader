@@ -159,47 +159,47 @@ def make_plot(historical_data, company, strategy_indicator):
 
 
 def update(price_data, strategy_indicator, historical_data, action):
-	ZZ_movement = strategy_indicator['ZZ_movement'] / 100
-	close_index = strategy_indicator['close_index'] / 100
-	historical_data_as_list = []
-	for i, row in historical_data.iterrows():
-		historical_data_as_list.append({'Datetime': row['Date'],
-		                                'Open': row['Open'],
-		                                'High': row['High'],
-		                                'Low': row['Low'],
-		                                'Close': row['Close'],
-		                                'Volume': row['Volume']
-		                                })
-
-	dates_dict = {}
-	count = 1
-	for row in historical_data_as_list:
-		dates_dict[row['Datetime']] = count
-		count += 1
-
-	(support_points, resistance_points) = find_zz_points(historical_data_as_list, ZZ_movement)[1]
-
-# Find absolute strength of points
-	for i, x in enumerate(support_points):
-		strength = 0
-		x['Strength'] = strength
-		for j in support_points[i+1:]:
-			if j['Price'] >= x['Price']:
-				strength += 1
-				x['Strength'] = strength
-			else:
-				break
-# Calculate relative strength of points
-		try:
-			x['Strength'] = int((strength / len(support_points[i + 1:])) * 100)
-			x['Pre-Volume'] = sum((historical_data_as_list[dates_dict[x['Datetime']]]['Volume'],
-								historical_data_as_list[dates_dict[x['Datetime']] - 1]['Volume'],
-								historical_data_as_list[dates_dict[x['Datetime']] - 2]['Volume']))
-		except(ZeroDivisionError):
-			x['Strength'] = 100
-			x['Pre-Volume'] = sum((historical_data_as_list[dates_dict[x['Datetime']]]['Volume'],
-								historical_data_as_list[dates_dict[x['Datetime']] - 1]['Volume'],
-								historical_data_as_list[dates_dict[x['Datetime']] - 2]['Volume']))
+# 	ZZ_movement = strategy_indicator['ZZ_movement'] / 100
+# 	close_index = strategy_indicator['close_index'] / 100
+# 	historical_data_as_list = []
+# 	for i, row in historical_data.iterrows():
+# 		historical_data_as_list.append({'Datetime': row['Date'],
+# 		                                'Open': row['Open'],
+# 		                                'High': row['High'],
+# 		                                'Low': row['Low'],
+# 		                                'Close': row['Close'],
+# 		                                'Volume': row['Volume']
+# 		                                })
+#
+# 	dates_dict = {}
+# 	count = 1
+# 	for row in historical_data_as_list:
+# 		dates_dict[row['Datetime']] = count
+# 		count += 1
+#
+# 	(support_points, resistance_points) = find_zz_points(historical_data_as_list, ZZ_movement)[1]
+#
+# # Find absolute strength of points
+# 	for i, x in enumerate(support_points):
+# 		strength = 0
+# 		x['Strength'] = strength
+# 		for j in support_points[i+1:]:
+# 			if j['Price'] >= x['Price']:
+# 				strength += 1
+# 				x['Strength'] = strength
+# 			else:
+# 				break
+# # Calculate relative strength of points
+# 		try:
+# 			x['Strength'] = int((strength / len(support_points[i + 1:])) * 100)
+# 			x['Pre-Volume'] = sum((historical_data_as_list[dates_dict[x['Datetime']]]['Volume'],
+# 								historical_data_as_list[dates_dict[x['Datetime']] - 1]['Volume'],
+# 								historical_data_as_list[dates_dict[x['Datetime']] - 2]['Volume']))
+# 		except(ZeroDivisionError):
+# 			x['Strength'] = 100
+# 			x['Pre-Volume'] = sum((historical_data_as_list[dates_dict[x['Datetime']]]['Volume'],
+# 								historical_data_as_list[dates_dict[x['Datetime']] - 1]['Volume'],
+# 								historical_data_as_list[dates_dict[x['Datetime']] - 2]['Volume']))
 
 	# for x in support_points:
 	# 	print(x)
