@@ -108,31 +108,49 @@ def get_price_data(company, bar_size):
 	return price_data
 
 
+# def the_best_known_strategy(company):
+# 	the_best_strategy = {}
+# 	with open(f'tmp_data/!BestStrategies.csv', 'r', encoding='utf-8') as file:
+# 		for x in csv.reader(file, delimiter=';'):
+# 			if x[0] == company:
+# 				the_best_strategy['bar_size'] = x[4]
+# 				the_best_strategy['Indicators_combination'] = x[5]
+# 				the_best_strategy['K_level_to_buy'] = x[6]
+# 				the_best_strategy['D_level_to_buy'] = x[7]
+# 				the_best_strategy['KD_difference_to_buy'] = x[8]
+# 				the_best_strategy['stop_loss'] = x[9]
+# 				the_best_strategy['take_profit'] = x[10]
+# 				the_best_strategy['K_level_to_sell'] = x[11]
+# 				the_best_strategy['D_level_to_sell'] = x[12]
+# 				the_best_strategy['KD_difference_to_sell'] = x[13]
+# 				the_best_strategy['Stoch_parameters'] = x[14]
+# 				the_best_strategy['Weekday_buy'] = x[15]
+# 				the_best_strategy['Weekday_sell'] = x[16]
+# 				the_best_strategy['Volume_profile_locator'] =  x[17]
+# 				the_best_strategy['SMA_period'] = x[18]
+# 	for key, value in the_best_strategy.items():
+# 		if value != '' and key != 'bar_size' and 'Weekday' not in key and key != 'Indicators_combination':
+# 			the_best_strategy[key] = eval(value)
+# 		if value == '':
+# 			the_best_strategy[key] = None
+# 	return the_best_strategy
+
+
 def the_best_known_strategy(company):
-	the_best_strategy = {}
-	with open(f'tmp_data/!BestStrategies.csv', 'r', encoding='utf-8') as file:
-		for x in csv.reader(file, delimiter=';'):
-			if x[0] == company:
-				the_best_strategy['bar_size'] = x[4]
-				the_best_strategy['Indicators_combination'] = x[5]
-				the_best_strategy['K_level_to_buy'] = x[6]
-				the_best_strategy['D_level_to_buy'] = x[7]
-				the_best_strategy['KD_difference_to_buy'] = x[8]
-				the_best_strategy['stop_loss'] = x[9]
-				the_best_strategy['take_profit'] = x[10]
-				the_best_strategy['K_level_to_sell'] = x[11]
-				the_best_strategy['D_level_to_sell'] = x[12]
-				the_best_strategy['KD_difference_to_sell'] = x[13]
-				the_best_strategy['Stoch_parameters'] = x[14]
-				the_best_strategy['Weekday_buy'] = x[15]
-				the_best_strategy['Weekday_sell'] = x[16]
-				the_best_strategy['Volume_profile_locator'] =  x[17]
-				the_best_strategy['SMA_period'] = x[18]
-	for key, value in the_best_strategy.items():
-		if value != '' and key != 'bar_size' and 'Weekday' not in key and key != 'Indicators_combination':
-			the_best_strategy[key] = eval(value)
-		if value == '':
-			the_best_strategy[key] = None
+	the_best_strategy = None
+	strategies = []
+	with open(f'tmp_data/!BestStrategies-2.pkl', 'rb') as file:
+		while True:
+			try:
+				strategies.append(pickle.load(file))
+			except EOFError:
+				break
+	for strategy in strategies:
+		try:
+			if strategy['company'] == company:
+				the_best_strategy = strategy
+		except(KeyError):
+			return None
 	return the_best_strategy
 
 
