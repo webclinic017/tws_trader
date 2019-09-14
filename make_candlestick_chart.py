@@ -11,12 +11,8 @@ mpl_logger.setLevel(logging.WARNING)
 
 
 def main(price_data, history, capital_by_date, company):
-	#fig, ax = plt.subplots()
 	fig = plt.figure()
-	ax_main = fig.add_subplot(2, 1, 1)
-	ax_main.set_position([0.05, 0.15, 0.9, 0.7])
-	ax_stoch = fig.add_subplot(8, 1, 5)
-	ax_stoch.set_position([0.05, 0.05, 0.9, 0.1])
+	ax_main = fig.add_subplot(1, 1, 1)
 
 # Capital	
 	koef = capital_by_date[0][1] / float(price_data[0]['Open'])	# history[1][3]
@@ -33,25 +29,11 @@ def main(price_data, history, capital_by_date, company):
 	profitability = round((capital_y[-1] - capital_y[0]) / capital_y[0] * 100, 1)
 	ax_main.plot(capital_x, capital_y, label='capital', linewidth = 0.7)
 
-# Candlestick chart + stoch
-	stoch_time = []
-	stoch_K = []
-	stoch_D = []
+# Candlestick chart
 	quotes = []
 	for row in price_data:
 		quotes.append((dates_dict[row['Datetime']], row['Open'], row['High'], row['Low'], row['Close']))
-		if row['%K'] and row['%D']:
-			stoch_K.append(row['%K'])
-			stoch_D.append(row['%D'])
-			stoch_time.append(dates_dict[row['Datetime']])
-		else:
-			stoch_K.append(50)
-			stoch_D.append(50)
-			stoch_time.append(dates_dict[row['Datetime']])
-
 	candlestick_ohlc(ax_main, quotes, width=0.3, colorup='g', colordown='r')
-	ax_stoch.plot(stoch_time, stoch_K, 'g', linewidth=0.4, label='%K')
-	ax_stoch.plot(stoch_time, stoch_D, 'k', linewidth=0.5, label='%D')
 
 # Trades
 	open_dates = []
@@ -81,9 +63,7 @@ def main(price_data, history, capital_by_date, company):
 	ax_main.plot(now_date, now_price, 'k<', label='now open position')	# now
 
 # Making beauty
-	ax_stoch.set_xlabel('Date')
 	ax_main.set_ylabel('Price')
-	ax_stoch.set_ylabel('Stoch')
 	ax_main.legend()
 	title = f'{company}\nMy strategy: {profitability}%\nBuy and hold: {buy_and_hold_profitability}%'
 	plt.title(title)
@@ -91,10 +71,8 @@ def main(price_data, history, capital_by_date, company):
 	ax_main.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 	ax_main.yaxis.set_major_locator(ticker.MultipleLocator(10))
 	ax_main.yaxis.set_minor_locator(ticker.MultipleLocator(10))
-	ax_stoch.yaxis.set_major_locator(ticker.MultipleLocator(10))
 	ax_main.minorticks_on()
 	plt.grid(which='major', linestyle='--')
 	ax_main.grid(which='minor', color = 'gray', linestyle = ':')
 
 	plt.show()
-

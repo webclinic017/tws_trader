@@ -1,4 +1,3 @@
-import csv
 import os
 import pickle
 
@@ -8,142 +7,43 @@ import settings
 import utils
 import W7_backtest
 
-# Мое понимание происходящего:
-# Существует 2 типа индикаторов - сигнальные (основные) и фильтрующие
-# Сигнальные:
-#   - stochastic
-#   - japanese_candlesticks
-#   - SMA (у меня реализован как сигнальный - по пересечению бара open-close)
-#
-# Фильтрующие:
-#   - weekday
-#   - volume_profile
-#
-#
-# Искать оптимум надо так:
-# 1) Для каждого сигнального индикатора найти его лучший вариант
-# 2) При SL и TP = None найти лучшие варианты комбинаций сигнальных индикаторов
-# 3) Застолбить сигнальные индикаторы и их комбинации и при них найти лучшие варианты scores и фильтрующих индикаторов
-# 4) Подобрать лучшие SL и TP
-#
-
 
 class Ranges:
-	bar_size = ( '30 mins',)
+	bar_size = ('30 mins',)
+	# TP/SL
+	SL = range(15)
+	TP = range(15)
+	# INDICATORS:
+	stochastic = {
+		'K_min': range(0, 100),
+		'K_max': range(100, 0, -1),
+		'D_min': range(0, 100),
+		'D_max': range(100, 0, -1),
+		'KD_difference': ('K>D', 'K<D', 'K=D', None),
+		'stoch_period': range(2, 101),
+		'stoch_slow_avg': range(2, 101),
+		'stoch_fast_avg': range(1, 101)
+	}
+	weekday = {
+		'weekday': (
+		1, 2, 3, 4, 5, 12, 13, 14, 15, 23, 24, 25, 34, 35, 45, 123, 124, 125, 134, 135, 145, 234, 235, 245, 345, 1234,
+		2345, 1235, 1345, 1245, 12345)
+	}
+	japanese_candlesticks = {}
+	volume_profile = {
+		'locator': range(1, 100)
+	}
+	SMA = {
+		'period': range(1, 300)
+	}
+	RS = {
+		'ZZ_movement': range(1, 40),
+		'close_index': range(1, 20)
+	}
+	# 	score = range(max_a+1): # this is correct, but gives us huge massive of combinations
+	# 	score = (0,1,2,3,4,5,6,10,15,20,25,40,80)
+	score = range(13)
 
-# Major settings
-	stop_loss = (None,2,5,10,15)
-	take_profit = (None,2,5,10,15)
-
-#INDICATORS:
-# stochastic:
-	_stochastic = []
-	for K_level_to_buy in (None,):
-		for D_level_to_buy in ((19, 29),):
-			for KD_difference_to_buy in (1,):
-				for K_level_to_sell in (None,):
-					for D_level_to_sell in (None,):
-						for KD_difference_to_sell in (0,):
-							for stoch_period in (19,):
-								for stoch_slow_avg in (12,):
-									for stoch_fast_avg in (5,):
-										indicator = {
-													'K_level_to_buy': K_level_to_buy,
-													'D_level_to_buy': D_level_to_buy,
-													'KD_difference_to_buy': KD_difference_to_buy,
-													'K_level_to_sell': K_level_to_sell,
-													'D_level_to_sell': D_level_to_sell,
-													'KD_difference_to_sell': KD_difference_to_sell,
-													'stoch_period': stoch_period,
-													'stoch_slow_avg': stoch_slow_avg,
-													'stoch_fast_avg': stoch_fast_avg
-													}
-										_stochastic.append(indicator)
-
-# weekday:
-	weekday = []
-	for Weekday_buy in (1,):#(None,1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345,1235,1345,1245,12345):
-		for Weekday_sell in (345,):#(None,1,2,3,4,5,12,13,14,15,23,24,25,34,35,45,123,124,125,134,135,145,234,235,245,345,1234,2345,1235,1345,1245,12345):
-			indicator = {
-						'Weekday_buy': Weekday_buy,
-						'Weekday_sell': Weekday_sell
-						}
-			weekday.append(indicator)
-
-# japanese_candlesticks:
-	japanese_candlesticks = []
-	indicator = {
-				}
-	japanese_candlesticks.append(indicator)
-
-# volume_profile:
-	_volume_profile = []
-	for locator in (14,):
-		indicator = {
-					'locator': locator
-					}
-		_volume_profile.append(indicator)
-
-# SMA:
-	_SMA = []
-	for period in (32,):#(100,10,25, 50,150,200, 300):
-		indicator = {
-			'period': period
-			}
-		_SMA.append(indicator)
-
-# RS:
-	_RS = []
-	for ZZ_movement in range(1, 31):
-		for close_index in range(1,10):
-			indicator = {
-				'ZZ_movement': ZZ_movement,
-				'close_index': close_index
-						}
-			_RS.append(indicator)
-
-# Scores:
-	x1 = []
-	x2 = []
-	x3 = []
-	x4 = []
-	x5 = []
-	x6 = []
-# 	for score in range(max_a+1): # this is correct, but gives us huge massive of combinations
-	scores = (0,1,2,3,4,5,6,10,15,20,25,40,80)
-	for score in scores:
-		for x in _stochastic:
-			if score == 0: #in scores:#
-				x['weight'] = score
-				x1.append(x.copy())
-		for x in weekday:
-			if score == 0: #in scores:#
-				x['weight'] = score
-				x2.append(x.copy())
-		for x in japanese_candlesticks:
-			if score == 0: #in scores:#
-				x['weight'] = score
-				x3.append(x.copy())
-		for x in _volume_profile:
-			if score == 0: #in scores:#
-				x['weight'] = score
-				x4.append(x.copy())
-		for x in _SMA:
-			if score == 0: #in scores:#
-				x['weight'] = score
-				x5.append(x.copy())
-		for x in _RS:
-			if score == 6:  #in scores:#
-				x['weight'] = score
-				x6.append(x.copy())
-	_stochastic = x1
-	weekday = x2
-	japanese_candlesticks = x3
-	_volume_profile = x4
-	_SMA = x5
-	_RS = x6
-
-# {'company': 'TSLA', 'profit': 235.5, 'max_drawdown': None, 'buy_and_hold_profitability': -35.8, 'bar_size': '30 mins', 'stop_loss': None, 'take_profit': None, 'indicators': {'stochastic': {'K_level_to_buy': None, 'D_level_to_buy': (19, 29), 'KD_difference_to_buy': 1, 'K_level_to_sell': None, 'D_level_to_sell': None, 'KD_difference_to_sell': 0, 'stoch_period': 19, 'stoch_slow_avg': 12, 'stoch_fast_avg': 5, 'weight': 10}, 'weekday': {'Weekday_buy': 1, 'Weekday_sell': 345, 'weight': 3}, 'japanese_candlesticks': {'weight': 5}, 'volume_profile': {'locator': 14, 'weight': 4}, 'SMA': {'period': 32, 'weight': 4}, 'RS': {'ZZ_movement': 22, 'close_index': 9, 'weight': 0}}}
 
 def save_the_best_strategy(the_best_strategy):
 	file_with_the_best_strategies = f'tmp_data/!BestStrategies.pkl'
