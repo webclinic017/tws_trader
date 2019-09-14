@@ -49,8 +49,8 @@ from indicators import volume_profile
 def first_run():
 	if not os.path.exists('tmp_data'):
 		os.makedirs('tmp_data')
-	if not os.path.isfile('tmp_data/!BestStrategies-2.pkl'):
-		open('tmp_data/!BestStrategies-2.pkl', 'w+', encoding='utf-8').close()
+	if not os.path.isfile('tmp_data/!BestStrategies.pkl'):
+		open('tmp_data/!BestStrategies.pkl', 'w+', encoding='utf-8').close()
 	if not os.path.exists('historical_data'):
 		os.makedirs('historical_data')
 
@@ -120,7 +120,7 @@ def request_historical_data(company):
 def the_best_known_strategy(company):
 	the_best_strategy = None
 	strategies = []
-	with open(f'tmp_data/!BestStrategies-2.pkl', 'rb') as file:
+	with open(f'tmp_data/!BestStrategies.pkl', 'rb') as file:
 		while True:
 			try:
 				strategies.append(pickle.load(file))

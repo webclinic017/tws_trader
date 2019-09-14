@@ -1,3 +1,4 @@
+import glob
 import os
 import pickle
 
@@ -70,129 +71,95 @@ def save_the_best_strategy(the_best_strategy):
 
 
 def print_status(info):
-	percentage = int((info['i'] / info['total'])*30)
-	total = str(info['total'])
-	if len(total) > 7:
-		total = total[:7]+'...'
 	print(f"""  
-Best founded strategy's profitability:  {info['better_profit']}%            
-Profit now:                             {info['now_profit']}%       
-Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - percentage)}| {info['i']}/{total} combinations                         
+Best founded strategy's profitability:  {info['best_profit']}%            
+Profit now:                             {info['profit']}%       
+Calculated:                             {info['i']} combinations  
+Indicator:                              {info['indicator']}
+Parameter:                              {info['parameter']}
 """)
-	print('\033[F' * 6)
+	print('\033[F' * 8)
+
+
+def not_absurd(strategy):
+	modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
+	all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+	for action in ('buy', 'sell'):
+		if strategy[action]['stochastic']['K_min'] > strategy[action]['stochastic']['K_max']:
+			return False
+		if strategy[action]['stochastic']['D_min'] > strategy[action]['stochastic']['D_max']:
+			return False
+		# if scores ok:
+		scores_buy = 0
+		scores_sell = 0
+		for indicator in all_indicators:
+			scores_buy += strategy['buy'][indicator]['weight']
+			scores_sell += strategy['sell'][indicator]['weight']
+		if scores_buy < len(all_indicators) and scores_sell < len(all_indicators):
+			return False
+	return True
+
+
+def get_the_best_strategy(company):
+	modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
+	all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+	strategy = utils.the_best_known_strategy(company)
+	if not strategy:
+		strategy = {
+			'profit': 0,
+			'buy': {'TP': 20, 'SL': 20},
+		    'sell': {'TP': 20, 'SL': 20}
+		}
+		for action in ('buy', 'sell'):
+			for indicator in all_indicators:
+				strategy[action][indicator] = {}
+				parameteres = getattr(Ranges, indicator)
+				for parameter in parameteres.keys():
+					strategy[action][indicator][parameter] = parameteres[parameter][0]
+				strategy[action][indicator]['weight'] = 0
+	return strategy
 
 
 def main(company):
-	existing_strategies = []
-	better_strategy = {}
-	strategy = {}
-	better_strategy['company'] = company
-	better_strategy['profit'] = 0
-	better_strategy['max_drawdown'] = 0
-	the_best_strategy = utils.the_best_known_strategy(company)
-	if the_best_strategy == None:
-		the_best_strategy = {'profit': 0.}
-	i = 1
-	total = (len(Ranges.bar_size) * len(Ranges.stop_loss) * len(Ranges.take_profit) *
-	         len(Ranges._stochastic) * len(Ranges.weekday) * len(Ranges.japanese_candlesticks) *
-	         len(Ranges._SMA) * len(Ranges._volume_profile) * len(Ranges._RS))
+	i = 0
+	strategy = get_the_best_strategy(company)
+	best_profit_ever = strategy['profit']
 	for bar_size in set(Ranges.bar_size):
-	# load strategies, we've already tested
-		file_with_all_strategies = f'tmp_data/!Strategies_for_{company} {bar_size}.pkl'
-		if not os.path.isfile(file_with_all_strategies):
-			open(file_with_all_strategies, 'w+').close()
-		with open(file_with_all_strategies, 'rb') as file:
-			while True:
-				try:
-					existing_strategies.append(pickle.load(file)['indicators'])
-				except EOFError:
-					break
-
 		historical_data = utils.request_historical_data(company)
 		price_data = utils.get_price_data(company, bar_size)
-		locator =  None
-		stoch_params = None
-		SMA_period = None
-		RS_params = None
-		for stop_loss in set(Ranges.stop_loss):
-			for take_profit in set(Ranges.take_profit):
-				for _stochastic in Ranges._stochastic:
-					new_stoch_params = (_stochastic['stoch_period'],
-										_stochastic['stoch_slow_avg'],
-										_stochastic['stoch_fast_avg'])
-					if  new_stoch_params != stoch_params:
-						price_data = stochastic.update(price_data,
-						                               _stochastic['stoch_period'],
-						                               _stochastic['stoch_slow_avg'],
-						                               _stochastic['stoch_fast_avg'])
-					for weekday in Ranges.weekday:
-						for japanese_candlesticks in Ranges.japanese_candlesticks:
-							for _SMA in Ranges._SMA:
-								new_SMA_period = _SMA['period']
-								if new_SMA_period != SMA_period:
-									price_data = SMA.update(price_data, _SMA['period'])
-								for _volume_profile in Ranges._volume_profile:
-									new_locator = _volume_profile['locator']
-									if new_locator != locator:
-										locator = new_locator
-										price_data = volume_profile.update(price_data, locator, historical_data)
-									for RS in Ranges._RS:
-										new_RS_params = (RS['ZZ_movement'], RS['close_index'])
-										if new_RS_params != RS_params:
-											price_data = RS_ind.update(price_data, RS, historical_data)
-										weight_sum = _stochastic['weight'] + weekday['weight'] + japanese_candlesticks['weight'] + _volume_profile['weight'] + _SMA['weight'] + RS['weight']
-										if weight_sum >= 5: # quantity of indicators
+		modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
+		all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+		for action in ('buy', 'sell'):
+			for indicator in all_indicators:
+				parameteres = getattr(Ranges, indicator)
+				for parameter in parameteres.keys():
+					for param_value in parameteres[parameter]:
+						strategy[action][indicator][parameter] = param_value
+						price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
+						for TP in Ranges.TP:
+							strategy[action]['TP'] = TP
+							for SL in Ranges.SL:
+								strategy[action]['SL'] = SL
+								for score in Ranges.score:
+									strategy[action][indicator]['weight'] = score
+									if not_absurd(strategy):
 
-											strategy['company'] = company
-											strategy['profit'] = None
-											strategy['max_drawdown'] = None
-											strategy['buy_and_hold_profitability'] = None
-											strategy['bar_size'] = bar_size
-											strategy['stop_loss'] = stop_loss
-											strategy['take_profit'] = take_profit
-										# Indicators:
-											strategy['indicators'] = {}
-											strategy['indicators']['stochastic'] = _stochastic
-											strategy['indicators']['weekday'] = weekday
-											strategy['indicators']['japanese_candlesticks'] = japanese_candlesticks
-											strategy['indicators']['volume_profile'] = _volume_profile
-											strategy['indicators']['SMA'] = _SMA
-											strategy['indicators']['RS'] = RS
+										profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
+										profitability = round(profitability, 1)
+										strategy['profit'] = profitability
 
-																		# DOES NOT WORK CORRECTLY:
-											if strategy['indicators']:# not in existing_strategies:
-												# BACKTEST:
-												profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
-												profitability = round(profitability,1)
-												buy_and_hold_profitability = ((price_data[-1]['Close'] - price_data[0]['Open']) / price_data[0]['Open']) * 100
-												buy_and_hold_profitability = round(buy_and_hold_profitability, 1)
-												strategy['profit'] = profitability
-												strategy['buy_and_hold_profitability'] = buy_and_hold_profitability
+										if profitability > best_profit_ever:
+											strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date),1)
+											save_the_best_strategy(strategy)
 
-												with open(file_with_all_strategies, 'ab') as file:
-													pickle.dump(strategy, file, pickle.HIGHEST_PROTOCOL)
-
-												if strategy['profit'] > better_strategy['profit']:
-													better_strategy = strategy.copy()
-													if better_strategy['profit'] > the_best_strategy['profit']:
-														the_best_strategy = better_strategy.copy()
-														the_best_strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
-														save_the_best_strategy(the_best_strategy)
-
-											print_status({
-												'i': i,
-												'total': total,
-												'now_profit': strategy['profit'],
-												'better_profit': better_strategy['profit']
-											})
-											i += 1
-											strategy = {}
-
-										# Reset price data
-										# 	new_price_data = []
-										# 	for row in price_data:
-										# 		new_price_data.append(row[:6])
-										# 	price_data = new_price_data
+										print_status({
+											'i': i,
+											'profit': profitability,
+											'best_profit': best_profit_ever,
+											'indicator': indicator,
+											'parameter': parameter
+										})
+										i += 1
 
 
 if __name__ == '__main__':
@@ -200,13 +167,7 @@ if __name__ == '__main__':
 	print(company)
 	try:
 		utils.first_run()
-		main(company)
-		print('\n\n\n\n\n')
+		while True:
+			main(company)
 	except(KeyboardInterrupt):
 		print('\n\n\n\n\nBye!')
-
-
-
-
-
-
