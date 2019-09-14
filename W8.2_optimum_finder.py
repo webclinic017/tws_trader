@@ -1,6 +1,7 @@
-import csv
 import os
 import pickle
+import glob
+import json
 
 from indicators import stochastic, volume_profile, SMA, RS
 from indicators import RS as RS_ind
@@ -27,13 +28,31 @@ import W7_backtest
 # 4) Подобрать лучшие SL и TP
 #
 
+S_STRINGS_COUNT = 43
+
+
+def print_status(info):
+	percentage = int((info['i'] / info['total'])*30)
+	total = str(info['total'])
+	strategy = json.dumps(info['strategy'], sort_keys=False, indent=4).replace('            ],', '') \
+		.replace('        },', '').replace('        }', '').replace('    }', '').replace('}', '').replace('{', '') \
+		.replace('"', '').replace('\n\n', '\n')
+	if len(total) > 7:
+		total = total[:7]+'...'
+	print(f"""
+{strategy}
+Best founded strategy's profitability:  {info['better_profit']}%              
+Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - percentage)}| {info['i']}/{total} combinations
+""")
+	print('\033[F' * S_STRINGS_COUNT)
+
 
 class Ranges:
 	bar_size = ( '30 mins',)
 
 # Major settings
-	stop_loss = range(1,25)
-	take_profit = range(1,25)
+	stop_loss = (None,2,5,10,15)
+	take_profit = (None,2,5,10,15)
 
 #INDICATORS:
 # stochastic:
@@ -44,9 +63,9 @@ class Ranges:
 				for K_level_to_sell in (None,):
 					for D_level_to_sell in (None,):
 						for KD_difference_to_sell in (0,):
-							for stoch_period in (17,):
-								for stoch_slow_avg in (13,):
-									for stoch_fast_avg in (4,):
+							for stoch_period in (19,):
+								for stoch_slow_avg in (12,):
+									for stoch_fast_avg in (5,):
 										indicator = {
 													'K_level_to_buy': K_level_to_buy,
 													'D_level_to_buy': D_level_to_buy,
@@ -86,7 +105,7 @@ class Ranges:
 
 # SMA:
 	_SMA = []
-	for period in (25,):
+	for period in (32,):#(100,10,25, 50,150,200, 300):
 		indicator = {
 			'period': period
 			}
@@ -94,8 +113,8 @@ class Ranges:
 
 # RS:
 	_RS = []
-	for ZZ_movement in (1,):
-		for close_index in (1,):
+	for ZZ_movement in range(1, 31):
+		for close_index in range(1,10):
 			indicator = {
 				'ZZ_movement': ZZ_movement,
 				'close_index': close_index
@@ -110,30 +129,30 @@ class Ranges:
 	x5 = []
 	x6 = []
 # 	for score in range(max_a+1): # this is correct, but gives us huge massive of combinations
-	scores = (0,1,2,3,4,5,6,10)
+	scores = (0,1,2,3,4,5,6,10,15,20,25,40,80)
 	for score in scores:
 		for x in _stochastic:
-			if score == 10:	#in scores:#
+			if score == 0: #in scores:#
 				x['weight'] = score
 				x1.append(x.copy())
 		for x in weekday:
-			if score == 3: #in scores:#
+			if score == 0: #in scores:#
 				x['weight'] = score
 				x2.append(x.copy())
 		for x in japanese_candlesticks:
-			if score == 5:  	#in scores:#
+			if score == 0: #in scores:#
 				x['weight'] = score
 				x3.append(x.copy())
 		for x in _volume_profile:
-			if score == 4:	#in scores:#
+			if score == 0: #in scores:#
 				x['weight'] = score
 				x4.append(x.copy())
 		for x in _SMA:
-			if score == 2:	#in scores:#
+			if score == 0: #in scores:#
 				x['weight'] = score
 				x5.append(x.copy())
 		for x in _RS:
-			if score == 0:  #in scores:#
+			if score == 6:  #in scores:#
 				x['weight'] = score
 				x6.append(x.copy())
 	_stochastic = x1
@@ -167,19 +186,6 @@ def save_the_best_strategy(the_best_strategy):
 	open(file_with_the_best_strategies, 'w').close()
 	for strategy in the_best_strategies:
 		pickle.dump(strategy, open(file_with_the_best_strategies, 'ab'))
-
-
-def print_status(info):
-	percentage = int((info['i'] / info['total'])*30)
-	total = str(info['total'])
-	if len(total) > 7:
-		total = total[:7]+'...'
-	print(f"""  
-Best founded strategy's profitability:  {info['better_profit']}%            
-Profit now:                             {info['now_profit']}%       
-Calculated: {int(round(percentage*3.33, 0))}% |{"█"*percentage+' '*(30 - percentage)}| {info['i']}/{total} combinations                         
-""")
-	print('\033[F' * 6)
 
 
 def main(company):
@@ -240,6 +246,13 @@ def main(company):
 										new_RS_params = (RS['ZZ_movement'], RS['close_index'])
 										if new_RS_params != RS_params:
 											price_data = RS_ind.update(price_data, RS, historical_data)
+
+
+										modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
+										all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+										for indicator in all_indicators:
+											print(indicator)
+
 										weight_sum = _stochastic['weight'] + weekday['weight'] + japanese_candlesticks['weight'] + _volume_profile['weight'] + _SMA['weight'] + RS['weight']
 										if weight_sum >= 5: # quantity of indicators
 
@@ -282,7 +295,7 @@ def main(company):
 											print_status({
 												'i': i,
 												'total': total,
-												'now_profit': strategy['profit'],
+												'strategy': strategy,
 												'better_profit': better_strategy['profit']
 											})
 											i += 1
@@ -297,13 +310,13 @@ def main(company):
 
 if __name__ == '__main__':
 	company = settings.company
-	print(company)
 	try:
 		utils.first_run()
 		main(company)
-		print('\n\n\n\n\n')
+		print('\n' * S_STRINGS_COUNT)
 	except(KeyboardInterrupt):
-		print('\n\n\n\n\nBye!')
+		print('\n' * S_STRINGS_COUNT)
+		print('\nBye!')
 
 
 

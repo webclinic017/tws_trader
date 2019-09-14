@@ -51,12 +51,12 @@ def hammer_candlestick(price_data):
 	if len(price_data) >= 2:
 		previous_row = price_data[-2]
 		now_row = price_data[-1]
-		prev_open = previous_row[1]
-		prev_close = previous_row[4]
-		now_open = now_row[1]
-		now_high = now_row[2]
-		now_low = now_row[3]
-		now_close = now_row[4]
+		prev_open = previous_row['Open']
+		prev_close = previous_row['Close']
+		now_open = now_row['Open']
+		now_high = now_row['High']
+		now_low = now_row['Low']
+		now_close = now_row['Close']
 		if prev_close < prev_open:	# and prev_close > now_close:
 			# green hammer
 			if now_close > now_open:
@@ -79,12 +79,12 @@ def hanging_man_candlestick(price_data):
 	if len(price_data) >= 2:
 		previous_row = price_data[-2]
 		now_row = price_data[-1]
-		prev_open = previous_row[1]
-		prev_close = previous_row[4]
-		now_open = now_row[1]
-		now_high = now_row[2]
-		now_low = now_row[3]
-		now_close = now_row[4]
+		prev_open = previous_row['Open']
+		prev_close = previous_row['Close']
+		now_open = now_row['Open']
+		now_high = now_row['High']
+		now_low = now_row['Low']
+		now_close = now_row['Close']
 		if prev_close > prev_open:	# and prev_close > now_close:
 			# green hanging man
 			if now_close > now_open:
@@ -103,7 +103,7 @@ def hanging_man_candlestick(price_data):
 	return False
 
 
-def signal(price_data):
+def signal(price_data, *args):
 	if hammer_candlestick(price_data):
 		return 1.
 	if hanging_man_candlestick(price_data):

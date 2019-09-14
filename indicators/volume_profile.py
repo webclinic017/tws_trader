@@ -1,193 +1,167 @@
+import time
+
 import matplotlib.pyplot as plt
 from mpl_finance import candlestick_ohlc
-from yahoo_historical import Fetcher
 
 
-def make_plots(quotes, volumes, new_volumes, now, count):
+
+def make_plot(volume_profile):
 	fig = plt.figure()
-	ax_main = fig.add_subplot(1, 2, 1)
-	candlestick_ohlc(ax_main, quotes, width=0.3, colorup='g', colordown='r')
-	ax_main.plot(now[0], now[1], 'k<', label='sell trades')	# sell
-	ax_main.grid(True)
-	ax_main.set_ylim(0,max(volumes[1])*1.1)
-
-	ax_volumes = fig.add_subplot(1, 2, 2)
-	ax_volumes.plot(new_volumes[0], new_volumes[1], color='green', linewidth=0.7)
-	ax_volumes.plot(volumes[0], volumes[1], linewidth=0.7)
-	ax_volumes.plot([0], now[1], 'k>', label='sell trades')
+	ax_volumes = fig.add_subplot(1, 1, 1)
+	ax_volumes.plot(volume_profile[0], volume_profile[1], linewidth=0.7)
 	ax_volumes.grid(True)
-	ax_volumes.set_ylim(0,max(volumes[1])*1.1)
-	ax_volumes.set_xlim(0,max(volumes[0])*1.2)
+	ax_volumes.set_ylim(0, max(volume_profile[1]) * 1.1)
+	ax_volumes.set_xlim(0, max(volume_profile[0]) * 1.2)
 	plt.show()
-	# plt.savefig(f'volume_plots/{count}.png')
-
-	plt.clf()
-	plt.cla()
-	plt.close(fig)
 
 
-def update_volume_profile(list_with_price_data, step, historical_volume_profile):
-	the_lowest_price = min(historical_volume_profile[1])
-	the_highest_price = 0
-	for row in list_with_price_data[1:]:
-		# print((row[2], the_highest_price))
-		if float(row[2]) > the_highest_price:
-			the_highest_price = float(row[2])
-	x_list=[]	# volumes
-	y_list=[]	# prices
-	price = the_lowest_price
-	while price <= the_highest_price:
-		y_list.append(price)
-		volume_sum = 0
-		for row in list_with_price_data:
-			if row[2] != 'high' and row[2] >= price >= row[3]:
-				volume_sum += int(round(row[5], 0))
-		x_list.append(volume_sum/100000)
-		price += step
-	new_x_list=[]
-	for i, val in enumerate(historical_volume_profile[1]):
-		if val in y_list:
-			new_volume = historical_volume_profile[0][i] + x_list[y_list.index(val)]
-			new_x_list.append(new_volume)
-		else:
-			new_x_list.append(historical_volume_profile[0][i])
-		# to see apart what added to volume profile
-		# if val in y_list:
-		# 	new_x_list.append(x_list[y_list.index(val)]*10)
-		# else:
-		# 	new_x_list.append(0)
-
-
-	# how much in % has volume profile changed
-	# new_added_list = []
-	# for i in range(len(new_x_list)):
-	# 	try:
-	# 		new_added = ((new_x_list[i] - volumes[0][i]) / volumes[0][i]) * 1000
-	# 		new_added_list.append(new_added)
-	# 		print(volumes[1][i], ':', round(new_added, 1), '%')
-	# 	except:
-	# 		new_added_list.append(0)
-	return (new_x_list, historical_volume_profile[1])
-
-
-def historical_volumes(company, end_date):
-	req = Fetcher(f'{company}', [2000,1,1], end_date)
-	data = req.getHistorical()
-	the_highest_price = data['High'].max()
-	the_lowest_price = data['Low'].min()
+def update(price_data, locator, historical_data):
+	the_highest_price = historical_data['High'].max()
+	the_lowest_price = historical_data['Low'].min()
 	step = (the_highest_price - the_lowest_price) / 100
-	x_list=[]	# volumes
-	y_list=[]	# prices
+	x_list = []  # volumes
+	y_list = []  # prices
 	price = the_lowest_price
 	while price <= the_highest_price:
 		y_list.append(price)
 		volume_sum = 0
-		for i in range(data.shape[0]):
-			if data.loc[i,'High'] >= price >= data.loc[i,'Low']:
-				volume_sum += data.loc[i,'Volume']
-		x_list.append(volume_sum/100000)
+		for i in range(historical_data.shape[0]):
+			if historical_data.loc[i, 'High'] >= price >= historical_data.loc[i, 'Low']:
+				volume_sum += historical_data.loc[i, 'Volume']
+		x_list.append(volume_sum / 100000)
 		price += step
-	return (x_list, y_list), step
+	volume_profile = (x_list, y_list)
 
+	last_day = None
+	for row in price_data:
+		price_now = row['Close']
 
-def signal(last_row, historical_volume_profile, volume_profile_locator):
-	if volume_profile_locator == None:
-		return 0.
-	else:
-		price_now = last_row[4]
-		price_difference = 999999999
-		closest_price_index = None
-		for i, x in enumerate(historical_volume_profile[1]):
-			if abs(x-price_now) < price_difference:
-				price_difference = abs(x-price_now)
-				closest_price_index = i
-		volume_profile_radius = min([len(historical_volume_profile[1][:closest_price_index]), 
-											len(historical_volume_profile[1][closest_price_index:])
-											])
-		if volume_profile_locator / 2 < volume_profile_radius:
-			volume_profile_radius = int(volume_profile_locator / 2)
-		volume_below = []
-		volume_above = []
-		if price_now < historical_volume_profile[1][closest_price_index]:
-			start = closest_price_index - volume_profile_radius
-			end = closest_price_index + volume_profile_radius
-		if price_now > historical_volume_profile[1][closest_price_index]:
-			start = closest_price_index - volume_profile_radius + 1
-			end = closest_price_index + volume_profile_radius + 1
-		for i, val in enumerate(historical_volume_profile[1][start:end]):
-			if price_now >= val:
-				volume_below.append(historical_volume_profile[0][i+start])
-			if price_now < val:
-				volume_above.append(historical_volume_profile[0][i+start])
-		max_volume_below = sum(volume_below)
-		max_volume_above = sum(volume_above)
-		if max_volume_below <= max_volume_above and volume_profile_radius > 0:
-			return 1.
-		if max_volume_below > max_volume_above and volume_profile_radius > 0:
-			return -1.
+		# new_last_day = row[0].replace('-', '')[:4] # one update in a month
+		# if new_last_day != last_day:
+		# 	last_day = new_last_day
+		# 	print(last_day)
+		# 	data_for_vol = data.set_index('Date').loc[:last_day].reset_index()
+		# 	the_highest_price = data_for_vol['High'].max()
+		# 	the_lowest_price = data_for_vol['Low'].min()
+		# 	step = (the_highest_price - the_lowest_price) / 100
+		# 	x_list = []  # volumes
+		# 	y_list = []  # prices
+		# 	price = the_lowest_price
+		# 	while price <= the_highest_price:
+		# 		y_list.append(price)
+		# 		volume_sum = 0
+		# 		for i in range(data_for_vol.shape[0]):
+		# 			if data_for_vol.loc[i, 'High'] >= price >= data_for_vol.loc[i, 'Low']:
+		# 				volume_sum += data_for_vol.loc[i, 'Volume']
+		# 		x_list.append(volume_sum / 100000)
+		# 		price += step
+		# 	volume_profile = (x_list, y_list)
+			# # make_plot(volume_profile)
+
+		if locator == None:
+			row['VP signal'] = None
 		else:
-			return 0.
-		# max_volume_difference_below = max(volume_below) - min(volume_below)
-		# max_volume_difference_above = max(volume_above) - min(volume_above)
-		# if max_volume_difference_below >= max_volume_difference_above and volume_profile_radius > 0:
-		# 	return 1.
-		# if max_volume_difference_below < max_volume_difference_above and volume_profile_radius > 0:
-		# 	return -1.
-		# else:
-		# 	return 0.
+			price_difference = 999999999
+			closest_price_index = None
+			for i, x in enumerate(volume_profile[1]):
+				if abs(x-price_now) < price_difference:
+					price_difference = abs(x-price_now)
+					closest_price_index = i
+			volume_profile_radius = min([len(volume_profile[1][:closest_price_index]),
+												len(volume_profile[1][closest_price_index:])
+												])
+			if locator / 2 < volume_profile_radius:
+				volume_profile_radius = int(locator / 2)
+			volume_below = []
+			volume_above = []
+			if price_now < volume_profile[1][closest_price_index]:
+				start = closest_price_index - volume_profile_radius
+				end = closest_price_index + volume_profile_radius
+			if price_now > volume_profile[1][closest_price_index]:
+				start = closest_price_index - volume_profile_radius + 1
+				end = closest_price_index + volume_profile_radius + 1
+			for i, val in enumerate(volume_profile[1][start:end]):
+				if price_now >= val:
+					volume_below.append(volume_profile[0][i + start])
+				if price_now < val:
+					volume_above.append(volume_profile[0][i + start])
+			sum_volume_below = sum(volume_below)
+			sum_volume_above = sum(volume_above)
+			if volume_profile_radius > 0:
+				if sum_volume_below <= sum_volume_above:
+					row['VP signal'] = 1.
+				if sum_volume_below > sum_volume_above:
+					row['VP signal'] = -1.
+			else:
+				row['VP signal'] = 0.
+	return price_data
 
-# In case of testing:
-def main(company, list_with_price_data):
-	
-	first_date = list_with_price_data[1][0]
-	end_date = [int(first_date[:4]), int(first_date[4:6]), int(first_date[6:8])]
-	historical_volume_profile, step = historical_volumes(company, end_date)
 
-	for count in range(len(list_with_price_data)-1,len(list_with_price_data)):		#	1,len(list_with_price_data),10):
-		new_volumes = update_volume_profile(list_with_price_data[1:count+1], step, historical_volume_profile)
-		price_now = float(list_with_price_data[count][4])
-		now = ([count+20],[price_now])
-		quotes = []
-		count1 = 1
-		for row in list_with_price_data[1:]:
-			quotes.append((count1, row[1], row[2], row[3], row[4]))
-			count1 += 1
-		volume_profile_locator = 4
-		# signal(price_now, historical_volume_profile, volume_profile_locator)
-		make_plots(quotes, historical_volume_profile, new_volumes, now, count)
+def signal(price_data, *args):
+	return price_data[-1].get('VP signal', 0)
+
 
 if __name__ == '__main__':
 	company = 'TSLA'
 	bar_size = '30 mins'
-	price_data=[]
-	import csv
-	with open(f'{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
-		for row in csv.reader(data_file, delimiter=';'):
-			if row[0] != 'Datetime':
-				formated_row = []
-				formated_row.append(row[0])
-				formated_row.append(float(row[1]))
-				formated_row.append(float(row[2]))
-				formated_row.append(float(row[3]))
-				formated_row.append(float(row[4]))
-				formated_row.append(int(row[5]))
-				try:
-					if row[6] != '' and row[7] != '':
-						formated_row.append(round(float(row[6]), 1))
-						formated_row.append(round(float(row[7]), 1))
-				except:
-					formated_row.append('')
-					formated_row.append('')
-				price_data.append(formated_row)
-	main(company, price_data)
+	strategy_indicator = {'locator': 14}
 
 
-# Варианты стратегий:
-# NOW: от текущей цены выше и ниже на N цен проверяем суммы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
+	def get_price_data(company, bar_size):
+		import csv
+		price_data = []
+		with open(f'../historical_data/{company} {bar_size}.csv', 'r', encoding='utf-8') as data_file:
+			for row in csv.reader(data_file, delimiter=';'):
+				if row[0] != 'Datetime':
+					formated_row = []
+					formated_row.append(row[0])
+					formated_row.append(float(row[1]))
+					formated_row.append(float(row[2]))
+					formated_row.append(float(row[3]))
+					formated_row.append(float(row[4]))
+					formated_row.append(int(row[5]))
+					price_data.append(formated_row)
+		return price_data
 
-# 2) от локального минимума в сторону локального (абсолютного) максимума (нужно определить диапазон поиска локального минимума)
-# 4) если между двумя ценами разница суммарных объемов не превышает параметр N, то значит это "площадка справедливой цены".
-# цена задерживается на этом уровне
+
+	price_data = get_price_data(company, bar_size)
+	price_data = update(price_data, strategy_indicator['locator'], company)
+	for row in price_data[:5]:
+		print(row)
+
+
+# NOW: от текущей цены выше и ниже на locator цен проверяем суммы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
