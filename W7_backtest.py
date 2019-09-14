@@ -179,12 +179,10 @@ if __name__ == '__main__':
 		strategy = utils.the_best_known_strategy2(company)
 	except:
 		strategy = {'company': 'TSLA',
-		            'profit': 180,
-		            'max_drawdown': 12,
 		            'bar_size': '30 mins',
 		            'buy': {
-			            'TP': 10,
-			            'SL': 10,
+			            'TP': 15,
+			            'SL': 15,
 			            'stochastic': {
 				            'weight': 10,  # 10
 				            'K_min': 19,
@@ -192,9 +190,9 @@ if __name__ == '__main__':
 				            'D_min': 0.,
 				            'D_max': 100.,
 				            'KD_difference': 'K>D',
-				            'stoch_period': 15,
-				            'stoch_slow_avg': 10,
-				            'stoch_fast_avg': 5
+				            'stoch_period': 17,
+				            'stoch_slow_avg': 13,
+				            'stoch_fast_avg': 4
 			            },
 			            'weekday': {
 				            'weight': 3,  # 3
@@ -218,18 +216,18 @@ if __name__ == '__main__':
 			            }
 		            },
 		            'sell': {
-			            'TP': 10,
-			            'SL': 10,
+			            'TP': 15,
+			            'SL': 15,
 			            'stochastic': {
 				            'weight': 10,  # 10
 				            'K_min': 19,
 				            'K_max': 29,
 				            'D_min': 0,
 				            'D_max': 100,
-				            'KD_difference': 'K>D',
-				            'stoch_period': 19,
-				            'stoch_slow_avg': 12,
-				            'stoch_fast_avg': 5
+				            'KD_difference': 'K=D',
+				            'stoch_period': 17,
+				            'stoch_slow_avg': 13,
+				            'stoch_fast_avg': 4
 			            },
 			            'weekday': {
 				            'weight': 3,  # 3
@@ -253,8 +251,6 @@ if __name__ == '__main__':
 			            }
 		            }
 		}
-	# strategy = utils.the_best_known_strategy(company)
-	# strategy = {'company': 'TSLA', 'profit': 74.5, 'max_drawdown': None, 'buy_and_hold_profitability': -37.8, 'bar_size': '30 mins', 'stop_loss': 4, 'take_profit': 15, 'indicators': {'stochastic': {'K_level_to_buy': None, 'D_level_to_buy': (19, 29), 'KD_difference_to_buy': 1, 'K_level_to_sell': None, 'D_level_to_sell': None, 'KD_difference_to_sell': 0, 'stoch_period': 19, 'stoch_slow_avg': 12, 'stoch_fast_avg': 5, 'weight': 0}, 'weekday': {'Weekday_buy': 1, 'Weekday_sell': 345, 'weight': 0}, 'japanese_candlesticks': {'weight': 0}, 'volume_profile': {'locator': 14, 'weight': 0}, 'SMA': {'period': 32, 'weight': 0}, 'RS': {'ZZ_movement': 10, 'close_index': 4, 'weight': 6}}}
 	historical_data = utils.request_historical_data(strategy['company'])
 	price_data = utils.get_price_data(company, strategy['bar_size'])
 	price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
