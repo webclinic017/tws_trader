@@ -324,7 +324,7 @@ def update(price_data, strategy_indicator, historical_data):
 
 
 def signal(price_data, *args):
-	return price_data[-1]['RS signal']
+	return price_data[-1].get('RS signal', 0)
 
 
 if __name__ == '__main__':

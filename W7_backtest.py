@@ -12,7 +12,8 @@ def main(price_data, strategy):
 	close_order_price = None
 	profit = 0
 	want_to_open_position = True
-	capital = 100000 * settings.POSITION_QUANTITY
+	capital = 100000
+	capital_init = 100000
 	capital_by_date = []
 	quantity = None
 	open_position_type = None
@@ -40,7 +41,7 @@ def main(price_data, strategy):
 				if i < len(price_data) - 1:
 					open_order_price = market_price*1.002
 					open_position_type = 'long'
-					quantity = int(capital / open_order_price)
+					quantity = int(capital_init / open_order_price)
 					history.append((price_data[i+1]['Datetime'], 'long', quantity, open_order_price, ''))
 	
 	# SELL
@@ -48,7 +49,7 @@ def main(price_data, strategy):
 				if i < len(price_data) - 1:
 					open_order_price = market_price*0.998
 					open_position_type = 'short'
-					quantity = -1 * int(capital / open_order_price)
+					quantity = -1 * int(capital_init / open_order_price)
 					history.append((price_data[i+1]['Datetime'], 'short', quantity, open_order_price, ''))
 # CLOSE POSITIONS functional
 		else:	# checking open position if it is signal to close
@@ -109,7 +110,7 @@ def main(price_data, strategy):
 			# + open opposite position
 						open_order_price = market_price*0.998
 						open_position_type = 'short'
-						quantity = -1 * int(capital / open_order_price)
+						quantity = -1 * int(capital_init / open_order_price)
 						history.append((price_data[i+1]['Datetime'], 'short', quantity, open_order_price, '', ''))
 
 	# close SHORT
@@ -168,7 +169,7 @@ def main(price_data, strategy):
 			# + open opposite position
 						open_order_price = market_price*1.002
 						open_position_type = 'long'
-						quantity = int(capital / open_order_price)
+						quantity = int(capital_init / open_order_price)
 						history.append((price_data[i+1]['Datetime'], 'long', quantity, open_order_price, '', ''))
 
 		if i == len(price_data) - 1 and open_position_type != None:
@@ -188,52 +189,52 @@ def main(price_data, strategy):
 
 if __name__ == '__main__':
 	company = settings.company
-	# try:
-	# 	strategy = utils.the_best_known_strategy(company)
-	# except:
-	strategy = {'company': 'TSLA',
-			'profit': 180,
-			'max_drawdown': 12,
-			'buy_and_hold_profitability': -35,
-			'bar_size': '30 mins',
-			'stop_loss': 3,
-			'take_profit': 10,
-            'indicators': {
-				'stochastic': {
-					'weight': 10,   # 10
-					'K_level_to_buy': None,
-					'D_level_to_buy': (19, 29),
-					'KD_difference_to_buy': 1,
-					'K_level_to_sell': None,
-					'D_level_to_sell': None,
-					'KD_difference_to_sell': 0,
-					'stoch_period': 19,
-					'stoch_slow_avg': 12,
-					'stoch_fast_avg': 5
-				},
-                'weekday': {
-                    'weight': 3,    # 3
-                    'Weekday_buy': 1,
-                    'Weekday_sell': 345
-                },
-	            'volume_profile': {
-					'weight': 4,    # 4
-		            'locator': 14
-	            },
-	            'japanese_candlesticks': {
-		            'weight': 5     # 5
-	            },
-				'SMA': {
-					'weight': 4,    # 4
-					'period': 32
-				},
-	            'RS': {
-		            'weight': 0,
-		            'ZZ_movement': 10,
-		            'close_index': 3
+	try:
+		strategy = utils.the_best_known_strategy(company)
+	except:
+		strategy = {'company': 'TSLA',
+				'profit': 180,
+				'max_drawdown': 12,
+				'buy_and_hold_profitability': -35,
+				'bar_size': '30 mins',
+				'stop_loss': 3,
+				'take_profit': 10,
+	            'indicators': {
+					'stochastic': {
+						'weight': 10,   # 10
+						'K_level_to_buy': None,
+						'D_level_to_buy': (19, 29),
+						'KD_difference_to_buy': 1,
+						'K_level_to_sell': None,
+						'D_level_to_sell': None,
+						'KD_difference_to_sell': 0,
+						'stoch_period': 19,
+						'stoch_slow_avg': 12,
+						'stoch_fast_avg': 5
+					},
+	                'weekday': {
+	                    'weight': 3,    # 3
+	                    'Weekday_buy': 1,
+	                    'Weekday_sell': 345
+	                },
+		            'volume_profile': {
+						'weight': 4,    # 4
+			            'locator': 14
+		            },
+		            'japanese_candlesticks': {
+			            'weight': 5     # 5
+		            },
+					'SMA': {
+						'weight': 4,    # 4
+						'period': 32
+					},
+		            'RS': {
+			            'weight': 0,
+			            'ZZ_movement': 10,
+			            'close_index': 3
+		            }
 	            }
-            }
-	}
+		}
 	strategy = utils.the_best_known_strategy(company)
 	# strategy = {'company': 'TSLA', 'profit': 74.5, 'max_drawdown': None, 'buy_and_hold_profitability': -37.8, 'bar_size': '30 mins', 'stop_loss': 4, 'take_profit': 15, 'indicators': {'stochastic': {'K_level_to_buy': None, 'D_level_to_buy': (19, 29), 'KD_difference_to_buy': 1, 'K_level_to_sell': None, 'D_level_to_sell': None, 'KD_difference_to_sell': 0, 'stoch_period': 19, 'stoch_slow_avg': 12, 'stoch_fast_avg': 5, 'weight': 0}, 'weekday': {'Weekday_buy': 1, 'Weekday_sell': 345, 'weight': 0}, 'japanese_candlesticks': {'weight': 0}, 'volume_profile': {'locator': 14, 'weight': 0}, 'SMA': {'period': 32, 'weight': 0}, 'RS': {'ZZ_movement': 10, 'close_index': 4, 'weight': 6}}}
 	historical_data = utils.request_historical_data(company)
@@ -253,4 +254,4 @@ if __name__ == '__main__':
 	print(f'\nProfitability: {round(profit, 1)}%, max drawdown: {round(max_drawdown, 1)}%')
 	buy_and_hold_profitability = ((price_data[-1]['Close'] - price_data[0]['Open']) / price_data[0]['Open']) * 100
 	print(f'\nBuy and hold profitability: {round(buy_and_hold_profitability, 1)}%')
-	# make_candlestick_chart.main(price_data, history, capital_by_date, company)
+	make_candlestick_chart.main(price_data, history, capital_by_date, company)

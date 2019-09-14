@@ -90,15 +90,16 @@ def main():
 	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
 	working_shedule = utils.get_working_shedule(strategy['bar_size'])
-
 	utils.update_price_data(company, strategy['bar_size'])
-	historical_data = utils.request_historical_data(company)
+
 	price_data = utils.get_price_data(company, strategy['bar_size'])
 	price_data = stochastic.update(price_data,
 	                               strategy['indicators']['stochastic']['stoch_period'],
 				                   strategy['indicators']['stochastic']['stoch_slow_avg'],
 				                   strategy['indicators']['stochastic']['stoch_fast_avg'])
 	price_data = SMA.update(price_data, strategy['indicators']['SMA']['period'])
+
+	historical_data = utils.request_historical_data(company)
 	price_data = volume_profile.update(price_data, strategy['indicators']['volume_profile']['locator'], historical_data)
 	price_data = RS.update(price_data, strategy['indicators']['RS'], historical_data)
 

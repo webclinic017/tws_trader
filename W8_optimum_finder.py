@@ -32,8 +32,8 @@ class Ranges:
 	bar_size = ( '30 mins',)
 
 # Major settings
-	stop_loss = (None,2,5,10,15)
-	take_profit = (None,2,5,10,15)
+	stop_loss = range(1,25)
+	take_profit = range(1,25)
 
 #INDICATORS:
 # stochastic:
@@ -44,9 +44,9 @@ class Ranges:
 				for K_level_to_sell in (None,):
 					for D_level_to_sell in (None,):
 						for KD_difference_to_sell in (0,):
-							for stoch_period in (19,):
-								for stoch_slow_avg in (12,):
-									for stoch_fast_avg in (5,):
+							for stoch_period in (17,):
+								for stoch_slow_avg in (13,):
+									for stoch_fast_avg in (4,):
 										indicator = {
 													'K_level_to_buy': K_level_to_buy,
 													'D_level_to_buy': D_level_to_buy,
@@ -86,7 +86,7 @@ class Ranges:
 
 # SMA:
 	_SMA = []
-	for period in (32,):#(100,10,25, 50,150,200, 300):
+	for period in (25,):
 		indicator = {
 			'period': period
 			}
@@ -94,8 +94,8 @@ class Ranges:
 
 # RS:
 	_RS = []
-	for ZZ_movement in range(1, 31):
-		for close_index in range(1,10):
+	for ZZ_movement in (1,):
+		for close_index in (1,):
 			indicator = {
 				'ZZ_movement': ZZ_movement,
 				'close_index': close_index
@@ -110,30 +110,30 @@ class Ranges:
 	x5 = []
 	x6 = []
 # 	for score in range(max_a+1): # this is correct, but gives us huge massive of combinations
-	scores = (0,1,2,3,4,5,6,10,15,20,25,40,80)
+	scores = (0,1,2,3,4,5,6,10)
 	for score in scores:
 		for x in _stochastic:
-			if score == 0: #in scores:#
+			if score == 10:	#in scores:#
 				x['weight'] = score
 				x1.append(x.copy())
 		for x in weekday:
-			if score == 0: #in scores:#
+			if score == 3: #in scores:#
 				x['weight'] = score
 				x2.append(x.copy())
 		for x in japanese_candlesticks:
-			if score == 0: #in scores:#
+			if score == 5:  	#in scores:#
 				x['weight'] = score
 				x3.append(x.copy())
 		for x in _volume_profile:
-			if score == 0: #in scores:#
+			if score == 4:	#in scores:#
 				x['weight'] = score
 				x4.append(x.copy())
 		for x in _SMA:
-			if score == 0: #in scores:#
+			if score == 2:	#in scores:#
 				x['weight'] = score
 				x5.append(x.copy())
 		for x in _RS:
-			if score == 6:  #in scores:#
+			if score == 0:  #in scores:#
 				x['weight'] = score
 				x6.append(x.copy())
 	_stochastic = x1

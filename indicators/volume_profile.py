@@ -98,7 +98,7 @@ def update(price_data, locator, historical_data):
 
 
 def signal(price_data, *args):
-	return price_data[-1]['VP signal']
+	return price_data[-1].get('VP signal', 0)
 
 
 if __name__ == '__main__':

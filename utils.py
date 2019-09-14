@@ -107,9 +107,10 @@ def request_historical_data(company):
 
 # This is NOT correct! But it shows the best profitability
 	now_date = [2019,1,14]
-
-	req = Fetcher(company, [2000,1,1], now_date)
-	return req.getHistorical()
+	# try:
+	return Fetcher(company, [2000, 1, 1], now_date).getHistorical()
+	# except:
+	# 	return None
 
 
 def the_best_known_strategy(company):
@@ -145,26 +146,30 @@ def max_drawdown_calculate(capital_by_date):
 
 
 def update_price_data(company, bar_size):
-	y_interval = {'1 min': '1m', '2 mins': '2m', '5 mins': '5m', '15 mins': '15m', '30 mins': '30m',
-					'1 hour': '1h', '1 day': '1d', '1 week': '1wk', '1 month': '1mo'}
-	data = yf.Ticker(company).history(interval=y_interval[bar_size]).iloc[:,:-2] # excluding Dividends and Stock Splits
-	filename = f'historical_data/{company} {bar_size}.csv'
-	if not os.path.isfile(filename): # create new file
-		data.to_csv(filename, mode='a', sep=';')
-	else: # update
-		last_date = pd.read_csv(filename, index_col=0, sep=';').index[-1]
-		new_price_data = data.loc[last_date:,:].iloc[1:]
-		interval = None
-		if bar_size.split()[1] == 'mins':
-			interval = int(bar_size.split()[0])
-		if bar_size.split()[1][:4] == 'hour':
-			interval = int(bar_size.split()[0])*60
-		if bar_size.split()[1] == 'day':
-			interval = 24*60
-		new_last_date = data.index[-1].to_pydatetime()
-		time_now_in_EST = datetime.now(pytz.timezone('US/Eastern'))
-		difference = (time_now_in_EST - new_last_date)
-		difference = difference.seconds//3600
-		if difference < interval:
-			new_price_data = new_price_data.iloc[:-1]
-		new_price_data.to_csv(filename, mode='a', header=False, sep=';')
+	try:
+		y_interval = {'1 min': '1m', '2 mins': '2m', '5 mins': '5m', '15 mins': '15m', '30 mins': '30m',
+						'1 hour': '1h', '1 day': '1d', '1 week': '1wk', '1 month': '1mo'}
+		data = yf.Ticker(company).history(interval=y_interval[bar_size]).iloc[:,:-2] # excluding Dividends and Stock Splits
+		filename = f'historical_data/{company} {bar_size}.csv'
+		if not os.path.isfile(filename): # create new file
+			data.to_csv(filename, mode='a', sep=';')
+		else: # update
+			last_date = pd.read_csv(filename, index_col=0, sep=';').index[-1]
+			new_price_data = data.loc[last_date:,:].iloc[1:]
+			interval = None
+			if bar_size.split()[1] == 'mins':
+				interval = int(bar_size.split()[0])
+			if bar_size.split()[1][:4] == 'hour':
+				interval = int(bar_size.split()[0])*60
+			if bar_size.split()[1] == 'day':
+				interval = 24*60
+			new_last_date = data.index[-1].to_pydatetime()
+			time_now_in_EST = datetime.now(pytz.timezone('US/Eastern'))
+			difference = (time_now_in_EST - new_last_date)
+			difference = difference.seconds//3600
+			if difference < interval:
+				new_price_data = new_price_data.iloc[:-1]
+			new_price_data.to_csv(filename, mode='a', header=False, sep=';')
+	except:
+		print('!!!! ERROR !!!! Can\'t update price data')
+		pass
