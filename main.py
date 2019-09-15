@@ -1,48 +1,12 @@
 # TO DO list:
+# - отработать все ошибки при выполнении ордеров!!! Bracket order - !!!
+	# Orders SL TP rejected by system: parent order partially or fully filled
+# - если сработал SL/TP - надо отменить другой ордер (TP или SL)
+# - убрать закрытие позиции, сделать 1 bracket order
+# - добавить мультиинструментальность
 
-# main:
-# 1. предусмотреть потерю связи: подождать, повторить последнее действие
-
-# 1. GET abd FILTER all companies:
-# - перестал торговаться - данные не собираем. последняя дата данных должна быть свежей
-# - Сбор данных - прикрутить вторую попытку на основе определенных ошибок + показывать результат оставшихся "ошибок"
-# - иногда в единичных случаях tws путает close и volume при сборе данных!!! - Исправить эту ошибку
-# - неправильные данные - вообще не той компании - при массовом запросе даже с большой задержкой time.sleep!!!
-
-
-# 6. TRADE:
-# - отработать все ошибки при выполнении ордеров!!!
-# - Orders SL TP rejected by system: parent order partially or fully filled
-# - исполнение ордеров - прикрутить проверку - не отменен ли ордер (есть ли позиция и т.д.) + вторая попытка в случае определенных ошибок
-	# отправлять parent order -> sleep -> + дочерние ордера?? м.б. так?
-
-
-#### WORKING SCHEME: ####
-
-#######################################################################################################################
-# 										| frequency	|			| result in db (out)	| in
-# 1. GET and FILTER all companies,		| 			|			|						| https://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download
-# 										|			|			|						| https://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download
-# 										|			|			|						| https://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amex&render=download
-# 	get price data 						| 2/10		|			| !MyCompanies.csv +	|
-# 										|			|			| + historical data 	|
-# 2. SORT companies						| 4/10		|			| 	list of companies	| !MyCompanies + ...
-#######################################################################################################################
-# 3. untitled							| 10/10		|			| 	list of companies	| !MyCompanies + ...
-# 4. CHECKING account 					| 10/10		|			| 						|
-# 5. WATCH for trade signals			| 10/10		| strategy	| 	buy or sell signal	| 
-# 6. TRADE with strong trading signals	| 10/10		|			| 						|
-#######################################################################################################################
-# 7. BACKTEST							|
-# 8. FIND optimal strategy for security	|
-# 9. ANALYSER strategy parameters 		|			|			|
-#######################################################################################################################
-
-import csv
 from datetime import datetime, timedelta
 import time
-
-from ib.opt import Connection, sender
 
 from indicators import volume_profile, stochastic, SMA, RS
 import settings
@@ -53,7 +17,6 @@ import W6_position_manager
 
 
 def print_status(info):
-	# print('\033[F'*7)
 	print(f'''
 Time:		{time.strftime('%H:%M', time.gmtime())}                                    
 Signal:		{info[0]}                                                      
@@ -62,16 +25,15 @@ Price data row:	{info[2]}
 Order id:	{info[3]}                                               
 Strategy:	{info[4]}
 ''')
-	# print('\033[F'*8)
 
 
 def print_waiting():
-	working_shedule = utils.get_working_shedule('30 mins')
+	working_sсhedule = utils.get_working_shedule('30 mins')
 	# reset date in time now:
 	time_now_str = datetime.strftime(datetime.now(), '%H:%M')
 	time_now = datetime.strptime(time_now_str, '%H:%M')
 	times_to_await = []
-	for sheduled_time in working_shedule:
+	for sheduled_time in working_sсhedule:
 		sheduled_time = datetime.strptime(sheduled_time, '%H:%M')
 		if time_now > sheduled_time:
 			sheduled_time += timedelta(days=1)
@@ -89,7 +51,7 @@ def print_waiting():
 def main():
 	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
-	working_shedule = utils.get_working_shedule(strategy['bar_size'])
+	working_sсhedule = utils.get_working_shedule(strategy['bar_size'])
 
 	utils.update_price_data(company, strategy['bar_size'])
 	historical_data = utils.request_historical_data(company)
@@ -158,7 +120,7 @@ def main():
 		weekday = datetime.strftime(datetime.now(), '%w')
 		if weekday not in ('6', '0'):
 			print_waiting()
-			if time_now_str in working_shedule:
+			if time_now_str in working_sсhedule:
 				time.sleep(15)
 				main()
 		else:

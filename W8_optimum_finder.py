@@ -1,19 +1,22 @@
 import glob
+import itertools
 import os
 import pickle
 
-from indicators import stochastic, volume_profile, SMA, RS
-from indicators import RS as RS_ind
 import settings
 import utils
 import W7_backtest
 
 
+modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
+all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+
+
 class Ranges:
 	bar_size = ('30 mins',)
 	# TP/SL
-	SL = range(15)
-	TP = range(15)
+	SL = range(16)
+	TP = range(16)
 	# INDICATORS:
 	stochastic = {
 		'K_min': range(0, 100),
@@ -43,7 +46,7 @@ class Ranges:
 	}
 	# 	score = range(max_a+1): # this is correct, but gives us huge massive of combinations
 	# 	score = (0,1,2,3,4,5,6,10,15,20,25,40,80)
-	score = range(13)
+	score = range(len(all_indicators) + 1)
 
 
 def save_the_best_strategy(the_best_strategy):
@@ -58,7 +61,7 @@ def save_the_best_strategy(the_best_strategy):
 				break
 	# Replace ex-the_best_strategy to the new one:
 	for i, strategy in enumerate(the_best_strategies):
-		if strategy['company'] == the_best_strategy['company']:
+		if strategy.get('company') == the_best_strategy['company']:
 			del the_best_strategies[i]
 			the_best_strategies.append(the_best_strategy)
 	# Or write new entry:
@@ -72,18 +75,15 @@ def save_the_best_strategy(the_best_strategy):
 
 def print_status(info):
 	print(f"""  
-Best founded strategy's profitability:  {info['best_profit']}%            
+Best founded strategy's profitability:  {info['best_profit']}%              
 Profit now:                             {info['profit']}%       
 Calculated:                             {info['i']} combinations  
-Indicator:                              {info['indicator']}
-Parameter:                              {info['parameter']}
+{info['strategy']}                                
 """)
-	print('\033[F' * 8)
+	print('\033[F' * 11)
 
 
 def not_absurd(strategy):
-	modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
-	all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
 	for action in ('buy', 'sell'):
 		if strategy[action]['stochastic']['K_min'] > strategy[action]['stochastic']['K_max']:
 			return False
@@ -100,66 +100,61 @@ def not_absurd(strategy):
 	return True
 
 
-def get_the_best_strategy(company):
-	modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
-	all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
+def get_the_first_strategy(company):
 	strategy = utils.the_best_known_strategy(company)
 	if not strategy:
 		strategy = {
-			'profit': 0,
-			'buy': {'TP': 20, 'SL': 20},
-		    'sell': {'TP': 20, 'SL': 20}
+			'company': company,
+			'profit': -100000000,
+			'buy': {'TP': 0, 'SL': 0},
+		    'sell': {'TP': 0, 'SL': 0}
 		}
-		for action in ('buy', 'sell'):
-			for indicator in all_indicators:
-				strategy[action][indicator] = {}
-				parameteres = getattr(Ranges, indicator)
-				for parameter in parameteres.keys():
-					strategy[action][indicator][parameter] = parameteres[parameter][0]
-				strategy[action][indicator]['weight'] = 0
+	for action in ('buy', 'sell'):
+		for indicator in all_indicators:
+			strategy[action][indicator] = {}
+			parameteres = getattr(Ranges, indicator)
+			for parameter in parameteres.keys():
+				strategy[action][indicator][parameter] = parameteres[parameter][0]
+			strategy[action][indicator]['weight'] = 0
 	return strategy
 
 
 def main(company):
 	i = 0
-	strategy = get_the_best_strategy(company)
+	strategy = get_the_first_strategy(company)
 	best_profit_ever = strategy['profit']
 	for bar_size in set(Ranges.bar_size):
 		historical_data = utils.request_historical_data(company)
 		price_data = utils.get_price_data(company, bar_size)
-		modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
-		all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
 		for action in ('buy', 'sell'):
 			for indicator in all_indicators:
-				parameteres = getattr(Ranges, indicator)
-				for parameter in parameteres.keys():
-					for param_value in parameteres[parameter]:
-						strategy[action][indicator][parameter] = param_value
-						price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
-						for TP in Ranges.TP:
-							strategy[action]['TP'] = TP
-							for SL in Ranges.SL:
-								strategy[action]['SL'] = SL
-								for score in Ranges.score:
-									strategy[action][indicator]['weight'] = score
-									if not_absurd(strategy):
+				params = tuple(getattr(Ranges, indicator).keys())
+				params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
+				for values in itertools.product(*params_values):
+					for j in range(len(params)):
+						strategy[action][indicator][params[j]] = values[j]
 
-										profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
-										profitability = round(profitability, 1)
-										strategy['profit'] = profitability
-
-										if profitability > best_profit_ever:
-											strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date),1)
-											save_the_best_strategy(strategy)
-
-										print_status({
-											'i': i,
-											'profit': profitability,
-											'best_profit': best_profit_ever,
-											'indicator': indicator,
-											'parameter': parameter
-										})
-										i += 1
+					price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
+					for score, TP, SL in itertools.product(Ranges.score, Ranges.TP, Ranges.SL):
+						strategy[action][indicator]['weight'] = score
+						strategy[action]['TP'] = TP
+						strategy[action]['SL'] = SL
+						if not_absurd(strategy):
+							profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
+							profitability = round(profitability, 1)
+							strategy['profit'] = profitability
+							if profitability > best_profit_ever:
+								best_profit_ever = profitability
+								if profitability > .0:
+									strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
+									save_the_best_strategy(strategy)
+							print_status({
+								'i': i,
+								'profit': profitability,
+								'best_profit': best_profit_ever,
+								'strategy': strategy
+							})
+							i += 1
 
 
 if __name__ == '__main__':
@@ -167,7 +162,6 @@ if __name__ == '__main__':
 	print(company)
 	try:
 		utils.first_run()
-		while True:
-			main(company)
+		main(company)
 	except(KeyboardInterrupt):
-		print('\n\n\n\n\nBye!')
+		print('\n' * 10, 'Bye!')
