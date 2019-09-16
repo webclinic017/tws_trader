@@ -19,14 +19,14 @@ class Ranges:
 	TP = range(16)
 	# INDICATORS:
 	stochastic = {
+		'stoch_period': range(2, 101),
+		'stoch_slow_avg': range(2, 101),
+		'stoch_fast_avg': range(1, 101),
 		'K_min': range(0, 100),
 		'K_max': range(100, 0, -1),
 		'D_min': range(0, 100),
 		'D_max': range(100, 0, -1),
-		'KD_difference': ('K>D', 'K<D', 'K=D', None),
-		'stoch_period': range(2, 101),
-		'stoch_slow_avg': range(2, 101),
-		'stoch_fast_avg': range(1, 101)
+		'KD_difference': ('K>D', 'K<D', 'K=D', None)
 	}
 	weekday = {
 		'weekday': (
@@ -46,7 +46,7 @@ class Ranges:
 	}
 	# 	score = range(max_a+1): # this is correct, but gives us huge massive of combinations
 	# 	score = (0,1,2,3,4,5,6,10,15,20,25,40,80)
-	score = range(0, len(all_indicators) + 1, -1)
+	score = range(len(all_indicators) + 1, 0, -1)
 
 
 def save_the_best_strategy(the_best_strategy):
@@ -100,12 +100,13 @@ def not_absurd(strategy):
 	return True
 
 
-def get_the_first_strategy(company):
+def get_the_strategy(company, bar_size):
 	strategy = utils.the_best_known_strategy(company)
 	if not strategy:
 		strategy = {
 			'company': company,
 			'profit': -100000000,
+			'bar_size': bar_size,
 			'buy': {'TP': 0, 'SL': 0},
 		    'sell': {'TP': 0, 'SL': 0}
 		}
@@ -121,21 +122,20 @@ def get_the_first_strategy(company):
 
 def main(company):
 	i = 0
-	strategy = get_the_first_strategy(company)
-	best_profit_ever = strategy['profit']
-	for bar_size in set(Ranges.bar_size):
-		strategy['bar_size'] = bar_size
+	for bar_size in Ranges.bar_size:
 		historical_data = utils.request_historical_data(company)
 		price_data = utils.get_price_data(company, bar_size)
-		for action in ('buy', 'sell'):
+		for action in set(('buy', 'sell')):
 			for indicator in set(all_indicators):
 				params = tuple(set(getattr(Ranges, indicator).keys()))
 				params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
+				strategy = get_the_strategy(company, bar_size)
+				best_profit_ever = strategy['profit']
 				for values in itertools.product(*params_values):
 					for j in range(len(params)):
 						strategy[action][indicator][params[j]] = values[j]
-
-					price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
+					if indicator in ('stochastic', 'RS', 'SMA', 'volume_profile'):
+						price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
 					for score, TP, SL in itertools.product(Ranges.score, Ranges.TP, Ranges.SL):
 						strategy[action][indicator]['weight'] = score
 						strategy[action]['TP'] = TP
@@ -160,7 +160,7 @@ def main(company):
 
 if __name__ == '__main__':
 	company = settings.company
-	company = 'NFLX'
+	# company = 'NFLX'
 	print(company)
 	try:
 		utils.first_run()

@@ -177,16 +177,16 @@ if __name__ == '__main__':
 	company = settings.company
 	# company = 'GBTC'
 	try:
-		strategy = utils.the_best_known_strategy(company)
+		strategy = utils.the_best_known_strategy2(company)
 	except:
 		strategy = {
 			'company': company,
 	        'bar_size': '30 mins',
 	        'buy': {
-	            'TP': 15,
-	            'SL': 15,
+	            'TP': 4,
+	            'SL': 2,
 	            'stochastic': {
-		            'weight': 10,  # 10
+		            'weight': 0,  # 10
 		            'K_min': 19,
 		            'K_max': 29.,
 		            'D_min': 0.,
@@ -197,18 +197,18 @@ if __name__ == '__main__':
 		            'stoch_fast_avg': 4
 	            },
 	            'weekday': {
-		            'weight': 3,  # 3
+		            'weight': 0,  # 3
 		            'weekday': 1,
 	            },
 	            'volume_profile': {
-		            'weight': 4,  # 4
+		            'weight': 0,  # 4
 		            'locator': 14
 	            },
 	            'japanese_candlesticks': {
-		            'weight': 5  # 5
+		            'weight': 0  # 5
 	            },
 	            'SMA': {
-		            'weight': 4,  # 4
+		            'weight': 0,  # 4
 		            'period': 32
 	            },
 	            'RS': {
@@ -221,7 +221,7 @@ if __name__ == '__main__':
 	            'TP': 15,
 	            'SL': 15,
 	            'stochastic': {
-		            'weight': 10,  # 10
+		            'weight': 0,  # 10
 		            'K_min': 19,
 		            'K_max': 29,
 		            'D_min': 0,
@@ -232,18 +232,18 @@ if __name__ == '__main__':
 		            'stoch_fast_avg': 4
 	            },
 	            'weekday': {
-		            'weight': 3,  # 3
+		            'weight': 0,  # 3
 		            'weekday': 345
 	            },
 	            'volume_profile': {
-		            'weight': 4,  # 4
+		            'weight': 0,  # 4
 		            'locator': 14
 	            },
 	            'japanese_candlesticks': {
-		            'weight': 5  # 5
+		            'weight': 0  # 5
 	            },
 	            'SMA': {
-		            'weight': 4,  # 4
+		            'weight': 7,  # 4
 		            'period': 32
 	            },
 	            'RS': {
@@ -264,4 +264,4 @@ if __name__ == '__main__':
 	print(f'\nProfitability: {round(profit, 1)}%, max drawdown: {round(max_drawdown, 1)}%')
 	buy_and_hold_profitability = ((price_data[-1]['Close'] - price_data[0]['Open']) / price_data[0]['Open']) * 100
 	print(f'\nBuy and hold profitability: {round(buy_and_hold_profitability, 1)}%')
-	make_candlestick_chart.main(price_data, history, capital_by_date, company)
+	# make_candlestick_chart.main(price_data, history, capital_by_date, company)
