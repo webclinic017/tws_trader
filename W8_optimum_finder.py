@@ -128,9 +128,9 @@ def main(company):
 		for indicator in set(all_indicators):
 			params = tuple(set(getattr(Ranges, indicator).keys()))
 			params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
-			strategy = get_the_strategy(company, bar_size)
-			best_profit_ever = strategy['profit']
 			for action in set(('buy', 'sell')):
+				strategy = get_the_strategy(company, bar_size)
+				best_profit_ever = strategy['profit']
 				for values in itertools.product(*params_values):
 					for j in range(len(params)):
 						strategy[action][indicator][params[j]] = values[j]
@@ -144,7 +144,6 @@ def main(company):
 						profitability = round(profitability, 1)
 						strategy['profit'] = profitability
 						if profitability > best_profit_ever * 0.9:
-							best_profit_ever = profitability
 							if profitability > .0:
 								strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
 								save_the_best_strategy(strategy)
@@ -152,6 +151,7 @@ def main(company):
 								# Try different weights:
 								for action1 in set(('buy', 'sell')):
 									for indicator1 in set(all_indicators):
+										strategy = get_the_strategy(company, bar_size)
 										for score in Ranges.score:
 											strategy[action1][indicator1]['weight'] = score
 											profitability1, history, capital_by_date = W7_backtest.main(price_data, strategy)
@@ -171,21 +171,22 @@ def main(company):
 											})
 								# Try different TP/SL:
 								for action2 in set(('buy', 'sell')):
+									strategy = get_the_strategy(company, bar_size)
 									for TP, SL in itertools.product(Ranges.TP, Ranges.SL):
 										strategy[action2]['TP'] = TP
 										strategy[action2]['SL'] = SL
-										profitability1, history, capital_by_date = W7_backtest.main(price_data, strategy)
-										profitability1 = round(profitability1, 1)
-										strategy['profit'] = profitability1
-										if profitability1 > best_profit_ever:
-											best_profit_ever = profitability1
+										profitability2, history, capital_by_date = W7_backtest.main(price_data, strategy)
+										profitability2 = round(profitability2, 1)
+										strategy['profit'] = profitability2
+										if profitability2 > best_profit_ever:
+											best_profit_ever = profitability2
 											strategy['max_drawdown'] = round(
 												utils.max_drawdown_calculate(capital_by_date), 1)
 											save_the_best_strategy(strategy)
 										i += 1
 										print_status({
 											'i': i,
-											'profit': profitability1,
+											'profit': profitability2,
 											'best_profit': best_profit_ever,
 											'strategy': strategy
 										})
