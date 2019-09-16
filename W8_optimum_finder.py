@@ -38,15 +38,15 @@ class Ranges:
 		'locator': range(1, 100)
 	}
 	SMA = {
-		'period': range(1, 300)
+		'period': range(1, 301)
 	}
 	RS = {
-		'ZZ_movement': range(1, 40),
-		'close_index': range(1, 20)
+		'ZZ_movement': (1,),     # range(1, 40),
+		'close_index': (1,)     # range(1, 20)
 	}
 	# 	score = range(max_a+1): # this is correct, but gives us huge massive of combinations
 	# 	score = (0,1,2,3,4,5,6,10,15,20,25,40,80)
-	score = range(len(all_indicators) + 1)
+	score = range(0, len(all_indicators) + 1, -1)
 
 
 def save_the_best_strategy(the_best_strategy):
@@ -109,13 +109,13 @@ def get_the_first_strategy(company):
 			'buy': {'TP': 0, 'SL': 0},
 		    'sell': {'TP': 0, 'SL': 0}
 		}
-	for action in ('buy', 'sell'):
-		for indicator in all_indicators:
-			strategy[action][indicator] = {}
-			parameteres = getattr(Ranges, indicator)
-			for parameter in parameteres.keys():
-				strategy[action][indicator][parameter] = parameteres[parameter][0]
-			strategy[action][indicator]['weight'] = 0
+		for action in ('buy', 'sell'):
+			for indicator in all_indicators:
+				strategy[action][indicator] = {}
+				parameteres = getattr(Ranges, indicator)
+				for parameter in parameteres.keys():
+					strategy[action][indicator][parameter] = parameteres[parameter][0]
+				strategy[action][indicator]['weight'] = 0
 	return strategy
 
 
@@ -124,11 +124,12 @@ def main(company):
 	strategy = get_the_first_strategy(company)
 	best_profit_ever = strategy['profit']
 	for bar_size in set(Ranges.bar_size):
+		strategy['bar_size'] = bar_size
 		historical_data = utils.request_historical_data(company)
 		price_data = utils.get_price_data(company, bar_size)
 		for action in ('buy', 'sell'):
-			for indicator in all_indicators:
-				params = tuple(getattr(Ranges, indicator).keys())
+			for indicator in set(all_indicators):
+				params = tuple(set(getattr(Ranges, indicator).keys()))
 				params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
 				for values in itertools.product(*params_values):
 					for j in range(len(params)):
@@ -159,6 +160,7 @@ def main(company):
 
 if __name__ == '__main__':
 	company = settings.company
+	company = 'NFLX'
 	print(company)
 	try:
 		utils.first_run()

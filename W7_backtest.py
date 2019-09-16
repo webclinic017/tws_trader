@@ -175,81 +175,83 @@ def main(price_data, strategy):
 
 if __name__ == '__main__':
 	company = settings.company
+	company = 'GBTC'
 	try:
 		strategy = utils.the_best_known_strategy2(company)
 	except:
-		strategy = {'company': 'TSLA',
-		            'bar_size': '30 mins',
-		            'buy': {
-			            'TP': 15,
-			            'SL': 15,
-			            'stochastic': {
-				            'weight': 10,  # 10
-				            'K_min': 19,
-				            'K_max': 29.,
-				            'D_min': 0.,
-				            'D_max': 100.,
-				            'KD_difference': 'K>D',
-				            'stoch_period': 17,
-				            'stoch_slow_avg': 13,
-				            'stoch_fast_avg': 4
-			            },
-			            'weekday': {
-				            'weight': 3,  # 3
-				            'weekday': 1,
-			            },
-			            'volume_profile': {
-				            'weight': 4,  # 4
-				            'locator': 14
-			            },
-			            'japanese_candlesticks': {
-				            'weight': 5  # 5
-			            },
-			            'SMA': {
-				            'weight': 4,  # 4
-				            'period': 32
-			            },
-			            'RS': {
-				            'weight': 0,
-				            'ZZ_movement': 10,
-				            'close_index': 3
-			            }
-		            },
-		            'sell': {
-			            'TP': 15,
-			            'SL': 15,
-			            'stochastic': {
-				            'weight': 10,  # 10
-				            'K_min': 19,
-				            'K_max': 29,
-				            'D_min': 0,
-				            'D_max': 100,
-				            'KD_difference': 'K=D',
-				            'stoch_period': 17,
-				            'stoch_slow_avg': 13,
-				            'stoch_fast_avg': 4
-			            },
-			            'weekday': {
-				            'weight': 3,  # 3
-				            'weekday': 345
-			            },
-			            'volume_profile': {
-				            'weight': 4,  # 4
-				            'locator': 14
-			            },
-			            'japanese_candlesticks': {
-				            'weight': 5  # 5
-			            },
-			            'SMA': {
-				            'weight': 4,  # 4
-				            'period': 32
-			            },
-			            'RS': {
-				            'weight': 0,
-				            'ZZ_movement': 10,
-				            'close_index': 3
-			            }
-		            }
+		strategy = {
+			'company': company,
+	        'bar_size': '30 mins',
+	        'buy': {
+	            'TP': 15,
+	            'SL': 15,
+	            'stochastic': {
+		            'weight': 10,  # 10
+		            'K_min': 19,
+		            'K_max': 29.,
+		            'D_min': 0.,
+		            'D_max': 100.,
+		            'KD_difference': 'K>D',
+		            'stoch_period': 17,
+		            'stoch_slow_avg': 13,
+		            'stoch_fast_avg': 4
+	            },
+	            'weekday': {
+		            'weight': 3,  # 3
+		            'weekday': 1,
+	            },
+	            'volume_profile': {
+		            'weight': 4,  # 4
+		            'locator': 14
+	            },
+	            'japanese_candlesticks': {
+		            'weight': 5  # 5
+	            },
+	            'SMA': {
+		            'weight': 4,  # 4
+		            'period': 32
+	            },
+	            'RS': {
+		            'weight': 0,
+		            'ZZ_movement': 10,
+		            'close_index': 3
+	            }
+	        },
+	        'sell': {
+	            'TP': 15,
+	            'SL': 15,
+	            'stochastic': {
+		            'weight': 10,  # 10
+		            'K_min': 19,
+		            'K_max': 29,
+		            'D_min': 0,
+		            'D_max': 100,
+		            'KD_difference': 'K=D',
+		            'stoch_period': 17,
+		            'stoch_slow_avg': 13,
+		            'stoch_fast_avg': 4
+	            },
+	            'weekday': {
+		            'weight': 3,  # 3
+		            'weekday': 345
+	            },
+	            'volume_profile': {
+		            'weight': 4,  # 4
+		            'locator': 14
+	            },
+	            'japanese_candlesticks': {
+		            'weight': 5  # 5
+	            },
+	            'SMA': {
+		            'weight': 4,  # 4
+		            'period': 32
+	            },
+	            'RS': {
+		            'weight': 0,
+		            'ZZ_movement': 10,
+		            'close_index': 3
+	            }
+	        }
 		}
 	historical_data = utils.request_historical_data(strategy['company'])
 	price_data = utils.get_price_data(company, strategy['bar_size'])

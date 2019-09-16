@@ -28,12 +28,12 @@ Strategy:	{info[4]}
 
 
 def print_waiting():
-	working_sсhedule = utils.get_working_shedule('30 mins')
+	working_schedule = utils.get_working_shedule('30 mins')
 	# reset date in time now:
 	time_now_str = datetime.strftime(datetime.now(), '%H:%M')
 	time_now = datetime.strptime(time_now_str, '%H:%M')
 	times_to_await = []
-	for sheduled_time in working_sсhedule:
+	for sheduled_time in working_schedule:
 		sheduled_time = datetime.strptime(sheduled_time, '%H:%M')
 		if time_now > sheduled_time:
 			sheduled_time += timedelta(days=1)
@@ -51,18 +51,12 @@ def print_waiting():
 def main():
 	company = settings.company
 	strategy = utils.the_best_known_strategy(company)
-	working_sсhedule = utils.get_working_shedule(strategy['bar_size'])
+	working_schedule = utils.get_working_shedule(strategy['bar_size'])
 
 	utils.update_price_data(company, strategy['bar_size'])
 	historical_data = utils.request_historical_data(company)
 	price_data = utils.get_price_data(company, strategy['bar_size'])
-	price_data = stochastic.update(price_data,
-	                               strategy['indicators']['stochastic']['stoch_period'],
-				                   strategy['indicators']['stochastic']['stoch_slow_avg'],
-				                   strategy['indicators']['stochastic']['stoch_fast_avg'])
-	price_data = SMA.update(price_data, strategy['indicators']['SMA']['period'])
-	price_data = volume_profile.update(price_data, strategy['indicators']['volume_profile']['locator'], historical_data)
-	price_data = RS.update(price_data, strategy['indicators']['RS'], historical_data)
+	price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
 
 	open_position_type = W4_checking_account.what_position_is_open_now_for(company)
 	time.sleep(7)
@@ -71,28 +65,28 @@ def main():
 	available_funds = W4_checking_account.available_funds()
 	time.sleep(3)
 
-	signal = signals.signal(price_data, strategy['indicators'])
+	buy_signal, sell_signal = signals.check(price_data, strategy)
 
-	print_status((signal, open_position_type, price_data[-1], orderId, strategy))
+	print_status(((buy_signal, sell_signal), open_position_type, price_data[-1], orderId, strategy))
 
 	last_close_price = price_data[-1]['Close']
 	quantity = int((available_funds * settings.POSITION_QUANTITY) / last_close_price)
 	
-	if open_position_type == None:
-		if signal == 'buy':
+	if not open_position_type:
+		if buy_signal:
 			print(f'Buying {company}')
 			action = 'BUY'
 			stop_loss = round(last_close_price * (1 - strategy['stop_loss'] / 100), 2)
 			take_profit = round(last_close_price * (1 + strategy['take_profit'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
-		if signal == 'sell':
+		if sell_signal:
 			print(f'Selling {company}')
 			action = 'SELL'
 			stop_loss = round(last_close_price * (1 + strategy['stop_loss'] / 100), 2)
 			take_profit = round(last_close_price * (1 - strategy['take_profit'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'long':
-		if signal == 'sell':
+		if sell_signal:
 			print('Closing long by signal...')
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
@@ -103,7 +97,7 @@ def main():
 			print('...and open short')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'short':
-		if signal == 'buy':
+		if buy_signal:
 			print('Closing short by signal...')
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
@@ -120,7 +114,7 @@ def main():
 		weekday = datetime.strftime(datetime.now(), '%w')
 		if weekday not in ('6', '0'):
 			print_waiting()
-			if time_now_str in working_sсhedule:
+			if time_now_str in working_schedule:
 				time.sleep(15)
 				main()
 		else:

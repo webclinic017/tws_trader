@@ -3,7 +3,6 @@ import csv
 import time
 
 from ib.ext.Order import Order
-from ib.opt import Connection, message
 
 import utils
 from settings import TWS_CONNECTION
@@ -159,8 +158,7 @@ def close_position(company, order_id):
 
 
 if __name__ == "__main__":
-	company = 'TSLA'
-	order_id = 105
-	# place_bracket_order(company, 'BUY', order_id)
-	close_position(company, order_id)
-
+	company = 'GBTC'
+	orderId = W4_checking_account.next_valid_order_Id()
+	place_bracket_order(company, 'BUY', 5, 15, 100, orderId)
+	# close_position(company, orderId)
