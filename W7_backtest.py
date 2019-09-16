@@ -241,4 +241,4 @@ if __name__ == '__main__':
 	print(f'\nProfitability: {round(profit, 1)}%, max drawdown: {round(max_drawdown, 1)}%')
 	buy_and_hold_profitability = ((price_data[-1]['Close'] - price_data[0]['Open']) / price_data[0]['Open']) * 100
 	print(f'\nBuy and hold profitability: {round(buy_and_hold_profitability, 1)}%')
-	make_candlestick_chart.main(price_data, history, capital_by_date, company)
+	# make_candlestick_chart.main(price_data, history, capital_by_date, company)
