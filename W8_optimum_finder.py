@@ -50,7 +50,7 @@ class Ranges:
 
 
 def save_the_best_strategy(the_best_strategy):
-	file_with_the_best_strategies = f'tmp_data/!BestStrategies.pkl'
+	file_with_the_best_strategies = f'tmp_data/!BestStrategies-exp.pkl'
 	# Get all of the best strategies in list
 	the_best_strategies = []
 	with open(file_with_the_best_strategies, 'rb') as file:
