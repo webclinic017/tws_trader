@@ -120,7 +120,7 @@ def request_historical_data(company):
 def the_best_known_strategy(company):
 	the_best_strategy = None
 	strategies = []
-	with open(f'tmp_data/!BestStrategies.pkl', 'rb') as file:
+	with open(f'tmp_data/!BestStrategies-exp.pkl', 'rb') as file:
 		while True:
 			try:
 				strategies.append(pickle.load(file))
