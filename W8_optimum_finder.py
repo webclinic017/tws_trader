@@ -136,8 +136,8 @@ def main(company):
 						strategy[action][indicator][params[j]] = values[j]
 					if indicator in ('stochastic', 'RS', 'SMA', 'volume_profile') or i == 1:
 						price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
-					for score, TP, SL in itertools.product(Ranges.score, Ranges.TP, Ranges.SL):
-						strategy[action][indicator]['weight'] = score
+					strategy[action][indicator]['weight'] = Ranges.score[0]
+					for TP, SL in itertools.product(Ranges.TP, Ranges.SL):
 						strategy[action]['TP'] = TP
 						strategy[action]['SL'] = SL
 						if not_absurd(strategy):
@@ -149,6 +149,22 @@ def main(company):
 								if profitability > .0:
 									strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
 									save_the_best_strategy(strategy)
+
+									# Try different weights:
+									for action1 in set(('buy', 'sell')):
+										for indicator1 in set(all_indicators):
+											for score in Ranges.score:
+												strategy[action1][indicator1]['weight'] = score
+												profitability1, history, capital_by_date = W7_backtest.main(price_data, strategy)
+												profitability1 = round(profitability1, 1)
+												strategy['profit'] = profitability1
+												if profitability1 > best_profit_ever:
+													best_profit_ever = profitability1
+													strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
+													save_the_best_strategy(strategy)
+												i += 1
+									strategy = get_the_strategy(company, bar_size)
+
 							print_status({
 								'i': i,
 								'profit': profitability,
