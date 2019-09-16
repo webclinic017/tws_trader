@@ -121,7 +121,7 @@ def get_the_strategy(company, bar_size):
 
 
 def main(company):
-	i = 0
+	i = 1
 	for bar_size in Ranges.bar_size:
 		historical_data = utils.request_historical_data(company)
 		price_data = utils.get_price_data(company, bar_size)
@@ -134,7 +134,7 @@ def main(company):
 				for values in itertools.product(*params_values):
 					for j in range(len(params)):
 						strategy[action][indicator][params[j]] = values[j]
-					if indicator in ('stochastic', 'RS', 'SMA', 'volume_profile'):
+					if indicator in ('stochastic', 'RS', 'SMA', 'volume_profile') or i == 1:
 						price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
 					for score, TP, SL in itertools.product(Ranges.score, Ranges.TP, Ranges.SL):
 						strategy[action][indicator]['weight'] = score
