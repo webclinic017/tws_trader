@@ -16,35 +16,6 @@ from indicators import SMA
 from indicators import stochastic
 from indicators import volume_profile
 
-# def clear_all_about_collected_price_data():
-# 	open('worker1/Errors.csv', "w+").close()
-# 	open('!MyCompanies.csv', "w+").close()
-# 	open('!RejectedCompanies.csv', "w+").close()
-# 
-# 
-# def set_with_my_companies():
-# 	companies_with_data = set()
-# 	with open(f'!MyCompanies.csv', 'r', encoding='utf-8') as file:
-# 		for x in csv.reader(file):
-# 			for y in x:
-# 				companies_with_data = set(y.split(';'))
-# 				companies_with_data -= {''}
-# 	return companies_with_data
-# 
-# 
-# def my_range(start, stop, step=0.5):
-# 	float_list = []
-# 	x = start
-# 	while x < stop:
-# 		float_list.append(round(x, 1))
-# 		x += step
-# 	return tuple(float_list)
-# 
-# 
-# def get_price_data_df(company, bar_size):
-# 	price_data_df = pd.read_csv(f'historical_data/{company} {bar_size}.csv', index_col=0, sep=';')
-# 	return price_data_df
-
 
 def first_run():
 	if not os.path.exists('tmp_data'):

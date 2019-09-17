@@ -126,14 +126,15 @@ def main(company):
 		historical_data = utils.request_historical_data(company)
 		price_data = utils.get_price_data(company, bar_size)
 		for indicator in set(all_indicators):
-			params = tuple(set(getattr(Ranges, indicator).keys()))
+			params = tuple(getattr(Ranges, indicator).keys())
 			params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
 			for action in set(('buy', 'sell')):
 				strategy = get_the_strategy(company, bar_size)
-				best_profit_ever = strategy['profit']
 				for values in itertools.product(*params_values):
 					for j in range(len(params)):
 						strategy[action][indicator][params[j]] = values[j]
+					if i == 1:
+						best_profit_ever = strategy['profit']
 					if indicator in ('stochastic', 'RS', 'SMA', 'volume_profile') or i == 1:
 						price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
 					strategy[action][indicator]['weight'] = Ranges.score[-1]
@@ -143,16 +144,16 @@ def main(company):
 						profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
 						profitability = round(profitability, 1)
 						strategy['profit'] = profitability
-						if profitability > best_profit_ever * 0.9:
+						if profitability > best_profit_ever:
 							if profitability > .0:
 								strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
 								save_the_best_strategy(strategy)
 
 								# Try different weights:
 								for action1 in set(('buy', 'sell')):
-									for indicator1 in set(all_indicators):
-										strategy = get_the_strategy(company, bar_size)
-										for score in Ranges.score:
+									for score in Ranges.score:
+										for indicator1 in set(all_indicators):
+											strategy = get_the_strategy(company, bar_size)
 											strategy[action1][indicator1]['weight'] = score
 											profitability1, history, capital_by_date = W7_backtest.main(price_data, strategy)
 											profitability1 = round(profitability1, 1)

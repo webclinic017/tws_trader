@@ -177,7 +177,7 @@ if __name__ == '__main__':
 	company = settings.company
 	# company = 'GBTC'
 	try:
-		strategy = utils.the_best_known_strategy2(company)
+		strategy = utils.the_best_known_strategy(company)
 	except:
 		strategy = {
 			'company': company,

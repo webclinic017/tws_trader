@@ -73,20 +73,20 @@ def main():
 	quantity = int((available_funds * settings.POSITION_QUANTITY) / last_close_price)
 	
 	if not open_position_type:
-		if buy_signal:
+		if buy_signal and not sell_signal:
 			print(f'Buying {company}')
 			action = 'BUY'
 			stop_loss = round(last_close_price * (1 - strategy['stop_loss'] / 100), 2)
 			take_profit = round(last_close_price * (1 + strategy['take_profit'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
-		if sell_signal:
+		if sell_signal and not buy_signal:
 			print(f'Selling {company}')
 			action = 'SELL'
 			stop_loss = round(last_close_price * (1 + strategy['stop_loss'] / 100), 2)
 			take_profit = round(last_close_price * (1 - strategy['take_profit'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'long':
-		if sell_signal:
+		if sell_signal and not buy_signal:
 			print('Closing long by signal...')
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
@@ -97,7 +97,7 @@ def main():
 			print('...and open short')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'short':
-		if buy_signal:
+		if buy_signal and not sell_signal:
 			print('Closing short by signal...')
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
