@@ -22,7 +22,7 @@ def create_TP_order(action, take_profit, quantity, parent_order_id):
 	tp = Order()
 	tp.m_orderType = 'LMT'
 	tp.m_totalQuantity = quantity
-	tp.m_action = "SELL" if action == "BUY" else "BUY"
+	tp.m_action = "SELL" if action == "buy" else "BUY"
 	tp.m_lmtPrice = take_profit
 	tp.order_id = parent_order_id + 1
 	tp.m_tif = 'GTC'
@@ -33,7 +33,7 @@ def create_SL_order(action, stop_loss, quantity, parent_order_id):
 	sl = Order()
 	sl.m_orderType = 'STP'
 	sl.m_totalQuantity = quantity
-	sl.m_action = "SELL" if action == "BUY" else "BUY"
+	sl.m_action = "SELL" if action == "buy" else "BUY"
 	sl.m_auxPrice = stop_loss
 	sl.order_id = parent_order_id + 2
 	sl.m_tif = 'GTC'

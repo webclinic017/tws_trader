@@ -1,8 +1,4 @@
-import time
-
 import matplotlib.pyplot as plt
-from mpl_finance import candlestick_ohlc
-
 
 
 def make_plot(volume_profile):
@@ -134,49 +130,4 @@ if __name__ == '__main__':
 	for row in price_data[:5]:
 		print(row)
 
-
 # NOW: от текущей цены выше и ниже на locator цен проверяем суммы этих объемов. Цена будет стремиться туда, где совокупный объем выше.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

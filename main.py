@@ -75,15 +75,15 @@ def main():
 	if not open_position_type:
 		if buy_signal and not sell_signal:
 			print(f'Buying {company}')
-			action = 'BUY'
-			stop_loss = round(last_close_price * (1 - strategy['stop_loss'] / 100), 2)
-			take_profit = round(last_close_price * (1 + strategy['take_profit'] / 100), 2)
+			action = 'buy'
+			stop_loss = round(last_close_price * (1 - strategy[action]['SL'] / 100), 2)
+			take_profit = round(last_close_price * (1 + strategy[action]['TP'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 		if sell_signal and not buy_signal:
 			print(f'Selling {company}')
-			action = 'SELL'
-			stop_loss = round(last_close_price * (1 + strategy['stop_loss'] / 100), 2)
-			take_profit = round(last_close_price * (1 - strategy['take_profit'] / 100), 2)
+			action = 'sell'
+			stop_loss = round(last_close_price * (1 + strategy[action]['SL'] / 100), 2)
+			take_profit = round(last_close_price * (1 - strategy[action]['TP'] / 100), 2)
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'long':
 		if sell_signal and not buy_signal:
@@ -91,9 +91,9 @@ def main():
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
 			time.sleep(30)
-			action = 'SELL'
-			stop_loss = round(last_close_price * (1 + strategy['stop_loss'] / 100), 2)
-			take_profit = round(last_close_price * (1 - strategy['take_profit'] / 100), 2)
+			action = 'sell'
+			stop_loss = round(last_close_price * (1 + strategy[action]['SL'] / 100), 2)
+			take_profit = round(last_close_price * (1 - strategy[action]['TP'] / 100), 2)
 			print('...and open short')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	if open_position_type == 'short':
@@ -102,9 +102,9 @@ def main():
 			W6_position_manager.close_position(company, orderId)
 			orderId += 1
 			time.sleep(30)
-			action = 'BUY'
-			stop_loss = round(last_close_price * (1 - strategy['stop_loss'] / 100), 2)
-			take_profit = round(last_close_price * (1 + strategy['take_profit'] / 100), 2)
+			action = 'buy'
+			stop_loss = round(last_close_price * (1 - strategy[action]['SL'] / 100), 2)
+			take_profit = round(last_close_price * (1 + strategy[action]['TP'] / 100), 2)
 			print('...and open long')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	time.sleep(60)
