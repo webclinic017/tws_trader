@@ -10,21 +10,19 @@ mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
 
-def main(price_data, history, capital_by_date, company):
+def main(price_data, history, company):
 	fig = plt.figure()
 	ax_main = fig.add_subplot(1, 1, 1)
 
 # Capital	
-	koef = capital_by_date[0][1] / float(price_data[0]['Open'])	# history[1][3]
+	koef = price_data[0]['Capital'] / float(price_data[0]['Open'])
 	capital_x = []
 	capital_y = []
 	dates_dict = {}
-	x = 1
-	for row in capital_by_date:
-		capital_x.append(x)
-		dates_dict[row[0]] = x
-		x += 1
-		capital_y.append(row[1] / koef)
+	for i, row in enumerate(price_data):
+		capital_x.append(i + 1)
+		capital_y.append(row['Capital'] / koef)
+		dates_dict[row['Datetime']] = i + 1
 	buy_and_hold_profitability = round((float(price_data[-1]['Close']) - float(price_data[0]['Open'])) / float(price_data[1]['Open']) * 100, 1)
 	profitability = round((capital_y[-1] - capital_y[0]) / capital_y[0] * 100, 1)
 	ax_main.plot(capital_x, capital_y, label='capital', linewidth = 0.7)

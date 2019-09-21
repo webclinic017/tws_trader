@@ -95,9 +95,9 @@ def update(price_data, locator, historical_data):
 
 def signal(price_data, *args):
 	action = args[1]
-	if action == 'buy' and price_data[-1]['VP signal'] == 1:
+	if action == 'buy' and price_data[-1].get('VP signal') == 1:
 		return 1.
-	if action == 'sell' and price_data[-1]['VP signal'] == -1:
+	if action == 'sell' and price_data[-1].get('VP signal') == -1:
 		return 1.
 	return 0.
 

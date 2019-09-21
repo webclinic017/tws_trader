@@ -1,15 +1,15 @@
 import glob
-import itertools
 import os
 import pickle
 import random
-import threading
-import time
 
 import settings
 import utils
 import W7_backtest
 
+POP_SIZE = 500
+MAX_GENERATIONS = 1000
+MUTATION_PROBABILITY = .25   # how many strategies in population will mutate
 
 modules = glob.glob(os.path.join(os.path.dirname(__file__), 'indicators', '*.py'))
 all_indicators = [os.path.basename(f)[:-3] for f in modules if f.endswith('.py') and not f.endswith('__init__.py')]
@@ -76,201 +76,127 @@ def save_the_best_strategy(the_best_strategy):
 		pickle.dump(strategy, open(file_with_the_best_strategies, 'ab'))
 
 
-def print_status(info):
-	print(f"""            
-Max profit: {info['max']}%               
-Profit now: {info['profit']}%       
-Attempt #:  {info['i']}          
-{info['strategy']}                                
-""")
-	print('\033[F' * 12)
-
-
-def is_normal(strategy):
+def random_strategy(company):
+	strategy = {
+		'company': company,
+		'profit': None,
+		'max_drawdown': None,
+		'bar_size': random.choice(Ranges.bar_size)
+	}
 	for action in ('buy', 'sell'):
+		strategy[action] = {}
+		strategy[action]['TP'] = random.choice(Ranges.TP)
+		strategy[action]['SL'] = random.choice(Ranges.SL)
+		for indicator in all_indicators:
+			strategy[action][indicator] = {'weight': random.choice(Ranges.score)}
+			params = tuple(getattr(Ranges, indicator).keys())
+			for j in range(len(params)):
+				strategy[action][indicator][params[j]] = random.choice(getattr(Ranges, indicator)[params[j]])
+		# check if strategy is normal
 		if strategy[action]['stochastic']['K_min'] > strategy[action]['stochastic']['K_max']:
-			return False
+			return None
 		if strategy[action]['stochastic']['D_min'] > strategy[action]['stochastic']['D_max']:
-			return False
-	return True
+			return None
+	return strategy
 
 
-# def get_empty_strategy(company, bar_size):
-# 	strategy = {
-# 		'company': company,
-# 		'profit': None,
-# 		'max_drawdown': None,
-# 		'bar_size': bar_size,
-# 		'buy': {'TP': 0, 'SL': 0},
-# 	    'sell': {'TP': 0, 'SL': 0}
-# 	}
-# 	for action in ('buy', 'sell'):
-# 		for indicator in all_indicators:
-# 			strategy[action][indicator] = {}
-# 			parameteres = getattr(Ranges, indicator)
-# 			for parameter in parameteres.keys():
-# 				strategy[action][indicator][parameter] = parameteres[parameter][0]
-# 			strategy[action][indicator]['weight'] = 0
-# 	return strategy
-#
-#
-# def main(company):
-# 	the_best_strategy = None
-# 	historical_data = utils.request_historical_data(company)
-#
-# 	def find_the_bests_for_indicators():
-# 		for bar_size in Ranges.bar_size:
-# 			the_best_strategy = get_empty_strategy(company, bar_size)
-# 			for indicator in set(all_indicators):
-# 				params = tuple(getattr(Ranges, indicator).keys())
-# 				params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
-# 				for action in set(('buy', 'sell')):
-# 					variants = []
-# 					for values in itertools.product(*params_values):
-# 						strategy = get_empty_strategy(company, bar_size)
-# 						strategy[action][indicator]['weight'] = Ranges.score[-1]
-# 						for j in range(len(params)):
-# 							if params[j] not in ('K_min', 'K_max', 'D_min', 'D_max'):
-# 								strategy[action][indicator][params[j]] = values[j]
-# 							else:
-# 								strategy[action][indicator][params[j]] = values[0]
-# 						if not_absurd(strategy):
-# 							variants.append(strategy)
-# 							total = f'{len(variants):,}'
-# 							print(f'  Action: {action}, indicator: {indicator}. We\'ve already got {total} strategies        ')
-# 							print('\033[F' * 2)
-#
-# 					the_best_strategy[action][indicator] = backtesting_indicators_variants(historical_data, variants)[action][indicator].copy()
-#
-#
-# 	def backtesting_indicators_variants(historical_data, variants):
-# 		the_best_profit_for_action_indicator = 0
-# 		the_best_strat_for_ind = variants[0]
-# 		for i in range(1, len(list(variants).copy()) + 1):
-# 			if i <= 10:
-# 				try:
-# 					strategy = variants.pop(random.randint(0, len(variants) - 1))
-# 				except(ValueError):
-# 					return the_best_strat_for_ind
-# 				price_data = utils.get_price_data(company, strategy['bar_size'])
-# 				price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
-# 				for TP in range(5):
-# 					strategy['buy']['TP'] = Ranges.TP[random.randint(0, len(Ranges.TP) - 1)]
-# 					strategy['sell']['TP'] = Ranges.TP[random.randint(0, len(Ranges.TP) - 1)]
-# 					for SL in range(5):
-# 						strategy['buy']['SL'] = Ranges.SL[random.randint(0, len(Ranges.SL) - 1)]
-# 						strategy['sell']['SL'] = Ranges.SL[random.randint(0, len(Ranges.SL) - 1)]
-# 						profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
-# 						profitability = round(profitability, 1)
-# 						if strategy and profitability > the_best_profit_for_action_indicator:
-# 							the_best_profit_for_action_indicator = profitability
-# 							the_best_strat_for_ind = strategy.copy()
-# 						print_status({
-# 							'done': i,
-# 							'remains': f'{len(variants.copy())}',
-# 							'profit': profitability,
-# 							'max': the_best_profit_for_action_indicator,
-# 							'strategy': strategy
-# 						})
-# 		return the_best_strat_for_ind
-#
-#
-#
-#
-#
-#
-# 		# # Try different TP/SL:
-# 		# for action2 in set(('buy', 'sell')):
-# 		# 	for TP, SL in itertools.product(Ranges.TP, Ranges.SL):
-# 		# 		strategy[action2]['TP'] = TP
-# 		# 		strategy[action2]['SL'] = SL
-#
-# 		# if not_absurd(strategy):
-#
-#
-# 		the_best_strat_for_ind = None
-# 		for i in range(1, len(list(variants).copy()) + 1):
-# 			try:
-# 				strategy = variants.pop(random.randint(0, len(variants) - 1))
-# 			except(ValueError):
-# 				return None
-# 			price_data = utils.get_price_data(company, strategy['bar_size'])
-# 			price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
-# 			profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
-# 			profitability = round(profitability, 1)
-# 			if strategy and profitability > the_best_profit_for_action_indicator:
-# 				the_best_profit_for_action_indicator = profitability
-# 				the_best_strat_for_ind = strategy.copy()
-# 			print_status({
-# 				'i': f'{i}/{len(variants.copy())}',
-# 				'profit': profitability,
-# 				'strategy': strategy
-# 			})
-#
-# 	find_the_bests_for_indicators()
-# 	print('\n\n\n\n\n\n', 'THE BEST INDICATORS ARE:\n', the_best_strategy)
-# 	find_the_best_weights()
-
-def main(company):
-
-	def random_strategy():
-		strategy = {
-			'company': company,
-			'profit': None,
-			'max_drawdown': None,
-			'bar_size': random.choice(Ranges.bar_size)
-		}
-		for action in ('buy', 'sell'):
-			strategy[action] = {}
-			strategy[action]['TP'] = random.choice(Ranges.TP)
-			strategy[action]['SL'] = random.choice(Ranges.SL)
-			for indicator in all_indicators:
-				strategy[action][indicator] = {'weight': random.choice(Ranges.score)}
-				params = tuple(getattr(Ranges, indicator).keys())
-				params_values = tuple(x for x in (getattr(Ranges, indicator)[y] for y in params))
-				for j in range(len(params)):
-					strategy[action][indicator][params[j]] = random.choice(params_values[j])
-		if not is_normal(strategy):
-			random_strategy()
-		return strategy
+def fitness_function(strategy, historical_data):
+	try:
+		the_best_strategy = utils.the_best_known_strategy(strategy['company'])
+	except:
+		the_best_strategy = {'profit': 0}
+	price_data = utils.get_price_data(strategy['company'], strategy['bar_size'])
+	price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
+	profitability, history, price_data = W7_backtest.main(strategy, price_data)
+	profitability = round(profitability, 1)
+	print(f'Backtested: {profitability}', end='')
+	strategy['profit'] = profitability
+	if strategy['profit'] > the_best_strategy['profit']:
+		the_best_strategy = strategy.copy()
+		strategy['max_drawdown'] = round(utils.max_drawdown_calculate(price_data), 1)
+		save_the_best_strategy(strategy)
+	return the_best_strategy
 
 
-	def random_backtest(strategy, historical_data):
-		try:
-			the_best_profit_ever = utils.the_best_known_strategy(strategy['company'])['profit']
-		except:
-			the_best_profit_ever = 0
-		price_data = utils.get_price_data(company, strategy['bar_size'])
-		price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
-		profitability, history, capital_by_date = W7_backtest.main(price_data, strategy)
-		profitability = round(profitability, 1)
-		if profitability > the_best_profit_ever:
-			the_best_profit_ever = profitability
-			strategy['profit'] = profitability
-			strategy['max_drawdown'] = round(utils.max_drawdown_calculate(capital_by_date), 1)
-			save_the_best_strategy(strategy)
-		return profitability, the_best_profit_ever
+def chose_by_tournament(population):
+	candidate1 = random.choice(population)
+	candidate2 = random.choice(population)
+	if candidate1['profit'] > candidate2['profit']:
+		return candidate1
+	else:
+		return candidate2
 
 
+def crossover(mother, father):
+	baby1 = {
+		'company': mother['company'],
+		'profit': None,
+		'max_drawdown': None,
+		'bar_size': random.choice((mother['bar_size'], father['bar_size']))
+	}
+	baby2 = {
+		'company': mother['company'],
+		'profit': None,
+		'max_drawdown': None,
+		'bar_size': random.choice((mother['bar_size'], father['bar_size']))
+	}
+	for action in ('buy', 'sell'):
+		baby1[action] = {}
+		baby2[action] = {}
+		baby1[action]['TP'] = random.choice((mother[action]['TP'], father[action]['TP']))
+		baby2[action]['TP'] = random.choice((mother[action]['TP'], father[action]['TP']))
+		baby1[action]['SL'] = random.choice((mother[action]['SL'], father[action]['SL']))
+		baby2[action]['SL'] = random.choice((mother[action]['SL'], father[action]['SL']))
+		for indicator in all_indicators:
+			baby1[action][indicator] = {'weight': random.choice((mother[action][indicator]['weight'], father[action][indicator]['weight']))}
+			baby2[action][indicator] = {'weight': random.choice((mother[action][indicator]['weight'], father[action][indicator]['weight']))}
+			params = tuple(getattr(Ranges, indicator).keys())
+			for j in range(len(params)):
+				baby1[action][indicator][params[j]] = random.choice((mother[action][indicator][params[j]],
+				                                                     father[action][indicator][params[j]]))
+				baby2[action][indicator][params[j]] = random.choice((mother[action][indicator][params[j]],
+				                                                     father[action][indicator][params[j]]))
+	return baby1, baby2
+
+
+def genetic_algorithm(company):
 	historical_data = utils.request_historical_data(company)
-	i = 1
-	while True:
-		strategy = random_strategy()
-		profitability, the_best_profit_ever = random_backtest(strategy, historical_data)
-		print_status({
-			'i': f'{i:,}',
-			'profit': profitability,
-			'strategy': strategy,
-			'max': the_best_profit_ever
-		})
-		i += 1
+	monitoring = []
+	the_best_strategy = None
 
+	# Create 1st population
+	population = []
+	while len(population) < POP_SIZE:
+		strategy = random_strategy(company)
+		if strategy:
+			population.append(strategy)
 
+	for i in range(MAX_GENERATIONS):
+		# Backtest the whole population and get the best result
+		for strategy in population:
+			the_best_strategy = fitness_function(strategy, historical_data)
 
+		# Create new generation
+		new_population = []
+		for j in range(int(POP_SIZE / 2)):
+			mother = chose_by_tournament(population)
+			father = chose_by_tournament(population)
+			baby1, baby2 = crossover(mother, father)
+			new_population.append(baby1)
+			new_population.append(baby2)
+		population = new_population
 
+		# Mutation of the new population
+		number_of_mutations = int(MUTATION_PROBABILITY * len(population))
+		j = 1
+		while j < number_of_mutations:
+			mutant_strategy = random_strategy(company).copy()
+			if mutant_strategy:
+				population[random.choice(range(len(population)))] = mutant_strategy
+				j += 1
 
-
-
+		monitoring.append({'Generation': i + 1, 'Profit': the_best_strategy['profit']})
+		print(monitoring[-1])
 
 
 if __name__ == '__main__':
@@ -279,6 +205,6 @@ if __name__ == '__main__':
 	print(company)
 	try:
 		utils.first_run()
-		main(company)
+		genetic_algorithm(company)
 	except(KeyboardInterrupt):
 		print('\n' * 10, 'Bye!')
