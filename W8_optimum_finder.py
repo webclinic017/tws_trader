@@ -7,7 +7,7 @@ import settings
 import utils
 import W7_backtest
 
-POP_SIZE = 500
+POP_SIZE = 300
 MAX_GENERATIONS = 1000
 MUTATION_PROBABILITY = .25   # how many strategies in population will mutate
 
@@ -158,6 +158,33 @@ def crossover(mother, father):
 	return baby1, baby2
 
 
+def mutation(population, number_of_mutants):
+	mutants = []
+	# 1st half of mutations = reversed the worst strategies
+	# find (number_of_mutations / 2) the worst strategies and pop them from population
+	while len(mutants) < number_of_mutants / 2:
+		the_worst_index = 0
+		the_worst_strategy = population[the_worst_index]
+		for i, strat in enumerate(population.copy()):
+			if strat['profit'] < the_worst_strategy['profit']:
+				the_worst_index = i
+				the_worst_strategy = population[the_worst_index]
+		# make reverse of the worst strategy
+		the_worst_strategy = population.pop(the_worst_index)
+		new_strategy = the_worst_strategy.copy()
+		new_strategy['buy'] = the_worst_strategy['sell']
+		new_strategy['sell'] = the_worst_strategy['buy']
+		new_strategy['profit'] = None
+		mutants.append(new_strategy)
+	# 2nd half of mutations = random strategies
+	while len(mutants) < number_of_mutants:
+		random_strat = random_strategy(population[0]['company'])
+		if random_strat:
+			mutants.append(random_strat)
+	return mutants
+
+
+
 def genetic_algorithm(company):
 	historical_data = utils.request_historical_data(company)
 	monitoring = []
@@ -173,31 +200,26 @@ def genetic_algorithm(company):
 
 	for i in range(MAX_GENERATIONS):
 		# Backtest the whole population and get the best result
-		average_profit = None
+		average_profit = 0
 		for strategy in population:
 			the_best_strategy = fitness_function(strategy, historical_data)
 			average_profit += strategy['profit'] / POP_SIZE
 
 		# Create new generation
-		new_population = []
-		for j in range(int(POP_SIZE / 2)):
+		new_generation = []
+		for j in range(int(POP_SIZE * (1 - MUTATION_PROBABILITY))):
 			mother = chose_by_tournament(population)
 			father = chose_by_tournament(population)
 			baby1, baby2 = crossover(mother, father)
-			new_population.append(baby1)
-			new_population.append(baby2)
-		population = new_population
+			new_generation.append(baby1)
+			new_generation.append(baby2)
 
 		# Mutation of the new population
-		number_of_mutations = int(MUTATION_PROBABILITY * len(population))
-		j = 1
-		while j < number_of_mutations:
-			mutant_strategy = random_strategy(company)
-			if mutant_strategy:
-				population[random.choice(range(len(population)))] = mutant_strategy
-				j += 1
+		number_of_mutants = int(MUTATION_PROBABILITY * len(population))
+		mutants = mutation(population, number_of_mutants)
 
-		monitoring.append({f"Generation # {i + 1} is done! Avg.profit: {round(average_profit, 1)}%. Max profit: {the_best_strategy['profit']}%")
+		population = new_generation.extend(mutants)
+		monitoring.append(f"Generation # {i + 1} is done! Avg.profit: {round(average_profit, 1)}%. Max profit: {the_best_strategy['profit']}%")
 		print(monitoring[-1])
 
 
