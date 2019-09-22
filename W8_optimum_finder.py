@@ -109,7 +109,6 @@ def fitness_function(strategy, historical_data):
 	price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
 	profitability, history, price_data = W7_backtest.main(strategy, price_data)
 	profitability = round(profitability, 1)
-	print(f'Backtested: {profitability}', end='')
 	strategy['profit'] = profitability
 	if strategy['profit'] > the_best_strategy['profit']:
 		the_best_strategy = strategy.copy()
@@ -171,10 +170,13 @@ def genetic_algorithm(company):
 		if strategy:
 			population.append(strategy)
 
+
 	for i in range(MAX_GENERATIONS):
 		# Backtest the whole population and get the best result
+		average_profit = None
 		for strategy in population:
 			the_best_strategy = fitness_function(strategy, historical_data)
+			average_profit += strategy['profit'] / POP_SIZE
 
 		# Create new generation
 		new_population = []
@@ -190,12 +192,12 @@ def genetic_algorithm(company):
 		number_of_mutations = int(MUTATION_PROBABILITY * len(population))
 		j = 1
 		while j < number_of_mutations:
-			mutant_strategy = random_strategy(company).copy()
+			mutant_strategy = random_strategy(company)
 			if mutant_strategy:
 				population[random.choice(range(len(population)))] = mutant_strategy
 				j += 1
 
-		monitoring.append({'Generation': i + 1, 'Profit': the_best_strategy['profit']})
+		monitoring.append({f"Generation # {i + 1} is done! Avg.profit: {round(average_profit, 1)}%. Max profit: {the_best_strategy['profit']}%")
 		print(monitoring[-1])
 
 
