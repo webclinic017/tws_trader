@@ -53,7 +53,7 @@ class Ranges:
 
 
 def save_the_best_strategy(the_best_strategy):
-	file_with_the_best_strategies = f'tmp_data/!BestStrategies-exp.pkl'
+	file_with_the_best_strategies = f'tmp_data/!BestStrategies.pkl'
 	# Get all of the best strategies in list
 	the_best_strategies = []
 	with open(file_with_the_best_strategies, 'rb') as file:
@@ -110,6 +110,8 @@ def fitness_function(strategy, historical_data):
 	profitability, history, price_data = W7_backtest.main(strategy, price_data)
 	profitability = round(profitability, 1)
 	strategy['profit'] = profitability
+	print(f'    {profitability} %                 ')
+	print('\033[F' * 2)
 	if strategy['profit'] > the_best_strategy['profit']:
 		the_best_strategy = strategy.copy()
 		strategy['max_drawdown'] = round(utils.max_drawdown_calculate(price_data), 1)
@@ -201,13 +203,16 @@ def genetic_algorithm(company):
 	for i in range(MAX_GENERATIONS):
 		# Backtest the whole population and get the best result
 		average_profit = 0
+		x = 1
 		for strategy in population:
+			print(f'  {x}/{len(population)}', end=' ')
+			x += 1
 			the_best_strategy = fitness_function(strategy, historical_data)
 			average_profit += strategy['profit'] / POP_SIZE
 
 		# Create new generation
 		new_generation = []
-		for j in range(int(POP_SIZE * (1 - MUTATION_PROBABILITY))):
+		for j in range(int((POP_SIZE * (1 - MUTATION_PROBABILITY)) / 2)):
 			mother = chose_by_tournament(population)
 			father = chose_by_tournament(population)
 			baby1, baby2 = crossover(mother, father)
@@ -215,11 +220,12 @@ def genetic_algorithm(company):
 			new_generation.append(baby2)
 
 		# Mutation of the new population
-		number_of_mutants = int(MUTATION_PROBABILITY * len(population))
+		number_of_mutants = int(POP_SIZE * MUTATION_PROBABILITY)
 		mutants = mutation(population, number_of_mutants)
 
-		population = new_generation.extend(mutants)
-		monitoring.append(f"Generation # {i + 1} is done! Avg.profit: {round(average_profit, 1)}%. Max profit: {the_best_strategy['profit']}%")
+		new_generation.extend(mutants)
+		population = new_generation
+		monitoring.append(f"Generation #{i + 1} is done! Avg.profit:    {round(average_profit, 1)}  %. Max profit:  {the_best_strategy['profit']}   %")
 		print(monitoring[-1])
 
 

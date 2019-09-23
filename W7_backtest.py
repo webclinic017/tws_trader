@@ -122,8 +122,8 @@ if __name__ == '__main__':
 			'company': company,
 	        'bar_size': '30 mins',
 	        'buy': {
-	            'TP': -4,
-	            'SL': -7,
+	            'TP': 15,
+	            'SL': 15,
 	            'stochastic': {
 		            'weight': 10,  # 10
 		            'K_min': 19,
@@ -131,23 +131,23 @@ if __name__ == '__main__':
 		            'D_min': 0.,
 		            'D_max': 100.,
 		            'KD_difference': 'K>D',
-		            'stoch_period': 17,
-		            'stoch_slow_avg': 13,
-		            'stoch_fast_avg': 4
+		            'stoch_period': 19,
+		            'stoch_slow_avg': 12,
+		            'stoch_fast_avg': 5
 	            },
 	            'weekday': {
-		            'weight': 0,  # 3
+		            'weight': 3,  # 3
 		            'weekday': 1,
 	            },
 	            'volume_profile': {
-		            'weight': 0,  # 4
+		            'weight': 4,  # 4
 		            'locator': 14
 	            },
 	            'japanese_candlesticks': {
-		            'weight': 0  # 5
+		            'weight': 5  # 5
 	            },
 	            'SMA': {
-		            'weight': 0,  # 4
+		            'weight': 4,  # 4
 		            'period': 32
 	            },
 	            'RS': {
@@ -160,29 +160,29 @@ if __name__ == '__main__':
 	            'TP': 15,
 	            'SL': 15,
 	            'stochastic': {
-		            'weight': 0,  # 10
+		            'weight': 10,  # 10
 		            'K_min': 19,
 		            'K_max': 29,
 		            'D_min': 0,
 		            'D_max': 100,
 		            'KD_difference': 'K=D',
-		            'stoch_period': 17,
-		            'stoch_slow_avg': 13,
-		            'stoch_fast_avg': 4
+		            'stoch_period': 19,
+		            'stoch_slow_avg': 12,
+		            'stoch_fast_avg': 5
 	            },
 	            'weekday': {
-		            'weight': 0,  # 3
+		            'weight': 3,  # 3
 		            'weekday': 345
 	            },
 	            'volume_profile': {
-		            'weight': 0,  # 4
+		            'weight': 4,  # 4
 		            'locator': 14
 	            },
 	            'japanese_candlesticks': {
-		            'weight': 0  # 5
+		            'weight': 5  # 5
 	            },
 	            'SMA': {
-		            'weight': 7,  # 4
+		            'weight': 4,  # 4
 		            'period': 32
 	            },
 	            'RS': {
