@@ -115,12 +115,14 @@ def main(strategy, price_data):
 if __name__ == '__main__':
 	company = settings.company
 	# company = 'GBTC'
+	# company = 'NFLX'
+	# company = 'GBP.USD'
 	try:
-		strategy = utils.the_best_known_strategy2(company)
+		strategy = utils.the_best_known_strategy(company)
 	except:
 		strategy = {
 			'company': company,
-	        'bar_size': '30 mins',
+	        'bar_size': '1 min',
 	        'buy': {
 	            'TP': 15,
 	            'SL': 15,
@@ -192,7 +194,9 @@ if __name__ == '__main__':
 	            }
 	        }
 		}
+	strategy = utils.the_best_known_strategy(company)
 	historical_data = utils.request_historical_data(strategy['company'])
+	# historical_data = None
 	price_data = utils.get_price_data(strategy['company'], strategy['bar_size'])
 	price_data = utils.put_indicators_to_price_data(price_data, strategy, historical_data)
 	profit, history, price_data = main(strategy, price_data)

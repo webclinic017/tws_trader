@@ -26,13 +26,21 @@ def first_run():
 		os.makedirs('historical_data')
 
 
-def create_contract_from_ticker(symbol, sec_type='STK', exch='SMART', prim_exch='SMART', curr='USD'):
+def create_contract_from_ticker(symbol):
 	contract = Contract()
-	contract.m_symbol = symbol
-	contract.m_secType = sec_type
-	contract.m_exchange = exch
-	contract.m_primaryExch = prim_exch
-	contract.m_currency = curr
+	# if it is stock
+	if '.' not in symbol:
+		contract.m_symbol = symbol
+		contract.m_secType = 'STK'
+		contract.m_exchange = 'SMART'
+		contract.m_primaryExch = 'SMART'
+		contract.m_currency = 'USD'
+	# if it is forex pair
+	else:
+		contract.m_symbol = symbol.split('.')[0]
+		contract.m_secType = 'CASH'
+		contract.m_exchange = 'IDEALPRO'
+		contract.m_currency = symbol.split('.')[1]
 	return contract
 
 
