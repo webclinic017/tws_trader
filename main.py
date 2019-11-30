@@ -16,36 +16,6 @@ import W4_checking_account
 import W6_position_manager
 
 
-def print_status(info):
-	print(f'''
-Time:		{time.strftime('%H:%M', time.gmtime())}                                    
-Signal:		{info[0]}                                                      
-Open position:	{info[1]}                                          
-Price data row:	{info[2]}                                          
-Order id:	{info[3]}                                               
-Strategy:	{info[4]}
-''')
-
-
-def print_waiting():
-	working_schedule = utils.get_working_shedule('30 mins')
-	# reset date in time now:
-	time_now_str = datetime.strftime(datetime.now(), '%H:%M')
-	time_now = datetime.strptime(time_now_str, '%H:%M')
-	times_to_await = []
-	for sheduled_time in working_schedule:
-		sheduled_time = datetime.strptime(sheduled_time, '%H:%M')
-		if time_now > sheduled_time:
-			sheduled_time += timedelta(days=1)
-		time_to_await = sheduled_time - time_now # + timedelta(seconds=60)
-		times_to_await.append(time_to_await)
-	time_to_await = min(times_to_await)
-	hours_to_await = time_to_await.seconds//(60*60)
-	minutes_to_await = (time_to_await.seconds//60)%60
-	for count in range(4):
-		print(f'  The next update will be in {hours_to_await} hours {minutes_to_await} minute(s){"."*count}     ', end='')
-		print('\033[F'*1)
-		time.sleep(1)
 
 
 def main():
@@ -67,7 +37,6 @@ def main():
 
 	buy_signal, sell_signal = signals.check(price_data, strategy)
 
-	print_status(((buy_signal, sell_signal), open_position_type, price_data[-1], orderId, strategy))
 
 	last_close_price = price_data[-1]['Close']
 	quantity = int((available_funds * settings.POSITION_QUANTITY) / last_close_price)
@@ -108,12 +77,10 @@ def main():
 			print('...and open long')
 			W6_position_manager.place_bracket_order(company, action, stop_loss, take_profit, quantity, orderId)
 	time.sleep(60)
-	print_waiting()
 	while True:
 		time_now_str = datetime.strftime(datetime.now(), '%H:%M')
 		weekday = datetime.strftime(datetime.now(), '%w')
 		if weekday not in ('6', '0'):
-			print_waiting()
 			if time_now_str in working_schedule:
 				time.sleep(15)
 				main()
