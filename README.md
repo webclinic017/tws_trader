@@ -33,4 +33,6 @@ https://www.interactivebrokers.com/en/index.php?f=14099#tws-software
 	TWS_CONNECTION = Connection.create(port=7496, clientId=0)   # your port from TWS settings
 	company = 'AAPL' # company you would like to trade with
 	```
-# ...
+# Main goal
+My purpose is to analyse option prices and trade options w/ low risks and
+high potential profits.
