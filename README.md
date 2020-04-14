@@ -1,5 +1,5 @@
 ## TWS Trader
-This project is my training in algorithmic trading.
+This project is my trading algorithm.
 
 # Installation
 1. Clone this repository:
@@ -28,7 +28,6 @@ https://www.interactivebrokers.com/en/index.php?f=14099#tws-software
 7. Create settings.py file with this variables:
 	```python3
 	from ib.opt import Connection
-
 	ACCOUNT_NUMBER = '123456' # your account number
 	TWS_CONNECTION = Connection.create(port=7496, clientId=0)   # your port from TWS settings
 	company = 'AAPL' # company you would like to trade with
