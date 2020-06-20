@@ -1,6 +1,9 @@
 from ibapi.contract import Contract
 
-заменить все m_symbol и тд на оригинальные атрибуты!
+
+# классы контрактов с официальной библиотекой
+# заменить все m_symbol и тд на оригинальные атрибуты!
+
 class Forex(Contract):
 	
 	def __init__(self, currency_1, currency_2):

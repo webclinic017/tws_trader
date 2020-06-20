@@ -4,7 +4,7 @@ This project is my trading algorithm.
 # Installation
 1. Clone this repository:
     ```bash
-    git clone https://github.com/SVGalich/tws_trader/tree/version_2
+    https://github.com/SGalich/tws_trader.git
     ```
 2. Create virtual environment:
     ```bash
@@ -16,16 +16,27 @@ This project is my trading algorithm.
 	```
 4. Install requirements:
 	```bash
-	pip3 install -r requirements.txt
+	python3 -m pip install -r requirements.txt
 	```
 5. Install IbPy 2 to work w/ TWS API:
 	```bash
-	pip3 install IbPy2
+	python3 -m pip install IbPy2
 	```
-6. Than install TWS, open it and go through authetication. Download TWS from here: 
-https://www.interactivebrokers.com/en/index.php?f=14099#tws-software
+6. Than install IB Getaway. You can do it from [here](https://download2.interactivebrokers.com/installers/ibgateway/stable-standalone/ibgateway-stable-standalone-macosx-x64.dmg).
 
-7. Create settings.py file with this variables:
+7. Install API source from [here](http://interactivebrokers.github.io/). Installation instructions are in
+the README.md inside the downloaded package. Or you can copy downloaded package inside your project's dir
+and run this commands:
+    ```
+   cd twsapi_macunix/IBJts/source/pythonclient/ && \
+   python3 setup.py sdist && \
+   python3 setup.py bdist_wheel && \
+   python3 -m pip install --upgrade dist/ibapi-9.76.1-py3-none-any.whl && \
+   cd ../../../.. && rm -rf twsapi_macunix
+   ```
+You should change ibapi version from 9.76.1 to those you've downloaded.
+
+8. Create settings.py file with this variables:
 	```python3
 	from ib.opt import Connection
 	ACCOUNT_NUMBER = '123456' # your account number

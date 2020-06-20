@@ -1,6 +1,6 @@
 from ib.ext.Contract import Contract
 
-
+# классы контрактов с неофициальной библиотекой
 class Forex(Contract):
 	
 	def __init__(self, currency_1, currency_2):
