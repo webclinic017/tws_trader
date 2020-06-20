@@ -1,4 +1,4 @@
-from ib.opt import Connection
+
 from settings.py import PORT, CLIENT_ID
 
 
